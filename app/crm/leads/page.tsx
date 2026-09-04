@@ -727,6 +727,13 @@ export default function LeadsPage() {
           </div>
 
           <div className={styles.headerActions}>
+            <button
+              className={styles.secondaryButton}
+              onClick={() => router.push("/crm/demos")}
+            >
+              Demo Schedule
+            </button>
+
             <button className={styles.secondaryButton} onClick={downloadTemplate}>
               Download CSV Template
             </button>
