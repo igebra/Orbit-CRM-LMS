@@ -382,15 +382,6 @@ export default function LeadsPage() {
       assigned_to: clean(form.assigned_to),
       next_action: clean(form.next_action),
       lead_stage: form.lead_stage,
-      demo_scheduled_at: form.demo_scheduled_at
-        ? new Date(form.demo_scheduled_at).toISOString()
-        : null,
-      demo_trainer: clean(form.demo_trainer),
-      demo_attended: form.lead_source === "Demo" ? form.demo_attended : false,
-      demo_attended_course:
-        form.lead_source === "Demo" && form.demo_attended
-          ? clean(form.demo_attended_course)
-          : null,
       next_follow_up_date: clean(form.next_follow_up_date),
       notes: clean(form.notes),
       updated_by: userId || null,
@@ -501,10 +492,6 @@ export default function LeadsPage() {
       "assigned_to",
       "next_action",
       "lead_stage",
-      "demo_scheduled_at",
-      "demo_trainer",
-      "demo_attended",
-      "demo_attended_course",
       "next_follow_up_date",
       "notes",
     ];
@@ -523,10 +510,6 @@ export default function LeadsPage() {
       "Madhu",
       "Need to Call",
       "Fresh Lead",
-      "",
-      "",
-      "false",
-      "",
       "",
       "",
     ];
@@ -580,7 +563,6 @@ export default function LeadsPage() {
 
           if (!parentFirstName || !childName) return null;
 
-          const rawDemoAttended = pick(row, ["demo_attended"]).toLowerCase();
 
           return {
             parent_first_name: parentFirstName,
@@ -606,12 +588,6 @@ export default function LeadsPage() {
               pick(row, ["assigned_to", "owner_name", "owner"]) || null,
             next_action: pick(row, ["next_action"]) || "Need to Call",
             lead_stage: pick(row, ["lead_stage", "stage"]) || "Fresh Lead",
-            demo_scheduled_at:
-              pick(row, ["demo_scheduled_at", "demo_date"]) || null,
-            demo_trainer: pick(row, ["demo_trainer"]) || null,
-            demo_attended: ["true", "yes", "1"].includes(rawDemoAttended),
-            demo_attended_course:
-              pick(row, ["demo_attended_course", "demo_course"]) || null,
             next_follow_up_date:
               pick(row, ["next_follow_up_date", "follow_up_date"]) || null,
             notes: pick(row, ["notes"]) || null,
@@ -927,7 +903,12 @@ export default function LeadsPage() {
                       </td>
 
                       <td>
-                        {lead.demo_scheduled_at ? (
+                        {lead.demo_attended ? (
+                          <>
+                            <span className={styles.stageBadge}>✓ Demo Attended</span>
+                            <small>{lead.demo_attended_course || "Demo"}</small>
+                          </>
+                        ) : lead.demo_scheduled_at ? (
                           <>
                             <span>
                               {new Date(lead.demo_scheduled_at).toLocaleDateString()}
@@ -939,8 +920,6 @@ export default function LeadsPage() {
                               )}
                             </small>
                           </>
-                        ) : lead.demo_attended ? (
-                          <span>Attended</span>
                         ) : (
                           "—"
                         )}
@@ -1180,74 +1159,12 @@ export default function LeadsPage() {
                   </select>
                 </label>
 
-                <label>
-                  <span>Demo Schedule</span>
-                  <input
-                    type="datetime-local"
-                    value={form.demo_scheduled_at}
-                    onChange={(event) =>
-                      setForm({
-                        ...form,
-                        demo_scheduled_at: event.target.value,
-                      })
-                    }
-                  />
-                </label>
-
-                <label>
-                  <span>Demo Trainer</span>
-                  <input
-                    value={form.demo_trainer}
-                    onChange={(event) =>
-                      setForm({ ...form, demo_trainer: event.target.value })
-                    }
-                    placeholder="Trainer name"
-                  />
-                </label>
-
-                {form.lead_source === "Demo" && (
-                  <>
-                    <label className={styles.checkboxLabel}>
-                      <span>Demo Attendance</span>
-                      <div className={styles.checkboxRow}>
-                        <input
-                          type="checkbox"
-                          checked={form.demo_attended}
-                          onChange={(event) =>
-                            setForm({
-                              ...form,
-                              demo_attended: event.target.checked,
-                              demo_attended_course: event.target.checked
-                                ? form.demo_attended_course
-                                : "",
-                            })
-                          }
-                        />
-                        <span>Child attended a demo</span>
-                      </div>
-                    </label>
-
-                    {form.demo_attended && (
-                      <label>
-                        <span>Which Demo Was Attended?</span>
-                        <select
-                          value={form.demo_attended_course}
-                          onChange={(event) =>
-                            setForm({
-                              ...form,
-                              demo_attended_course: event.target.value,
-                            })
-                          }
-                        >
-                          <option value="">Select demo course</option>
-                          {SCHOOL_COURSES.map((course) => (
-                            <option key={course}>{course}</option>
-                          ))}
-                        </select>
-                      </label>
-                    )}
-                  </>
-                )}
+                <div className={styles.notesField}>
+                  <span style={{ display: "block", fontSize: "12px", fontWeight: 800, color: "#263f40", marginBottom: "7px" }}>Demo Scheduling</span>
+                  <div style={{ border: "1px solid #d4dfdc", borderRadius: "10px", padding: "11px", background: "#f7faf9", color: "#5e7473", fontSize: "12px" }}>
+                    Demo scheduling and attendance are managed from the separate Demo Schedule screen.
+                  </div>
+                </div>
 
                 <label>
                   <span>Next Follow-up Date</span>

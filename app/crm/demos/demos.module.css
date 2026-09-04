@@ -39,7 +39,7 @@
   display: grid;
   place-items: center;
   font-weight: 900;
-  box-shadow: 0 10px 20px rgba(0,0,0,.15);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
 }
 
 .brand strong {
@@ -51,7 +51,7 @@
 .brand small {
   display: block;
   margin-top: 4px;
-  color: rgba(255,255,255,.72);
+  color: rgba(255, 255, 255, 0.72);
 }
 
 .nav {
@@ -64,7 +64,7 @@
   border: 0;
   border-radius: 14px;
   padding: 12px 14px;
-  color: rgba(255,255,255,.9);
+  color: rgba(255, 255, 255, 0.9);
   background: transparent;
   display: flex;
   gap: 12px;
@@ -75,7 +75,7 @@
 
 .nav button:hover,
 .navActive {
-  background: rgba(255,255,255,.12) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
 }
 
 .crmGroup {
@@ -86,7 +86,7 @@
 .subNav {
   margin-left: 34px;
   padding-left: 10px;
-  border-left: 1px solid rgba(255,255,255,.18);
+  border-left: 1px solid rgba(255, 255, 255, 0.18);
   display: grid;
   gap: 3px;
 }
@@ -95,12 +95,12 @@
   padding: 8px 10px;
   border-radius: 9px;
   font-size: 12px;
-  color: rgba(255,255,255,.7);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .subNavActive {
   color: #fff !important;
-  background: rgba(255,255,255,.1) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
 }
 
 .soon {
@@ -108,7 +108,7 @@
   padding: 3px 7px;
   border-radius: 999px;
   color: #ffd2a5;
-  background: rgba(217,133,59,.18);
+  background: rgba(217, 133, 59, 0.18);
 }
 
 .sidebarBottom {
@@ -119,7 +119,7 @@
 .userBox {
   padding: 12px;
   border-radius: 16px;
-  background: rgba(255,255,255,.08);
+  background: rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -133,7 +133,7 @@
 .userBox small {
   margin-top: 3px;
   max-width: 160px;
-  color: rgba(255,255,255,.68);
+  color: rgba(255, 255, 255, 0.68);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -201,18 +201,25 @@
 .primaryButton,
 .secondaryButton,
 .cancelButton,
-.refreshButton {
+.refreshButton,
+.smallPrimary {
   border-radius: 11px;
   padding: 10px 14px;
   font-weight: 800;
   cursor: pointer;
 }
 
-.primaryButton {
+.primaryButton,
+.smallPrimary {
   border: 1px solid #c77830;
   color: #fff;
   background: linear-gradient(180deg, #e3944c, #d9853b);
   box-shadow: 0 4px 0 #a7632a;
+}
+
+.smallPrimary {
+  padding: 8px 12px;
+  box-shadow: none;
 }
 
 .primaryButton:active {
@@ -220,9 +227,10 @@
   box-shadow: 0 1px 0 #a7632a;
 }
 
-.primaryButton:disabled {
-  opacity: .6;
-  cursor: wait;
+.primaryButton:disabled,
+.smallPrimary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .secondaryButton,
@@ -245,7 +253,7 @@
   border-radius: 18px;
   background: #fff;
   padding: 18px;
-  box-shadow: 0 9px 26px rgba(20,63,63,.05);
+  box-shadow: 0 9px 26px rgba(20, 63, 63, 0.05);
 }
 
 .statCard span {
@@ -260,18 +268,25 @@
   font-size: 28px;
 }
 
-.warningNumber {
-  color: #b04b42;
-}
-
-.message {
-  margin-bottom: 14px;
+.message,
+.inlineError {
   padding: 11px 13px;
-  border: 1px solid rgba(217,133,59,.35);
+  border: 1px solid rgba(217, 133, 59, 0.35);
   border-radius: 11px;
   background: #fff8f0;
   color: #7b4a20;
   font-size: 13px;
+}
+
+.message {
+  margin-bottom: 14px;
+}
+
+.inlineError {
+  margin-top: 10px;
+  border-color: #e9b5b5;
+  background: #fff4f4;
+  color: #9b3636;
 }
 
 .scheduleCard {
@@ -279,7 +294,7 @@
   border-radius: 20px;
   overflow: hidden;
   background: #fff;
-  box-shadow: 0 10px 30px rgba(20,63,63,.05);
+  box-shadow: 0 10px 30px rgba(20, 63, 63, 0.05);
 }
 
 .toolbar {
@@ -314,7 +329,7 @@
 
 .tableWrap table {
   width: 100%;
-  min-width: 1540px;
+  min-width: 1700px;
   border-collapse: collapse;
 }
 
@@ -389,21 +404,6 @@
   white-space: nowrap;
 }
 
-.statusCompleted {
-  background: #e5f5e8;
-  color: #2e7440;
-}
-
-.statusNoShow {
-  background: #ffe6e4;
-  color: #a53d37;
-}
-
-.statusCancelled {
-  background: #ecefee;
-  color: #687372;
-}
-
 .rowActions {
   display: flex;
   gap: 7px;
@@ -417,6 +417,7 @@
   color: #0f5e61;
   font-weight: 750;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .rowActions .deleteButton {
@@ -429,19 +430,19 @@
   inset: 0;
   z-index: 50;
   padding: 24px;
-  background: rgba(15,42,43,.48);
+  background: rgba(15, 42, 43, 0.48);
   backdrop-filter: blur(5px);
   display: grid;
   place-items: center;
 }
 
 .modal {
-  width: min(1080px, 96vw);
+  width: min(1120px, 96vw);
   max-height: 94vh;
   overflow-y: auto;
   border-radius: 22px;
   background: #fff;
-  box-shadow: 0 25px 70px rgba(14,47,47,.3);
+  box-shadow: 0 25px 70px rgba(14, 47, 47, 0.3);
 }
 
 .modalHeader {
@@ -450,7 +451,7 @@
   z-index: 5;
   padding: 20px 24px;
   border-bottom: 1px solid #e3e9e7;
-  background: rgba(255,255,255,.97);
+  background: rgba(255, 255, 255, 0.97);
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -516,13 +517,15 @@
   font-size: 12px;
 }
 
-.formGrid {
+.formGrid,
+.mappingGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 15px 18px;
 }
 
 .formGrid label > span,
+.mappingGrid label > span,
 .multiField > span {
   display: block;
   margin-bottom: 7px;
@@ -533,7 +536,8 @@
 
 .formGrid input,
 .formGrid select,
-.formGrid textarea {
+.formGrid textarea,
+.mappingGrid select {
   width: 100%;
   border: 1px solid #d4dfdc;
   border-radius: 10px;
@@ -543,7 +547,8 @@
 }
 
 .formGrid input,
-.formGrid select {
+.formGrid select,
+.mappingGrid select {
   height: 44px;
   padding: 0 11px;
 }
@@ -555,9 +560,10 @@
 
 .formGrid input:focus,
 .formGrid select:focus,
-.formGrid textarea:focus {
+.formGrid textarea:focus,
+.mappingGrid select:focus {
   border-color: #74afad;
-  box-shadow: 0 0 0 3px rgba(116,175,173,.12);
+  box-shadow: 0 0 0 3px rgba(116, 175, 173, 0.12);
 }
 
 .fullWidth {
@@ -576,10 +582,6 @@
   align-items: center;
 }
 
-.timePreview div:not(.timeArrow) {
-  min-width: 0;
-}
-
 .timePreview span,
 .timePreview strong,
 .timePreview small {
@@ -590,7 +592,7 @@
   color: #7a8988;
   font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: .7px;
+  letter-spacing: 0.7px;
   font-weight: 800;
 }
 
@@ -608,6 +610,312 @@
   color: #d9853b;
   font-size: 25px;
   font-weight: 800;
+}
+
+.modeTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.modeTabs button {
+  border: 1px solid #cbdad7;
+  border-radius: 10px;
+  padding: 9px 12px;
+  background: #fff;
+  color: #45605f;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.modeTabs .modeActive {
+  background: #0f5e61;
+  border-color: #0f5e61;
+  color: #fff;
+}
+
+.studentToolPanel {
+  padding: 14px;
+  border: 1px solid #dce7e4;
+  border-radius: 14px;
+  background: #f9fbfa;
+}
+
+.leadPickerTop {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.leadPickerTop input {
+  min-width: 0;
+  flex: 1;
+  height: 42px;
+  border: 1px solid #d4dfdc;
+  border-radius: 10px;
+  padding: 0 11px;
+}
+
+.leadPickerList {
+  max-height: 290px;
+  overflow-y: auto;
+  border: 1px solid #e1e9e7;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.leadRow {
+  min-height: 58px;
+  padding: 10px 11px;
+  display: grid;
+  grid-template-columns: auto minmax(180px, 1fr) minmax(170px, 0.8fr) auto;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid #edf2f0;
+  cursor: pointer;
+}
+
+.leadRow:last-child {
+  border-bottom: 0;
+}
+
+.leadRow input {
+  width: 17px;
+  height: 17px;
+  accent-color: #0f5e61;
+}
+
+.leadMain strong,
+.leadMain small {
+  display: block;
+}
+
+.leadMain small {
+  margin-top: 3px;
+  color: #778685;
+}
+
+.leadCourse {
+  color: #4e6665;
+  font-size: 12px;
+}
+
+.attendedTag {
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: #e4f4e8;
+  color: #347044;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.toolFooter {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.excelIntro {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.excelIntro strong {
+  display: block;
+}
+
+.excelIntro p {
+  margin: 5px 0 0;
+  color: #6f807f;
+  font-size: 12px;
+}
+
+.fileButton {
+  min-width: 110px;
+  border-radius: 10px;
+  padding: 9px 12px;
+  background: #0f5e61;
+  color: #fff;
+  text-align: center;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.fileName {
+  margin-top: 11px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: #edf6f4;
+  color: #315b59;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mappingGrid {
+  margin-top: 13px;
+}
+
+.excelPreview {
+  margin-top: 14px;
+  border: 1px solid #dfe8e6;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.previewTitle {
+  padding: 9px 11px;
+  background: #f3f7f6;
+  color: #506867;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.previewTableWrap {
+  overflow-x: auto;
+}
+
+.previewTableWrap table {
+  min-width: 700px;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.previewTableWrap th,
+.previewTableWrap td {
+  padding: 7px 9px;
+  border-bottom: 1px solid #edf2f0;
+  text-align: left;
+  font-size: 11px;
+}
+
+.previewTableWrap th {
+  background: #fafcfc;
+  color: #536a69;
+}
+
+.attendeeHeader {
+  margin-top: 16px;
+  padding: 12px 0 9px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #e2eae8;
+}
+
+.attendeeHeader strong,
+.attendeeHeader span {
+  display: block;
+}
+
+.attendeeHeader span {
+  margin-top: 3px;
+  color: #768584;
+  font-size: 11px;
+}
+
+.bulkActions {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.bulkActions button {
+  border: 1px solid #cbdad7;
+  border-radius: 8px;
+  padding: 6px 9px;
+  background: #fff;
+  color: #0f5e61;
+  font-size: 11px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.attendeeList {
+  max-height: 360px;
+  overflow-y: auto;
+  border: 1px solid #e2eae8;
+  border-top: 0;
+  border-radius: 0 0 12px 12px;
+}
+
+.attendeeRow {
+  min-height: 62px;
+  padding: 9px 10px;
+  display: grid;
+  grid-template-columns: 34px minmax(180px, 1.2fr) minmax(160px, 1fr) 145px auto;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid #edf2f0;
+  background: #fff;
+}
+
+.attendeeRow:last-child {
+  border-bottom: 0;
+}
+
+.studentNumber {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: #edf5f4;
+  color: #0f5e61;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.attendeeIdentity strong,
+.attendeeIdentity small,
+.attendeeContact span,
+.attendeeContact small {
+  display: block;
+}
+
+.attendeeIdentity small,
+.attendeeContact small,
+.attendeeContact span {
+  color: #778685;
+  font-size: 11px;
+}
+
+.attendeeIdentity small,
+.attendeeContact small {
+  margin-top: 3px;
+}
+
+.attendeeRow select {
+  width: 100%;
+  height: 36px;
+  border: 1px solid #d4dfdc;
+  border-radius: 8px;
+  background: #fff;
+  padding: 0 7px;
+}
+
+.removeStudent {
+  border: 1px solid #e8c5c5;
+  border-radius: 8px;
+  padding: 7px 9px;
+  background: #fff;
+  color: #ad3c3c;
+  font-size: 11px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.inlineEmpty {
+  padding: 22px;
+  color: #7a8988;
+  text-align: center;
+  font-size: 12px;
 }
 
 .chipEditor {
@@ -643,7 +951,7 @@
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: rgba(15,94,97,.12);
+  background: rgba(15, 94, 97, 0.12);
   color: #0f5e61;
   cursor: pointer;
 }
@@ -654,10 +962,11 @@
 }
 
 .chipInputRow input {
+  width: 100%;
   height: 34px;
   border: 0;
   padding: 0 5px;
-  box-shadow: none !important;
+  outline: none;
 }
 
 .chipInputRow button {
@@ -700,7 +1009,8 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .formGrid {
+  .formGrid,
+  .mappingGrid {
     grid-template-columns: 1fr;
   }
 
@@ -714,6 +1024,25 @@
 
   .timeArrow {
     transform: rotate(90deg);
+  }
+
+  .leadRow {
+    grid-template-columns: auto 1fr;
+  }
+
+  .leadCourse,
+  .attendedTag {
+    grid-column: 2;
+  }
+
+  .attendeeRow {
+    grid-template-columns: 34px 1fr;
+  }
+
+  .attendeeContact,
+  .attendeeRow select,
+  .removeStudent {
+    grid-column: 2;
   }
 }
 
@@ -732,5 +1061,12 @@
 
   .modalBackdrop {
     padding: 9px;
+  }
+
+  .leadPickerTop,
+  .excelIntro,
+  .attendeeHeader {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
