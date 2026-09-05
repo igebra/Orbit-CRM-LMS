@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import OrbitSidebar from "../components/OrbitSidebar";
+import { COURSE_OPTIONS, courseDefaults } from "../lib/orbitCourses";
 import styles from "../lms.module.css";
 
 const supabase = createClient(
@@ -19,18 +20,6 @@ const TIMEZONES = [
   { value: "Asia/Kolkata", label: "India IST" },
 ];
 
-const COURSES = [
-  "AiEdge Elementary - Level 01","AiEdge Elementary - Level 02","AiEdge Elementary - Level 03",
-  "AiEdge Middle School - Level 01","AiEdge Middle School - Level 02","AiEdge Middle School - Level 03",
-  "AiEdge High School - Level 01","AiEdge High School - Level 02","AiEdge High School - Level 03",
-  "Coding4AI Elementary - Level 01","Coding4AI Elementary - Level 02","Coding4AI Elementary - Level 03",
-  "Coding4AI Middle School - Level 01","Coding4AI Middle School - Level 02","Coding4AI Middle School - Level 03",
-  "Coding4AI High School - Level 01","Coding4AI High School - Level 02","Coding4AI High School - Level 03",
-  "Math - Grade 01","Math - Grade 02","Math - Grade 03","Math - Grade 04","Math - Grade 05",
-  "Math - Grade 06","Math - Grade 07","Math - Grade 08","Math - Grade 09","Math - Grade 10",
-  "AP Pre-Calculus","AP Calculus AB","AP Calculus BC","AP Statistics","SAT and PSAT",
-  "Algebra 1","Geometry","Algebra 2",
-];
 
 type Batch = {
   id: string;
@@ -43,6 +32,7 @@ type Batch = {
   source_timezone: string | null;
   end_date: string | null;
   planned_sessions: number | null;
+  default_duration_minutes: number | null;
   recurring_zoom_url: string | null;
   status: string;
   max_students: number;
@@ -63,6 +53,7 @@ type FormState = {
   source_timezone: string;
   end_date: string;
   planned_sessions: string;
+  duration_minutes: string;
   recurring_zoom_url: string;
   status: string;
 };
@@ -75,6 +66,7 @@ const EMPTY_FORM: FormState = {
   source_timezone: "America/New_York",
   end_date: "",
   planned_sessions: "",
+  duration_minutes: "90",
   recurring_zoom_url: "",
   status: "Active",
 };
@@ -180,6 +172,19 @@ export default function BatchesPage() {
     [form.local_datetime, form.source_timezone]
   );
 
+  function chooseCourse(course: string) {
+    const defaults = courseDefaults(course);
+    setForm((current) => ({
+      ...current,
+      course_name: course,
+      planned_sessions:
+        defaults.plannedSessions === null
+          ? current.planned_sessions
+          : String(defaults.plannedSessions),
+      duration_minutes: String(defaults.durationMinutes),
+    }));
+  }
+
   function chooseTrainer(id: string) {
     setForm((f) => ({ ...f, trainer_id: id }));
   }
@@ -209,6 +214,7 @@ export default function BatchesPage() {
       start_date: form.local_datetime.slice(0,10),
       end_date: form.end_date || null,
       planned_sessions: form.planned_sessions ? Number(form.planned_sessions) : null,
+      default_duration_minutes: Number(form.duration_minutes || 90),
       recurring_zoom_url: form.recurring_zoom_url.trim() || null,
       status: form.status,
       max_students: 8,
@@ -344,9 +350,9 @@ export default function BatchesPage() {
 
                 <label>
                   <span>Course *</span>
-                  <select value={form.course_name} onChange={(e) => setForm({...form,course_name:e.target.value})}>
+                  <select value={form.course_name} onChange={(e) => chooseCourse(e.target.value)}>
                     <option value="">Select course</option>
-                    {COURSES.map((x) => <option key={x}>{x}</option>)}
+                    {COURSE_OPTIONS.map((x) => <option key={x}>{x}</option>)}
                   </select>
                 </label>
 
@@ -384,6 +390,14 @@ export default function BatchesPage() {
                 <label>
                   <span>Planned Sessions</span>
                   <input type="number" min="1" value={form.planned_sessions} onChange={(e) => setForm({...form,planned_sessions:e.target.value})}/>
+                </label>
+                <label>
+                  <span>Class Duration</span>
+                  <select value={form.duration_minutes} onChange={(e) => setForm({...form,duration_minutes:e.target.value})}>
+                    <option value="60">60 Minutes</option>
+                    <option value="90">90 Minutes</option>
+                    <option value="120">120 Minutes</option>
+                  </select>
                 </label>
 
                 <label className={styles.full}>

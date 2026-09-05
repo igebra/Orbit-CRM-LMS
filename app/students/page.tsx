@@ -102,8 +102,7 @@ export default function StudentsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
-  const canManage = ["super_admin", "admin", "sales", "sales_marketing"].includes(role);
-  const canDelete = canManage;
+  const canDelete = ["super_admin", "admin", "sales", "sales_marketing"].includes(role);
 
   useEffect(() => {
     async function initialize() {
@@ -310,11 +309,9 @@ export default function StudentsPage() {
             <p className={styles.subtitle}>Student profiles, course enrollments and CRM conversions.</p>
           </div>
           <div className={styles.headerActions}>
-            {canManage && (
-              <button className={styles.primary} onClick={() => { setForm(EMPTY_FORM); setModalOpen(true); }}>
-                + Add Student
-              </button>
-            )}
+            <button className={styles.primary} onClick={() => { setForm(EMPTY_FORM); setModalOpen(true); }}>
+              + Add Student
+            </button>
           </div>
         </header>
 
@@ -348,14 +345,14 @@ export default function StudentsPage() {
                   <th>Course(s)</th>
                   <th>Status</th>
                   <th>Created</th>
-                  {canDelete && <th>Actions</th>}
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={canDelete ? 7 : 6} className={styles.empty}>Loading students...</td></tr>
+                  <tr><td colSpan={7} className={styles.empty}>Loading students...</td></tr>
                 ) : filteredStudents.length === 0 ? (
-                  <tr><td colSpan={canDelete ? 7 : 6} className={styles.empty}>No students found.</td></tr>
+                  <tr><td colSpan={7} className={styles.empty}>No students found.</td></tr>
                 ) : filteredStudents.map((student) => (
                   <tr key={student.id}>
                     <td>{student.student_name}<small>{student.grade || "—"}</small></td>
@@ -366,11 +363,29 @@ export default function StudentsPage() {
                     <td>{new Date(student.created_at).toLocaleDateString()}</td>
                     {canDelete && (
                       <td>
+                        <div className={styles.rowActions}>
+                          <button
+                            className={styles.smallButton}
+                            onClick={() => router.push(`/students/${student.id}`)}
+                          >
+                            Open
+                          </button>
+                          <button
+                            className={styles.danger}
+                            onClick={() => deleteStudent(student)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    )}
+                    {!canDelete && (
+                      <td>
                         <button
-                          className={styles.danger}
-                          onClick={() => deleteStudent(student)}
+                          className={styles.smallButton}
+                          onClick={() => router.push(`/students/${student.id}`)}
                         >
-                          Delete
+                          Open
                         </button>
                       </td>
                     )}
@@ -382,7 +397,7 @@ export default function StudentsPage() {
         </section>
       </main>
 
-      {modalOpen && canManage && (
+      {modalOpen && (
         <div className={styles.modalBackdrop}>
           <div className={styles.modal}>
             <div className={styles.modalHeader}>

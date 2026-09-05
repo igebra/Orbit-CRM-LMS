@@ -246,13 +246,13 @@ export default function TrainersPage() {
                   <th>Courses / Skills</th>
                   <th>Orbit Access</th>
                   <th>Status</th>
-                  {canManage && <th>Actions</th>}
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={canManage ? 8 : 7} className={styles.empty}>
+                    <td colSpan={8} className={styles.empty}>
                       No trainers found.
                     </td>
                   </tr>
@@ -270,16 +270,21 @@ export default function TrainersPage() {
                         </span>
                       </td>
                       <td><span className={styles.status}>{trainer.status}</span></td>
-                      {canManage && (
-                        <td>
-                          <div className={styles.actions}>
-                            <button onClick={() => openEdit(trainer)}>Edit</button>
-                            <button onClick={() => toggleStatus(trainer)}>
-                              {trainer.status === "Active" ? "Make Inactive" : "Make Active"}
-                            </button>
-                          </div>
-                        </td>
-                      )}
+                      <td>
+                        <div className={styles.actions}>
+                          <button onClick={() => router.push(`/reports?trainer=${trainer.id}`)}>
+                            Report
+                          </button>
+                          {canManage && (
+                            <>
+                              <button onClick={() => openEdit(trainer)}>Edit</button>
+                              <button onClick={() => toggleStatus(trainer)}>
+                                {trainer.status === "Active" ? "Make Inactive" : "Make Active"}
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   ))
                 )}

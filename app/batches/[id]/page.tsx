@@ -22,12 +22,12 @@ const PAYMENT_MODES = [
 type Batch = {
   id:string; batch_name:string; course_name:string; trainer_name:string|null; trainer_user_id:string|null; trainer_id:string|null;
   start_at:string|null; source_timezone:string|null; end_date:string|null; recurring_zoom_url:string|null;
-  planned_sessions:number|null; status:string; max_students:number;
+  planned_sessions:number|null; default_duration_minutes:number|null; status:string; max_students:number;
 };
 
 type Student = { id:string; student_name:string; grade:string|null; email:string|null; phone:string|null; status:string };
 type Roster = { id:string; batch_id:string; student_id:string };
-type Session = { id:string; session_number:number|null; session_date:string; topic_planned:string|null; topic_covered:string|null; status:string; trainer_name:string|null };
+type Session = { id:string; session_number:number|null; session_date:string; scheduled_at:string|null; source_timezone:string|null; topic_planned:string|null; topic_covered:string|null; status:string; trainer_name:string|null };
 type Trainer = { id:string; trainer_name:string };
 type History = { id:string; trainer_name:string|null; assigned_from:string; assigned_to:string|null; is_active:boolean };
 
@@ -50,6 +50,33 @@ function fmt(iso:string|null, zone:string) {
     timeZone:zone, day:"2-digit", month:"short", year:"numeric",
     hour:"numeric", minute:"2-digit", hour12:true, timeZoneName:"short"
   }).format(new Date(iso));
+}
+
+function getOffsetMs(date:Date, zone:string) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone:zone, year:"numeric", month:"2-digit", day:"2-digit",
+    hour:"2-digit", minute:"2-digit", second:"2-digit", hourCycle:"h23",
+  }).formatToParts(date);
+  const map:Record<string,string> = {};
+  parts.forEach(part => { if(part.type !== "literal") map[part.type] = part.value; });
+  return Date.UTC(
+    Number(map.year), Number(map.month)-1, Number(map.day),
+    Number(map.hour), Number(map.minute), Number(map.second)
+  ) - date.getTime();
+}
+
+function localToUtc(value:string, zone:string) {
+  if(!value) return null;
+  const [datePart,timePart] = value.split("T");
+  if(!datePart || !timePart) return null;
+  const [y,m,d] = datePart.split("-").map(Number);
+  const [h,min] = timePart.split(":").map(Number);
+  const guess = new Date(Date.UTC(y,m-1,d,h,min));
+  const first = getOffsetMs(guess,zone);
+  let result = new Date(guess.getTime()-first);
+  const second = getOffsetMs(result,zone);
+  if(second !== first) result = new Date(guess.getTime()-second);
+  return result.toISOString();
 }
 
 export default function BatchDetailPage() {
@@ -77,14 +104,14 @@ export default function BatchDetailPage() {
   const [financeOpen,setFinanceOpen] = useState(false);
   const [paymentOpen,setPaymentOpen] = useState(false);
 
-  const [edit,setEdit] = useState({trainer_id:"",trainer_name:"",end_date:"",recurring_zoom_url:"",planned_sessions:"",status:"Active"});
-  const [sessionForm,setSessionForm] = useState({session_number:"",session_date:"",topic_planned:"",status:"Scheduled"});
+  const [edit,setEdit] = useState({trainer_id:"",trainer_name:"",end_date:"",recurring_zoom_url:"",planned_sessions:"",duration_minutes:"90",status:"Active"});
+  const [sessionForm,setSessionForm] = useState({session_number:"",scheduled_at:"",topic_planned:"",status:"Scheduled"});
   const [attendanceRows,setAttendanceRows] = useState<{session_id:string;attendance_status:string}[]>([]);
   const [financeForm,setFinanceForm] = useState({student_id:"",total_fee_usd:"",payment_plan:"Monthly",installment_amount_usd:"",plan_start_date:new Date().toISOString().slice(0,10),custom_next_due_date:""});
   const [paymentForm,setPaymentForm] = useState({finance_id:"",student_name:"",amount_usd:"",payment_date:new Date().toISOString().slice(0,10),payment_mode:"Zelle",reference:""});
 
   const canAdmin = ["super_admin","admin","sales","sales_marketing"].includes(role);
-  const canSeeFinance = ["super_admin","admin","sales","viewer_management","accounts_finance"].includes(role);
+  const canSeeFinance = ["super_admin","admin","sales","sales_marketing","viewer_management","accounts_finance"].includes(role);
   const canManageFinance = ["super_admin","admin","sales","sales_marketing","accounts_finance"].includes(role);
   const canTeach = canAdmin || role==="trainer";
 
@@ -110,7 +137,7 @@ export default function BatchDetailPage() {
       supabase.from("batches").select("*").eq("id",batchId).single(),
       supabase.from("students").select("id,student_name,grade,email,phone,status").order("student_name"),
       supabase.from("batch_students").select("id,batch_id,student_id").eq("batch_id",batchId),
-      supabase.from("class_sessions").select("id,session_number,session_date,topic_planned,topic_covered,status,trainer_name").eq("batch_id",batchId).order("session_date",{ascending:false}),
+      supabase.from("class_sessions").select("id,session_number,session_date,scheduled_at,source_timezone,topic_planned,topic_covered,status,trainer_name").eq("batch_id",batchId).order("session_date",{ascending:false}),
       supabase.rpc("active_trainer_options"),
       supabase.from("batch_trainer_assignments").select("id,trainer_name,assigned_from,assigned_to,is_active").eq("batch_id",batchId).order("assigned_from",{ascending:false}),
     ]);
@@ -140,7 +167,7 @@ export default function BatchDetailPage() {
     }
 
     const effectiveRole = r ?? role;
-    if (["super_admin","admin","sales","viewer_management","accounts_finance"].includes(effectiveRole)) {
+    if (["super_admin","admin","sales","sales_marketing","viewer_management","accounts_finance"].includes(effectiveRole)) {
       await loadFinance();
     } else {
       setFinance([]); setTxns([]);
@@ -210,6 +237,7 @@ export default function BatchDetailPage() {
       end_date:batch.end_date||"",
       recurring_zoom_url:batch.recurring_zoom_url||"",
       planned_sessions:batch.planned_sessions?String(batch.planned_sessions):"",
+      duration_minutes:String(batch.default_duration_minutes||90),
       status:batch.status,
     });
     setEditOpen(true);
@@ -228,6 +256,7 @@ export default function BatchDetailPage() {
       end_date:edit.end_date||null,
       recurring_zoom_url:edit.recurring_zoom_url.trim()||null,
       planned_sessions:edit.planned_sessions?Number(edit.planned_sessions):null,
+      default_duration_minutes:Number(edit.duration_minutes||90),
       status:edit.status,
       updated_by:userId||null,
     }).eq("id",batchId);
@@ -239,14 +268,22 @@ export default function BatchDetailPage() {
 
   async function saveSession(e:FormEvent) {
     e.preventDefault();
-    if (!sessionForm.session_date) return setMessage("Session Date is required.");
+    if (!sessionForm.scheduled_at) return setMessage("Class Date & Time is required.");
+
+    const zone = batch?.source_timezone || "Asia/Kolkata";
+    const scheduledAt = localToUtc(sessionForm.scheduled_at, zone);
+    if (!scheduledAt) return setMessage("Select a valid class date and time.");
 
     const {error} = await supabase.from("class_sessions").insert({
       batch_id:batchId,
       session_number:sessionForm.session_number?Number(sessionForm.session_number):null,
-      session_date:sessionForm.session_date,
+      session_date:sessionForm.scheduled_at.slice(0,10),
+      scheduled_at:scheduledAt,
+      source_timezone:zone,
+      duration_minutes:batch?.default_duration_minutes||90,
       topic_planned:sessionForm.topic_planned.trim()||null,
       trainer_id:batch?.trainer_id||null,
+      trainer_user_id:batch?.trainer_user_id||null,
       trainer_name:batch?.trainer_name||null,
       status:sessionForm.status,
       created_by:userId||null,
@@ -255,7 +292,7 @@ export default function BatchDetailPage() {
 
     if (error) return setMessage(error.message);
     setSessionOpen(false);
-    setSessionForm({session_number:"",session_date:"",topic_planned:"",status:"Scheduled"});
+    setSessionForm({session_number:"",scheduled_at:"",topic_planned:"",status:"Scheduled"});
     await load();
   }
 
@@ -313,6 +350,30 @@ export default function BatchDetailPage() {
   }
 
 
+  async function generateSchedule() {
+    if (!batch?.planned_sessions) {
+      setMessage("Set Planned Sessions before generating the schedule.");
+      return;
+    }
+
+    if (!confirm(`Generate missing weekly sessions up to ${batch.planned_sessions}? Existing session numbers will not be duplicated.`)) {
+      return;
+    }
+
+    const { data, error } = await supabase.rpc("generate_batch_sessions", {
+      p_batch_id: batchId,
+    });
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    setMessage(`${Number(data || 0)} class session(s) generated.`);
+    await load();
+  }
+
+
   function attendanceSummary(sessionId:string) {
     const rows = attendanceRows.filter((row) => row.session_id === sessionId);
     if (!rows.length) return "Not marked";
@@ -346,6 +407,7 @@ export default function BatchDetailPage() {
           <div className={styles.headerActions}>
             <button className={styles.secondary} onClick={()=>router.push("/batches")}>← Batches</button>
             {canAdmin && <button className={styles.secondary} onClick={openEdit}>Edit Batch</button>}
+            {canAdmin && batch.planned_sessions && <button className={styles.secondary} onClick={generateSchedule}>Generate Schedule</button>}
             {canTeach && <button className={styles.primary} onClick={()=>setSessionOpen(true)}>+ Add Session</button>}
           </div>
         </header>
@@ -383,7 +445,7 @@ export default function BatchDetailPage() {
               <div className={styles.roster}>
                 {roster.length===0?<div className={styles.empty}>No students assigned.</div>:roster.map(x=>(
                   <div className={styles.rosterRow} key={x.id}>
-                    <div><strong>{x.student_name}</strong><small>{x.grade||"—"} · {x.email||x.phone||"No contact"}</small></div>
+                    <button className={styles.rosterStudentButton} onClick={()=>router.push(`/students/${x.id}`)}><strong>{x.student_name}</strong><small>{x.grade||"—"} · {x.email||x.phone||"No contact"}</small></button>
                     {canAdmin && <button className={styles.danger} onClick={()=>removeStudent(x.id)}>Remove</button>}
                   </div>
                 ))}
@@ -419,7 +481,7 @@ export default function BatchDetailPage() {
               {sessions.length===0?<div className={styles.empty}>No sessions created.</div>:sessions.map(x=>(
                 <div className={styles.sessionItem} key={x.id}>
                   <div>
-                    <h3>{x.session_number?`Session ${x.session_number}`:"Class Session"} · {x.session_date}</h3>
+                    <h3>{x.session_number?`Session ${x.session_number}`:"Class Session"} · {x.scheduled_at ? fmt(x.scheduled_at, x.source_timezone || batch.source_timezone || "Asia/Kolkata") : x.session_date}</h3>
                     <p>{x.trainer_name||"Trainer not assigned"} · {x.topic_covered||x.topic_planned||"Topic not added"} · {x.status}</p>
                     <span className={styles.badge}>{attendanceSummary(x.id)}</span>
                   </div>
@@ -497,7 +559,7 @@ export default function BatchDetailPage() {
           <form className={styles.form} onSubmit={saveSession}>
             <div className={styles.formGrid}>
               <label><span>Session Number</span><input type="number" min="1" value={sessionForm.session_number} onChange={e=>setSessionForm({...sessionForm,session_number:e.target.value})}/></label>
-              <label><span>Session Date *</span><input type="date" value={sessionForm.session_date} onChange={e=>setSessionForm({...sessionForm,session_date:e.target.value})}/></label>
+              <label><span>Class Date & Time *</span><input type="datetime-local" value={sessionForm.scheduled_at} onChange={e=>setSessionForm({...sessionForm,scheduled_at:e.target.value})}/></label>
               <label className={styles.full}><span>Topic Planned</span><input value={sessionForm.topic_planned} onChange={e=>setSessionForm({...sessionForm,topic_planned:e.target.value})}/></label>
               <label><span>Status</span><select value={sessionForm.status} onChange={e=>setSessionForm({...sessionForm,status:e.target.value})}><option>Scheduled</option><option>Completed</option><option>Cancelled</option><option>Rescheduled</option></select></label>
             </div>
@@ -519,7 +581,7 @@ export default function BatchDetailPage() {
                 </select>
               </label>
               <label><span>Batch End Date</span><input type="date" value={edit.end_date} onChange={e=>setEdit({...edit,end_date:e.target.value})}/></label>
-              <label><span>Planned Sessions</span><input type="number" min="1" value={edit.planned_sessions} onChange={e=>setEdit({...edit,planned_sessions:e.target.value})}/></label>
+              <label><span>Planned Sessions</span><input type="number" min="1" value={edit.planned_sessions} onChange={e=>setEdit({...edit,planned_sessions:e.target.value})}/></label><label><span>Class Duration</span><select value={edit.duration_minutes} onChange={e=>setEdit({...edit,duration_minutes:e.target.value})}><option value="60">60 Minutes</option><option value="90">90 Minutes</option><option value="120">120 Minutes</option></select></label>
               <label className={styles.full}><span>Recurring Zoom Link</span><input type="url" value={edit.recurring_zoom_url} onChange={e=>setEdit({...edit,recurring_zoom_url:e.target.value})}/></label>
               <label><span>Status</span><select value={edit.status} onChange={e=>setEdit({...edit,status:e.target.value})}><option>Active</option><option>Upcoming</option><option>Paused</option><option>Completed</option></select></label>
             </div>

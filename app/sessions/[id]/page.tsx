@@ -13,16 +13,66 @@ const supabase = createClient(
 
 type Session = {
   id:string; batch_id:string; session_number:number|null; session_date:string;
+  scheduled_at:string|null; source_timezone:string|null; duration_minutes:number|null;
   topic_planned:string|null; topic_covered:string|null; status:string;
   zoom_meeting_url:string|null; zoom_recording_url:string|null; deck_url:string|null;
   homework_given:boolean; homework_url:string|null; assessment_url:string|null;
   trainer_notes:string|null; trainer_feedback:string|null; parent_feedback:string|null; trainer_name:string|null; trainer_id:string|null;
 };
-type Batch = {id:string;batch_name:string;course_name:string;trainer_name:string|null;recurring_zoom_url:string|null};
+type Batch = {id:string;batch_name:string;course_name:string;trainer_name:string|null;recurring_zoom_url:string|null;source_timezone:string|null};
 type Student = {id:string;student_name:string;grade:string|null};
 type Att = {student_id:string;attendance_status:string};
 type Hw = {student_id:string;homework_completed:boolean};
 type TrainerOption = {id:string;trainer_name:string};
+
+function getOffsetMs(date: Date, zone: string) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: zone,
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const map: Record<string,string> = {};
+  parts.forEach((part) => { if (part.type !== "literal") map[part.type] = part.value; });
+  return Date.UTC(
+    Number(map.year), Number(map.month)-1, Number(map.day),
+    Number(map.hour), Number(map.minute), Number(map.second)
+  ) - date.getTime();
+}
+
+function localDateTimeToUtc(value: string, zone: string) {
+  if (!value) return null;
+  const [datePart,timePart] = value.split("T");
+  if (!datePart || !timePart) return null;
+  const [y,m,d] = datePart.split("-").map(Number);
+  const [h,min] = timePart.split(":").map(Number);
+  const guess = new Date(Date.UTC(y,m-1,d,h,min));
+  const first = getOffsetMs(guess,zone);
+  let result = new Date(guess.getTime()-first);
+  const second = getOffsetMs(result,zone);
+  if (second !== first) result = new Date(guess.getTime()-second);
+  return result.toISOString();
+}
+
+function isoToLocalInput(iso: string | null, zone: string) {
+  if (!iso) return "";
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: zone,
+    year:"numeric", month:"2-digit", day:"2-digit",
+    hour:"2-digit", minute:"2-digit", hourCycle:"h23",
+  }).formatToParts(new Date(iso));
+  const map: Record<string,string> = {};
+  parts.forEach((part) => { if (part.type !== "literal") map[part.type] = part.value; });
+  return `${map.year}-${map.month}-${map.day}T${map.hour}:${map.minute}`;
+}
+
+function formatInZone(iso: string | null, zone: string) {
+  if (!iso) return "—";
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: zone, day:"2-digit", month:"short", year:"numeric",
+    hour:"numeric", minute:"2-digit", hour12:true, timeZoneName:"short",
+  }).format(new Date(iso));
+}
 
 export default function SessionDetailPage() {
   const {id:sessionId}=useParams<{id:string}>();
@@ -43,7 +93,8 @@ export default function SessionDetailPage() {
   const [attendanceMarkedAt,setAttendanceMarkedAt]=useState<string|null>(null);
 
   const [form,setForm]=useState({
-    trainer_id:"",topic_planned:"",topic_covered:"",status:"Scheduled",zoom_meeting_url:"",
+    trainer_id:"",scheduled_at:"",duration_minutes:"90",
+    topic_planned:"",topic_covered:"",status:"Scheduled",zoom_meeting_url:"",
     zoom_recording_url:"",deck_url:"",homework_given:false,homework_url:"",
     assessment_url:"",trainer_notes:"",trainer_feedback:"",parent_feedback:""
   });
@@ -71,6 +122,8 @@ export default function SessionDetailPage() {
     const ss=s.data as Session;setSession(ss);
     setForm({
       trainer_id:ss.trainer_id||"",
+      scheduled_at: isoToLocalInput(ss.scheduled_at, ss.source_timezone || "Asia/Kolkata"),
+      duration_minutes: String(ss.duration_minutes || 90),
       topic_planned:ss.topic_planned||"",topic_covered:ss.topic_covered||"",status:ss.status,
       zoom_meeting_url:ss.zoom_meeting_url||"",zoom_recording_url:ss.zoom_recording_url||"",
       deck_url:ss.deck_url||"",homework_given:Boolean(ss.homework_given),homework_url:ss.homework_url||"",
@@ -79,7 +132,7 @@ export default function SessionDetailPage() {
     });
 
     const [b,r,a,h]=await Promise.all([
-      supabase.from("batches").select("id,batch_name,course_name,trainer_name,recurring_zoom_url").eq("id",ss.batch_id).single(),
+      supabase.from("batches").select("id,batch_name,course_name,trainer_name,recurring_zoom_url,source_timezone").eq("id",ss.batch_id).single(),
       supabase.from("batch_students").select("student_id").eq("batch_id",ss.batch_id),
       supabase.from("session_attendance").select("student_id,attendance_status,marked_at").eq("session_id",sessionId),
       supabase.from("session_homework").select("student_id,homework_completed").eq("session_id",sessionId),
@@ -117,6 +170,12 @@ export default function SessionDetailPage() {
     const up=await supabase.from("class_sessions").update({
       trainer_id: form.trainer_id || null,
       trainer_name: selectedTrainer?.trainer_name || session.trainer_name || null,
+      session_date: form.scheduled_at ? form.scheduled_at.slice(0,10) : session.session_date,
+      scheduled_at: form.scheduled_at
+        ? localDateTimeToUtc(form.scheduled_at, session.source_timezone || batch?.source_timezone || "Asia/Kolkata")
+        : session.scheduled_at,
+      source_timezone: session.source_timezone || batch?.source_timezone || "Asia/Kolkata",
+      duration_minutes: Number(form.duration_minutes || 90),
       topic_planned:form.topic_planned.trim()||null,topic_covered:form.topic_covered.trim()||null,
       status:form.status,zoom_meeting_url:form.zoom_meeting_url.trim()||null,
       zoom_recording_url:form.zoom_recording_url.trim()||null,deck_url:form.deck_url.trim()||null,
@@ -175,7 +234,7 @@ export default function SessionDetailPage() {
           <div>
             <p className={styles.kicker}>LMS · CLASS SESSION</p>
             <h1>{session.session_number?`Session ${session.session_number}`:"Class Session"}</h1>
-            <p className={styles.subtitle}>{batch?.batch_name||"Batch"} · {batch?.course_name||"Course"} · {session.session_date}</p>
+            <p className={styles.subtitle}>{batch?.batch_name||"Batch"} · {batch?.course_name||"Course"} · {session.scheduled_at ? formatInZone(session.scheduled_at, session.source_timezone || batch?.source_timezone || "Asia/Kolkata") : session.session_date}</p>
           </div>
           <div className={styles.headerActions}>
             {meeting&&<a href={meeting} target="_blank" rel="noreferrer" className={styles.primaryLink}>Open Zoom</a>}
@@ -200,6 +259,27 @@ export default function SessionDetailPage() {
                   >
                     <option value="">Select trainer</option>
                     {trainers.map(t=><option key={t.id} value={t.id}>{t.trainer_name}</option>)}
+                  </select>
+                </label>
+                <label>
+                  <span>Class Date & Time</span>
+                  <input
+                    disabled={!canEdit}
+                    type="datetime-local"
+                    value={form.scheduled_at}
+                    onChange={e=>setForm({...form,scheduled_at:e.target.value})}
+                  />
+                </label>
+                <label>
+                  <span>Duration</span>
+                  <select
+                    disabled={!canEdit}
+                    value={form.duration_minutes}
+                    onChange={e=>setForm({...form,duration_minutes:e.target.value})}
+                  >
+                    <option value="60">60 Minutes</option>
+                    <option value="90">90 Minutes</option>
+                    <option value="120">120 Minutes</option>
                   </select>
                 </label>
                 <label className={styles.full}><span>Topic Planned</span><input disabled={!canEdit} value={form.topic_planned} onChange={e=>setForm({...form,topic_planned:e.target.value})}/></label>

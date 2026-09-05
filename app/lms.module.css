@@ -47,3 +47,14 @@
 .rowActions{display:flex;gap:6px;flex-wrap:wrap}.rowActions button{border:1px solid #cbdad7;border-radius:8px;padding:6px 8px;background:#fff;color:#0f5e61;font-weight:700;cursor:pointer}
 @media(max-width:1050px){.batchOpsStats,.financeStats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.batchOpsStats,.financeStats{grid-template-columns:1fr}.tabBar{width:100%;overflow-x:auto}.tabBar button{white-space:nowrap}.attendanceRow{align-items:stretch;flex-direction:column}.attendanceRow select{width:100%}}
+
+
+/* Final LMS additions */
+.compactRowButton{width:100%;padding:10px 11px;border:1px solid #e4ebe9;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;color:#183032;cursor:pointer}
+.compactRowButton strong,.compactRowButton small{display:block}
+.compactRowButton small{margin-top:3px;color:#7a8988;font-size:11px}
+.tableWrap select{min-height:34px;border:1px solid #d4dfdc;border-radius:8px;background:#fff;padding:0 8px;color:#183032}
+.saveBar{margin-top:16px;display:flex;justify-content:flex-end}
+.classTable{min-width:1120px!important}
+
+.rosterStudentButton{flex:1;border:0;background:transparent;text-align:left;color:#183032;cursor:pointer;padding:0}.rosterStudentButton strong,.rosterStudentButton small{display:block}.rosterStudentButton small{margin-top:3px;color:#7a8988}

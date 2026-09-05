@@ -12,7 +12,7 @@
 .summary>div{background:#fff;border:1px solid #d9e5e2;border-radius:13px;padding:14px}.summary span{display:block;color:#7d8d8b;font-size:11px}.summary strong{display:block;margin-top:4px;font-size:22px}
 .card{background:#fff;border:1px solid #d9e5e2;border-radius:16px;overflow:hidden}
 .toolbar{padding:14px;border-bottom:1px solid #e2ebe9}.toolbar input{width:min(420px,100%);height:40px;border:1px solid #cedbd8;border-radius:9px;padding:0 11px}
-.tableWrap{overflow:auto}.tableWrap table{width:100%;border-collapse:collapse;min-width:980px}.tableWrap th,.tableWrap .tableWrap td{text-align:left;padding:12px 13px;border-bottom:1px solid #edf1f0;font-size:12px;vertical-align:top}.tableWrap th{font-size:10px;text-transform:uppercase;color:#748483;letter-spacing:.04em;background:#fbfdfc}
+.tableWrap{overflow:auto}.tableWrap table{width:100%;border-collapse:collapse;min-width:980px}.tableWrap th,.tableWrap td{text-align:left;padding:12px 13px;border-bottom:1px solid #edf1f0;font-size:12px;vertical-align:top}.tableWrap th{font-size:10px;text-transform:uppercase;color:#748483;letter-spacing:.04em;background:#fbfdfc}
 .actions{display:flex;gap:6px;flex-wrap:wrap}.actions button{border:1px solid #cbdad7;border-radius:8px;padding:6px 8px;background:#fff;color:#0f5e61;font-weight:700;cursor:pointer;font-size:10px}
 .status,.accessYes,.accessNo{display:inline-block;border-radius:999px;padding:4px 7px;font-size:10px;font-weight:800}.status{background:#eef4f3}.accessYes{background:#e5f5e8;color:#2e7440}.accessNo{background:#f0f2f1;color:#6d7a79}
 .empty{text-align:center;color:#80908e;padding:28px!important}.help{margin-top:14px;padding:12px 14px;background:#eef7f5;border:1px solid #d5e7e3;border-radius:12px;color:#506766;font-size:11px;line-height:1.5}
