@@ -38,6 +38,7 @@ type Batch = {
   course_name: string;
   trainer_name: string | null;
   trainer_user_id: string | null;
+  trainer_id: string | null;
   start_at: string | null;
   source_timezone: string | null;
   end_date: string | null;
@@ -51,15 +52,13 @@ type Roster = { batch_id: string; student_id: string };
 
 type Trainer = {
   id: string;
-  full_name: string | null;
-  email: string | null;
+  trainer_name: string;
 };
 
 type FormState = {
   batch_name: string;
   course_name: string;
-  trainer_user_id: string;
-  trainer_name: string;
+  trainer_id: string;
   local_datetime: string;
   source_timezone: string;
   end_date: string;
@@ -71,8 +70,7 @@ type FormState = {
 const EMPTY_FORM: FormState = {
   batch_name: "",
   course_name: "",
-  trainer_user_id: "",
-  trainer_name: "",
+  trainer_id: "",
   local_datetime: "",
   source_timezone: "America/New_York",
   end_date: "",
@@ -161,7 +159,7 @@ export default function BatchesPage() {
     const [b, r, t] = await Promise.all([
       supabase.from("batches").select("*").order("created_at", { ascending: false }),
       supabase.from("batch_students").select("batch_id,student_id"),
-      supabase.from("user_profiles").select("id,full_name,email").eq("role","trainer").eq("is_active",true).order("full_name"),
+      supabase.rpc("active_trainer_options"),
     ]);
 
     if (b.error) setMessage(b.error.message);
@@ -183,12 +181,7 @@ export default function BatchesPage() {
   );
 
   function chooseTrainer(id: string) {
-    const trainer = trainers.find((x) => x.id === id);
-    setForm((f) => ({
-      ...f,
-      trainer_user_id: id,
-      trainer_name: trainer?.full_name || trainer?.email || f.trainer_name,
-    }));
+    setForm((f) => ({ ...f, trainer_id: id }));
   }
 
   async function save(event: FormEvent) {
@@ -209,8 +202,8 @@ export default function BatchesPage() {
     const { error } = await supabase.from("batches").insert({
       batch_name: form.batch_name.trim(),
       course_name: form.course_name,
-      trainer_user_id: form.trainer_user_id || null,
-      trainer_name: form.trainer_name.trim() || null,
+      trainer_id: form.trainer_id || null,
+      trainer_name: trainers.find((x) => x.id === form.trainer_id)?.trainer_name || null,
       start_at: startAt,
       source_timezone: form.source_timezone,
       start_date: form.local_datetime.slice(0,10),
@@ -358,16 +351,11 @@ export default function BatchesPage() {
                 </label>
 
                 <label>
-                  <span>Trainer Account</span>
-                  <select value={form.trainer_user_id} onChange={(e) => chooseTrainer(e.target.value)}>
-                    <option value="">Select trainer account</option>
-                    {trainers.map((x) => <option key={x.id} value={x.id}>{x.full_name || x.email || "Trainer"}</option>)}
+                  <span>Trainer</span>
+                  <select value={form.trainer_id} onChange={(e) => chooseTrainer(e.target.value)}>
+                    <option value="">Select trainer</option>
+                    {trainers.map((x) => <option key={x.id} value={x.id}>{x.trainer_name}</option>)}
                   </select>
-                </label>
-
-                <label>
-                  <span>Trainer Display Name</span>
-                  <input value={form.trainer_name} onChange={(e) => setForm({...form,trainer_name:e.target.value})}/>
                 </label>
 
                 <label>

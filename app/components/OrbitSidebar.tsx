@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import styles from "../lms.module.css";
@@ -12,17 +12,57 @@ const supabase = createClient(
 
 type Props = {
   email: string;
-  active: "students" | "batches" | "sessions" | "courses";
+  active:
+    | "students"
+    | "batches"
+    | "sessions"
+    | "courses"
+    | "trainers"
+    | "reports";
 };
 
 export default function OrbitSidebar({ email, active }: Props) {
   const router = useRouter();
   const [crmOpen, setCrmOpen] = useState(false);
+  const [role, setRole] = useState("");
+
+  useEffect(() => {
+    async function loadRole() {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) return;
+
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
+
+      setRole(profile?.role || "");
+    }
+
+    loadRole();
+  }, []);
 
   async function signOut() {
     await supabase.auth.signOut();
     router.replace("/");
   }
+
+  const canSeeCrm = [
+    "super_admin","admin","sales","marketing","sales_marketing","viewer_management"
+  ].includes(role);
+
+  const canSeeTrainers = [
+    "super_admin","admin","sales","sales_marketing","viewer_management"
+  ].includes(role);
+
+  const canSeeReports = [
+    "super_admin","admin","viewer_management"
+  ].includes(role);
+
+  const canSeePayments = [
+    "super_admin","admin","sales","viewer_management","accounts_finance"
+  ].includes(role);
 
   return (
     <aside className={styles.sidebar}>
@@ -40,18 +80,20 @@ export default function OrbitSidebar({ email, active }: Props) {
             <span>⌂</span> Overview
           </button>
 
-          <div className={styles.crmGroup}>
-            <button onClick={() => setCrmOpen((value) => !value)}>
-              <span>◎</span> CRM
-              <span className={styles.chevron}>{crmOpen ? "▾" : "▸"}</span>
-            </button>
-            {crmOpen && (
-              <div className={styles.subNav}>
-                <button onClick={() => router.push("/crm/leads")}>Leads</button>
-                <button onClick={() => router.push("/crm/demos")}>Demo Schedule</button>
-              </div>
-            )}
-          </div>
+          {canSeeCrm && (
+            <div className={styles.crmGroup}>
+              <button onClick={() => setCrmOpen((value) => !value)}>
+                <span>◎</span> CRM
+                <span className={styles.chevron}>{crmOpen ? "▾" : "▸"}</span>
+              </button>
+              {crmOpen && (
+                <div className={styles.subNav}>
+                  <button onClick={() => router.push("/crm/leads")}>Leads</button>
+                  <button onClick={() => router.push("/crm/demos")}>Demo Schedule</button>
+                </div>
+              )}
+            </div>
+          )}
 
           <button
             className={active === "students" ? styles.navActive : ""}
@@ -67,7 +109,16 @@ export default function OrbitSidebar({ email, active }: Props) {
             <span>▣</span> Batches
           </button>
 
-          <button><span>$</span> Payments</button>
+          {canSeeTrainers && (
+            <button
+              className={active === "trainers" ? styles.navActive : ""}
+              onClick={() => router.push("/trainers")}
+            >
+              <span>♙</span> Trainers
+            </button>
+          )}
+
+          {canSeePayments && <button><span>$</span> Payments</button>}
 
           <button
             className={active === "courses" ? styles.navActive : ""}
@@ -76,7 +127,14 @@ export default function OrbitSidebar({ email, active }: Props) {
             <span>✦</span> Courses
           </button>
 
-          <button><span>▤</span> Reports</button>
+          {canSeeReports && (
+            <button
+              className={active === "reports" ? styles.navActive : ""}
+              onClick={() => router.push("/reports")}
+            >
+              <span>▤</span> Reports
+            </button>
+          )}
 
           <button>
             <span>◌</span> AQMATICS

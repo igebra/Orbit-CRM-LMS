@@ -1,0 +1,21 @@
+
+.shell{min-height:100vh;background:#f3f7f6;display:grid;grid-template-columns:245px 1fr;color:#173637}
+.main{padding:32px 34px 52px;min-width:0}
+.header{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:20px}
+.header h1{margin:4px 0 6px;font-size:36px}.header p{margin:0;color:#758584;font-size:14px}
+.kicker{font-size:12px!important;color:#d9792e!important;font-weight:900;letter-spacing:.08em}
+.primary,.secondary{border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer}
+.primary{border:1px solid #c6752e;background:#df8a3d;color:#fff;box-shadow:0 2px 0 #a86328}
+.secondary{border:1px solid #cddbd8;background:#fff;color:#0f5e61}
+.message{margin-bottom:14px;padding:10px 12px;border-radius:10px;background:#fff4e7;color:#80532e;border:1px solid #f0d3b2;font-size:12px}
+.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.summary>div{background:#fff;border:1px solid #d9e5e2;border-radius:13px;padding:14px}.summary span{display:block;color:#7d8d8b;font-size:11px}.summary strong{display:block;margin-top:4px;font-size:22px}
+.card{background:#fff;border:1px solid #d9e5e2;border-radius:16px;overflow:hidden}
+.toolbar{padding:14px;border-bottom:1px solid #e2ebe9}.toolbar input{width:min(420px,100%);height:40px;border:1px solid #cedbd8;border-radius:9px;padding:0 11px}
+.tableWrap{overflow:auto}.tableWrap table{width:100%;border-collapse:collapse;min-width:980px}.tableWrap th,.tableWrap .tableWrap td{text-align:left;padding:12px 13px;border-bottom:1px solid #edf1f0;font-size:12px;vertical-align:top}.tableWrap th{font-size:10px;text-transform:uppercase;color:#748483;letter-spacing:.04em;background:#fbfdfc}
+.actions{display:flex;gap:6px;flex-wrap:wrap}.actions button{border:1px solid #cbdad7;border-radius:8px;padding:6px 8px;background:#fff;color:#0f5e61;font-weight:700;cursor:pointer;font-size:10px}
+.status,.accessYes,.accessNo{display:inline-block;border-radius:999px;padding:4px 7px;font-size:10px;font-weight:800}.status{background:#eef4f3}.accessYes{background:#e5f5e8;color:#2e7440}.accessNo{background:#f0f2f1;color:#6d7a79}
+.empty{text-align:center;color:#80908e;padding:28px!important}.help{margin-top:14px;padding:12px 14px;background:#eef7f5;border:1px solid #d5e7e3;border-radius:12px;color:#506766;font-size:11px;line-height:1.5}
+.backdrop{position:fixed;inset:0;background:rgba(8,34,34,.58);display:flex;align-items:center;justify-content:center;padding:20px;z-index:90}.modal{width:min(720px,95vw);background:#fff;border-radius:18px;overflow:hidden}.modalHeader{padding:18px 20px;border-bottom:1px solid #e2ebe9;display:flex;justify-content:space-between}.modalHeader h2{margin:0}.modalHeader p{margin:4px 0 0;color:#788887;font-size:12px}.modalHeader button{border:0;background:#edf3f1;width:38px;height:38px;border-radius:10px;font-size:22px}
+.formGrid{padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px}.formGrid label span{display:block;font-size:11px;font-weight:800;margin-bottom:6px}.formGrid input,.formGrid select{width:100%;height:42px;border:1px solid #ccd9d6;border-radius:9px;padding:0 10px;background:#fff}.full{grid-column:1/-1}.modalFooter{padding:13px 20px;border-top:1px solid #e2ebe9;display:flex;justify-content:flex-end;gap:8px}
+@media(max-width:800px){.shell{grid-template-columns:1fr}.main{padding:24px 18px}.summary{grid-template-columns:1fr}.formGrid{grid-template-columns:1fr}.full{grid-column:auto}}

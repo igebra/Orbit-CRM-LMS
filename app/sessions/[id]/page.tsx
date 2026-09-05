@@ -16,12 +16,13 @@ type Session = {
   topic_planned:string|null; topic_covered:string|null; status:string;
   zoom_meeting_url:string|null; zoom_recording_url:string|null; deck_url:string|null;
   homework_given:boolean; homework_url:string|null; assessment_url:string|null;
-  trainer_notes:string|null; trainer_feedback:string|null; parent_feedback:string|null; trainer_name:string|null;
+  trainer_notes:string|null; trainer_feedback:string|null; parent_feedback:string|null; trainer_name:string|null; trainer_id:string|null;
 };
 type Batch = {id:string;batch_name:string;course_name:string;trainer_name:string|null;recurring_zoom_url:string|null};
 type Student = {id:string;student_name:string;grade:string|null};
 type Att = {student_id:string;attendance_status:string};
 type Hw = {student_id:string;homework_completed:boolean};
+type TrainerOption = {id:string;trainer_name:string};
 
 export default function SessionDetailPage() {
   const {id:sessionId}=useParams<{id:string}>();
@@ -38,14 +39,18 @@ export default function SessionDetailPage() {
   const [loading,setLoading]=useState(true);
   const [saving,setSaving]=useState(false);
   const [message,setMessage]=useState("");
+  const [trainers,setTrainers]=useState<TrainerOption[]>([]);
+  const [attendanceMarkedAt,setAttendanceMarkedAt]=useState<string|null>(null);
 
   const [form,setForm]=useState({
-    topic_planned:"",topic_covered:"",status:"Scheduled",zoom_meeting_url:"",
+    trainer_id:"",topic_planned:"",topic_covered:"",status:"Scheduled",zoom_meeting_url:"",
     zoom_recording_url:"",deck_url:"",homework_given:false,homework_url:"",
     assessment_url:"",trainer_notes:"",trainer_feedback:"",parent_feedback:""
   });
 
   const canEdit=["super_admin","admin","trainer"].includes(role);
+  const canChangeTrainer=["super_admin","admin"].includes(role);
+  const canMarkAttendance=["super_admin","admin","sales","sales_marketing","trainer"].includes(role);
 
   useEffect(()=>{
     async function init(){
@@ -65,6 +70,7 @@ export default function SessionDetailPage() {
     if(s.error||!s.data){setMessage(s.error?.message||"Session not found.");setLoading(false);return;}
     const ss=s.data as Session;setSession(ss);
     setForm({
+      trainer_id:ss.trainer_id||"",
       topic_planned:ss.topic_planned||"",topic_covered:ss.topic_covered||"",status:ss.status,
       zoom_meeting_url:ss.zoom_meeting_url||"",zoom_recording_url:ss.zoom_recording_url||"",
       deck_url:ss.deck_url||"",homework_given:Boolean(ss.homework_given),homework_url:ss.homework_url||"",
@@ -75,10 +81,16 @@ export default function SessionDetailPage() {
     const [b,r,a,h]=await Promise.all([
       supabase.from("batches").select("id,batch_name,course_name,trainer_name,recurring_zoom_url").eq("id",ss.batch_id).single(),
       supabase.from("batch_students").select("student_id").eq("batch_id",ss.batch_id),
-      supabase.from("session_attendance").select("student_id,attendance_status").eq("session_id",sessionId),
+      supabase.from("session_attendance").select("student_id,attendance_status,marked_at").eq("session_id",sessionId),
       supabase.from("session_homework").select("student_id,homework_completed").eq("session_id",sessionId),
     ]);
     if(!b.error)setBatch(b.data as Batch);
+
+    const { data: trainerOptions } = await supabase.rpc("active_trainer_options");
+    setTrainers((trainerOptions || []) as TrainerOption[]);
+
+    const markedTimes = (a.data || []).map((row:any) => row.marked_at).filter(Boolean);
+    setAttendanceMarkedAt(markedTimes.length ? markedTimes.sort().slice(-1)[0] : null);
 
     const ids=(r.data||[]).map(x=>x.student_id as string);
     let roster:Student[]=[];
@@ -97,11 +109,14 @@ export default function SessionDetailPage() {
 
   const summary=useMemo(()=>Object.values(attendance).reduce((a,x)=>({...a,[x]:(a[x]||0)+1}),{} as Record<string,number>),[attendance]);
 
-  async function save(e:FormEvent){
+  async function saveClassDetails(e:FormEvent){
     e.preventDefault();if(!session)return;
     setSaving(true);setMessage("");
 
+    const selectedTrainer = trainers.find((t)=>t.id===form.trainer_id);
     const up=await supabase.from("class_sessions").update({
+      trainer_id: form.trainer_id || null,
+      trainer_name: selectedTrainer?.trainer_name || session.trainer_name || null,
       topic_planned:form.topic_planned.trim()||null,topic_covered:form.topic_covered.trim()||null,
       status:form.status,zoom_meeting_url:form.zoom_meeting_url.trim()||null,
       zoom_recording_url:form.zoom_recording_url.trim()||null,deck_url:form.deck_url.trim()||null,
@@ -112,19 +127,40 @@ export default function SessionDetailPage() {
     }).eq("id",sessionId);
     if(up.error){setSaving(false);return setMessage(up.error.message);}
 
-    if(students.length){
-      const ar=students.map(x=>({session_id:sessionId,student_id:x.id,attendance_status:attendance[x.id]||"Present",updated_by:userId||null,updated_at:new Date().toISOString()}));
-      const au=await supabase.from("session_attendance").upsert(ar,{onConflict:"session_id,student_id"});
-      if(au.error){setSaving(false);return setMessage(au.error.message);}
-
-      if(form.homework_given){
-        const hr=students.map(x=>({session_id:sessionId,student_id:x.id,homework_completed:Boolean(homework[x.id]),updated_by:userId||null,updated_at:new Date().toISOString()}));
-        const hu=await supabase.from("session_homework").upsert(hr,{onConflict:"session_id,student_id"});
-        if(hu.error){setSaving(false);return setMessage(hu.error.message);}
-      }
+    if(students.length && form.homework_given){
+      const hr=students.map(x=>({session_id:sessionId,student_id:x.id,homework_completed:Boolean(homework[x.id]),updated_by:userId||null,updated_at:new Date().toISOString()}));
+      const hu=await supabase.from("session_homework").upsert(hr,{onConflict:"session_id,student_id"});
+      if(hu.error){setSaving(false);return setMessage(hu.error.message);}
     }
 
     setSaving(false);setMessage("Session updated successfully.");await load();
+  }
+
+
+  async function saveAttendance(){
+    if(!canMarkAttendance)return;
+    setSaving(true);
+    setMessage("");
+
+    const payload = students.map((student)=>({
+      student_id: student.id,
+      attendance_status: attendance[student.id] || "Present",
+    }));
+
+    const { error } = await supabase.rpc("save_session_attendance", {
+      p_session_id: sessionId,
+      p_attendance: payload,
+    });
+
+    setSaving(false);
+
+    if(error){
+      setMessage(error.message);
+      return;
+    }
+
+    setMessage("Attendance saved.");
+    await load();
   }
 
   if(loading||!session)return <div className={styles.shell}><OrbitSidebar email={email} active="sessions"/><main className={styles.main}><div className={styles.empty}>{loading?"Loading session...":message||"Session not found."}</div></main></div>;
@@ -149,12 +185,23 @@ export default function SessionDetailPage() {
 
         {message&&<div className={styles.message}>{message}</div>}
 
-        <form onSubmit={save}>
+        <form onSubmit={saveClassDetails}>
           <section className={styles.grid2}>
             <div className={styles.panel}>
               <div className={styles.panelHeader}><div><h2>Class Details</h2><span>{session.trainer_name||batch?.trainer_name||"Trainer not assigned"}</span></div></div>
 
               <div className={styles.formGrid}>
+                <label className={styles.full}>
+                  <span>Actual Trainer for this Class</span>
+                  <select
+                    disabled={!canChangeTrainer}
+                    value={form.trainer_id}
+                    onChange={e=>setForm({...form,trainer_id:e.target.value})}
+                  >
+                    <option value="">Select trainer</option>
+                    {trainers.map(t=><option key={t.id} value={t.id}>{t.trainer_name}</option>)}
+                  </select>
+                </label>
                 <label className={styles.full}><span>Topic Planned</span><input disabled={!canEdit} value={form.topic_planned} onChange={e=>setForm({...form,topic_planned:e.target.value})}/></label>
                 <label className={styles.full}><span>Topic Covered</span><input disabled={!canEdit} value={form.topic_covered} onChange={e=>setForm({...form,topic_covered:e.target.value})}/></label>
                 <label><span>Status</span><select disabled={!canEdit} value={form.status} onChange={e=>setForm({...form,status:e.target.value})}><option>Scheduled</option><option>Completed</option><option>Cancelled</option><option>Rescheduled</option></select></label>
@@ -165,12 +212,18 @@ export default function SessionDetailPage() {
               <div className={styles.attendanceGrid}>
                 {students.map(x=><div className={styles.attendanceRow} key={x.id}>
                   <div><strong>{x.student_name}</strong><small>{x.grade||"—"}</small></div>
-                  <select disabled={!canEdit} value={attendance[x.id]||"Present"} onChange={e=>setAttendance({...attendance,[x.id]:e.target.value})}>
+                  <select disabled={!canMarkAttendance} value={attendance[x.id]||"Present"} onChange={e=>setAttendance({...attendance,[x.id]:e.target.value})}>
                     <option>Present</option><option>Absent</option><option>Late</option><option>Excused</option>
                   </select>
                 </div>)}
               </div>
               <p className={styles.subtitle}>Present {summary.Present||0} · Absent {summary.Absent||0} · Late {summary.Late||0} · Excused {summary.Excused||0}</p>
+              {attendanceMarkedAt && <p className={styles.subtitle}>Last attendance update: {new Date(attendanceMarkedAt).toLocaleString()}</p>}
+              {canMarkAttendance && (
+                <button type="button" className={styles.primary} onClick={saveAttendance} disabled={saving}>
+                  {saving ? "Saving..." : "Save Attendance"}
+                </button>
+              )}
             </div>
 
             <div className={styles.panel}>
@@ -208,7 +261,7 @@ export default function SessionDetailPage() {
             </div>
           </section>
 
-          {canEdit&&<div className={styles.modalFooter} style={{marginTop:18}}><button className={styles.primary} disabled={saving}>{saving?"Saving...":"Save Session"}</button></div>}
+          {canEdit&&<div className={styles.modalFooter} style={{marginTop:18}}><button className={styles.primary} disabled={saving}>{saving?"Saving...":"Save Class Details"}</button></div>}
         </form>
       </main>
     </div>

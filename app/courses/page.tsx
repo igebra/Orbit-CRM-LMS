@@ -486,7 +486,7 @@ export default function CoursesPage() {
           {COURSES.map((course) => (
             <article className={styles.courseCard} key={course.id}>
               <div className={`${styles.courseTop} ${styles[course.id]}`}>
-                <span className={styles.courseType}>iGebra Program</span>
+                <span className={styles.courseType}>igebra Program</span>
                 <h2>{course.name}</h2>
                 <p>{course.tagline}</p>
               </div>
