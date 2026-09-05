@@ -140,29 +140,22 @@ export default function LoginPage() {
 
     setRequestLoading(true);
 
-    const response = await fetch("/api/access-request", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        full_name: requestName.trim(),
-        email: requestEmail.trim().toLowerCase(),
-        requested_role: requestRole,
-      }),
+    const { error } = await supabase.rpc("submit_access_request", {
+      p_full_name: requestName.trim(),
+      p_email: requestEmail.trim().toLowerCase(),
+      p_requested_role: requestRole,
     });
-
-    const result = await response.json().catch(() => ({
-      ok: false,
-      message: "Could not submit the access request.",
-    }));
 
     setRequestLoading(false);
 
-    if (!response.ok || !result.ok) {
-      setRequestMessage(result.message || "Could not submit the access request.");
+    if (error) {
+      setRequestMessage(error.message);
       return;
     }
 
-    setRequestMessage(result.message || "Access request submitted successfully.");
+    setRequestMessage(
+      "Access request submitted. An Admin will review it in Orbit."
+    );
     setRequestName("");
     setRequestEmail("");
     setRequestRole("");
@@ -388,7 +381,7 @@ export default function LoginPage() {
                   className="request-submit"
                   disabled={requestLoading}
                 >
-                  {requestLoading ? "Sending..." : "Submit Request"}
+                  {requestLoading ? "Submitting..." : "Submit Request"}
                 </button>
               </form>
             )}

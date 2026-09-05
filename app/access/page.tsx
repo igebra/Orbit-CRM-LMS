@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import OrbitSidebar from "../components/OrbitSidebar";
@@ -98,6 +98,12 @@ export default function AccessPage() {
   const [editUser, setEditUser] = useState<UserRow | null>(null);
   const [editRole, setEditRole] = useState("");
   const [editActive, setEditActive] = useState(true);
+
+  const [grantOpen, setGrantOpen] = useState(false);
+  const [grantName, setGrantName] = useState("");
+  const [grantEmail, setGrantEmail] = useState("");
+  const [grantRole, setGrantRole] = useState("trainer");
+
   const [saving, setSaving] = useState(false);
 
   const canManage = role === "super_admin" || role === "admin";
@@ -214,6 +220,10 @@ export default function AccessPage() {
   const approved = requests.filter((request) => request.status === "Approved").length;
   const activeUsers = users.filter((user) => user.is_active).length;
 
+  const roleOptions = isSuperAdmin
+    ? [{ value: "super_admin", label: "Super Admin" }, ...STANDARD_ROLES]
+    : STANDARD_ROLES;
+
   async function approve(request: RequestRow) {
     const selectedRole =
       roleSelections[request.request_id] || roleFromRequest(request.requested_role);
@@ -237,7 +247,7 @@ export default function AccessPage() {
     setMessage(
       request.user_id
         ? "Access approved and existing Orbit account activated."
-        : "Access approved. The user can now activate access from the Orbit login page."
+        : "Access approved. The user can now use Activate Approved Access on the login page."
     );
 
     await load();
@@ -260,6 +270,40 @@ export default function AccessPage() {
     }
 
     setMessage("Access request rejected.");
+    await load();
+  }
+
+  async function grantAccess(event: FormEvent) {
+    event.preventDefault();
+
+    if (!grantName.trim() || !grantEmail.trim() || !grantRole) {
+      setMessage("Enter the name, email and role.");
+      return;
+    }
+
+    setSaving(true);
+    setMessage("");
+
+    const { error } = await supabase.rpc("grant_orbit_access", {
+      p_full_name: grantName.trim(),
+      p_email: grantEmail.trim().toLowerCase(),
+      p_role: grantRole,
+    });
+
+    setSaving(false);
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    setGrantOpen(false);
+    setGrantName("");
+    setGrantEmail("");
+    setGrantRole("trainer");
+    setMessage(
+      "Access granted. The user can now use Activate Approved Access on the Orbit login page."
+    );
     await load();
   }
 
@@ -300,10 +344,6 @@ export default function AccessPage() {
     return "No Account";
   }
 
-  const roleOptions = isSuperAdmin
-    ? [{ value: "super_admin", label: "Super Admin" }, ...STANDARD_ROLES]
-    : STANDARD_ROLES;
-
   if (!canManage && !loading) {
     return (
       <div className={styles.shell}>
@@ -326,8 +366,18 @@ export default function AccessPage() {
           <div>
             <p className={styles.kicker}>ADMIN · ACCESS</p>
             <h1>Access Management</h1>
-            <p>Approve requests and manage existing Orbit users.</p>
+            <p>Approve requests or grant Orbit access directly.</p>
           </div>
+
+          <button
+            className={styles.primary}
+            onClick={() => {
+              setGrantRole("trainer");
+              setGrantOpen(true);
+            }}
+          >
+            + Add User
+          </button>
         </header>
 
         {message && <div className={styles.message}>{message}</div>}
@@ -353,7 +403,7 @@ export default function AccessPage() {
               className={tab === "requests" ? styles.activeTab : ""}
               onClick={() => setTab("requests")}
             >
-              Access Requests
+              Access Requests {pending > 0 ? `(${pending})` : ""}
             </button>
             <button
               className={tab === "users" ? styles.activeTab : ""}
@@ -415,14 +465,10 @@ export default function AccessPage() {
                   ) : (
                     filteredRequests.map((request) => (
                       <tr key={request.request_id}>
-                        <td>
-                          <strong>{request.full_name || "—"}</strong>
-                        </td>
+                        <td><strong>{request.full_name || "—"}</strong></td>
                         <td>{request.email}</td>
                         <td>{request.requested_role}</td>
-                        <td>
-                          {new Date(request.created_at).toLocaleDateString()}
-                        </td>
+                        <td>{new Date(request.created_at).toLocaleDateString()}</td>
                         <td>
                           <span
                             className={`${styles.status} ${
@@ -455,16 +501,14 @@ export default function AccessPage() {
                                 })
                               }
                             >
-                              {STANDARD_ROLES.map((option) => (
+                              {roleOptions.map((option) => (
                                 <option key={option.value} value={option.value}>
                                   {option.label}
                                 </option>
                               ))}
                             </select>
                           ) : (
-                            displayRole(
-                              request.approved_role || request.user_role
-                            )
+                            displayRole(request.approved_role || request.user_role)
                           )}
                         </td>
                         <td>
@@ -486,9 +530,7 @@ export default function AccessPage() {
                           ) : (
                             <span className={styles.muted}>
                               {request.reviewed_at
-                                ? new Date(
-                                    request.reviewed_at
-                                  ).toLocaleDateString()
+                                ? new Date(request.reviewed_at).toLocaleDateString()
                                 : "—"}
                             </span>
                           )}
@@ -527,25 +569,19 @@ export default function AccessPage() {
 
                       return (
                         <tr key={user.user_id}>
-                          <td>
-                            <strong>{user.full_name || "Orbit User"}</strong>
-                          </td>
+                          <td><strong>{user.full_name || "Orbit User"}</strong></td>
                           <td>{user.email || "—"}</td>
                           <td>{displayRole(user.role)}</td>
                           <td>
                             <span
                               className={`${styles.status} ${
-                                user.is_active
-                                  ? styles.approved
-                                  : styles.rejected
+                                user.is_active ? styles.approved : styles.rejected
                               }`}
                             >
                               {user.is_active ? "Active" : "Inactive"}
                             </span>
                           </td>
-                          <td>
-                            {new Date(user.created_at).toLocaleDateString()}
-                          </td>
+                          <td>{new Date(user.created_at).toLocaleDateString()}</td>
                           <td>
                             {isSelf ? (
                               <span className={styles.muted}>Your account</span>
@@ -571,13 +607,77 @@ export default function AccessPage() {
         </section>
 
         <div className={styles.help}>
-          <strong>How approval works:</strong> approve the request and choose the
-          role. The user then opens the Orbit login page and selects
-          <strong> Activate Approved Access</strong> to create their password.
-          Trainer access links automatically when the email matches the Trainer
-          Directory. Sales Admin has full Orbit access except login approval.
+          <strong>Simple access flow:</strong> users can request access, or an
+          Admin can grant it directly with <strong>+ Add User</strong>. After
+          approval, the user selects <strong>Activate Approved Access</strong>
+          on the login page and creates their own password. No Orbit email
+          notification is required.
         </div>
       </main>
+
+      {grantOpen && (
+        <div className={styles.backdrop}>
+          <div className={styles.modal}>
+            <div className={styles.modalHeader}>
+              <div>
+                <h2>Add User</h2>
+                <p>Grant Orbit access directly.</p>
+              </div>
+              <button onClick={() => setGrantOpen(false)}>×</button>
+            </div>
+
+            <form onSubmit={grantAccess}>
+              <div className={styles.formGrid}>
+                <label>
+                  <span>Name</span>
+                  <input
+                    value={grantName}
+                    onChange={(event) => setGrantName(event.target.value)}
+                    placeholder="Full name"
+                  />
+                </label>
+
+                <label>
+                  <span>Email</span>
+                  <input
+                    type="email"
+                    value={grantEmail}
+                    onChange={(event) => setGrantEmail(event.target.value)}
+                    placeholder="Email address"
+                  />
+                </label>
+
+                <label className={styles.full}>
+                  <span>Role</span>
+                  <select
+                    value={grantRole}
+                    onChange={(event) => setGrantRole(event.target.value)}
+                  >
+                    {roleOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <div className={styles.modalFooter}>
+                <button
+                  type="button"
+                  className={styles.secondary}
+                  onClick={() => setGrantOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button className={styles.primary} disabled={saving}>
+                  {saving ? "Granting..." : "Grant Access"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {editUser && (
         <div className={styles.backdrop}>

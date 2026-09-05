@@ -27,6 +27,7 @@ export default function OrbitSidebar({ email, active }: Props) {
   const router = useRouter();
   const [crmOpen, setCrmOpen] = useState(false);
   const [role, setRole] = useState("");
+  const [pendingAccess, setPendingAccess] = useState(0);
 
   useEffect(() => {
     async function loadRole() {
@@ -39,7 +40,15 @@ export default function OrbitSidebar({ email, active }: Props) {
         .eq("id", data.user.id)
         .single();
 
-      setRole(profile?.role || "");
+      const currentRole = profile?.role || "";
+      setRole(currentRole);
+
+      if (currentRole === "super_admin" || currentRole === "admin") {
+        const { data: count } = await supabase.rpc(
+          "pending_access_request_count"
+        );
+        setPendingAccess(Number(count || 0));
+      }
     }
 
     loadRole();
@@ -172,6 +181,27 @@ export default function OrbitSidebar({ email, active }: Props) {
               onClick={() => router.push("/access")}
             >
               <span>⚙</span> Access
+              {pendingAccess > 0 && (
+                <span
+                  title={`${pendingAccess} pending access request${pendingAccess === 1 ? "" : "s"}`}
+                  style={{
+                    marginLeft: "auto",
+                    minWidth: 20,
+                    height: 20,
+                    padding: "0 6px",
+                    borderRadius: 999,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "#D9853B",
+                    color: "#fff",
+                    fontSize: 10,
+                    fontWeight: 900,
+                  }}
+                >
+                  {pendingAccess}
+                </span>
+              )}
             </button>
           )}
 
