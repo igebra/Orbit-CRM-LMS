@@ -12,6 +12,14 @@ const supabase = createClient(
 );
 
 const GRADES = Array.from({ length: 10 }, (_, i) => `Grade ${String(i + 1).padStart(2, "0")}`);
+const TIMEZONES = [
+  { value: "America/New_York", label: "US Eastern" },
+  { value: "America/Chicago", label: "US Central" },
+  { value: "America/Denver", label: "US Mountain" },
+  { value: "America/Los_Angeles", label: "US Pacific" },
+  { value: "Asia/Kolkata", label: "India IST" },
+];
+
 const COURSES = [
   ...["Elementary", "Middle School", "High School"].flatMap((group) => ["01", "02", "03"].map((level) => `AiEdge ${group} - Level ${level}`)),
   ...["Elementary", "Middle School", "High School"].flatMap((group) => ["01", "02", "03"].map((level) => `Coding4AI ${group} - Level ${level}`)),
@@ -33,6 +41,8 @@ type Batch = {
   trainer_name: string | null;
   schedule_text: string | null;
   start_date: string | null;
+  start_at: string | null;
+  source_timezone: string | null;
   status: string;
   max_students: number;
   created_at: string;
@@ -44,8 +54,8 @@ type FormState = {
   batch_name: string;
   course_name: string;
   trainer_name: string;
-  schedule_text: string;
-  start_date: string;
+  local_datetime: string;
+  source_timezone: string;
   status: string;
 };
 
@@ -53,10 +63,82 @@ const EMPTY_FORM: FormState = {
   batch_name: "",
   course_name: "",
   trainer_name: "",
-  schedule_text: "",
-  start_date: "",
+  local_datetime: "",
+  source_timezone: "America/New_York",
   status: "Active",
 };
+
+function getTimeZoneOffsetMs(date: Date, timeZone: string) {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  });
+
+  const parts = formatter.formatToParts(date);
+  const map: Record<string, string> = {};
+  for (const part of parts) {
+    if (part.type !== "literal") map[part.type] = part.value;
+  }
+
+  const asUtc = Date.UTC(
+    Number(map.year),
+    Number(map.month) - 1,
+    Number(map.day),
+    Number(map.hour),
+    Number(map.minute),
+    Number(map.second)
+  );
+
+  return asUtc - date.getTime();
+}
+
+function localDateTimeToUtc(localDateTime: string, timeZone: string) {
+  if (!localDateTime) return null;
+
+  const [datePart, timePart] = localDateTime.split("T");
+  if (!datePart || !timePart) return null;
+
+  const [year, month, day] = datePart.split("-").map(Number);
+  const [hour, minute] = timePart.split(":").map(Number);
+
+  const guess = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
+  const firstOffset = getTimeZoneOffsetMs(guess, timeZone);
+  let result = new Date(guess.getTime() - firstOffset);
+
+  const correctedOffset = getTimeZoneOffsetMs(result, timeZone);
+  if (correctedOffset !== firstOffset) {
+    result = new Date(guess.getTime() - correctedOffset);
+  }
+
+  return result.toISOString();
+}
+
+function formatInZone(iso: string | null, timeZone: string) {
+  if (!iso) return "Not scheduled";
+
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZoneName: "short",
+  }).format(new Date(iso));
+}
+
+function zoneLabel(value: string | null) {
+  if (!value) return "US Eastern";
+  return TIMEZONES.find((zone) => zone.value === value)?.label || value;
+}
 
 export default function BatchesPage() {
   const router = useRouter();
@@ -115,13 +197,18 @@ export default function BatchesPage() {
     return batches.filter((batch) => {
       if (statusFilter !== "All statuses" && batch.status !== statusFilter) return false;
       if (!q) return true;
-      return [batch.batch_name, batch.course_name, batch.trainer_name, batch.schedule_text]
+      return [batch.batch_name, batch.course_name, batch.trainer_name, batch.source_timezone]
         .filter(Boolean)
         .join(" ")
         .toLowerCase()
         .includes(q);
     });
   }, [batches, search, statusFilter]);
+
+  const previewIso = useMemo(
+    () => localDateTimeToUtc(form.local_datetime, form.source_timezone),
+    [form.local_datetime, form.source_timezone]
+  );
 
   const stats = useMemo(() => ({
     total: batches.length,
@@ -137,14 +224,27 @@ export default function BatchesPage() {
       return;
     }
 
+    if (!form.local_datetime) {
+      setMessage("Start Date & Time is required.");
+      return;
+    }
+
+    const startAt = localDateTimeToUtc(form.local_datetime, form.source_timezone);
+    if (!startAt) {
+      setMessage("Please select a valid batch date and time.");
+      return;
+    }
+
     setSaving(true);
     setMessage("");
     const { error } = await supabase.from("batches").insert({
       batch_name: form.batch_name.trim(),
       course_name: form.course_name,
       trainer_name: form.trainer_name.trim() || null,
-      schedule_text: form.schedule_text.trim() || null,
-      start_date: form.start_date || null,
+      start_at: startAt,
+      source_timezone: form.source_timezone,
+      start_date: form.local_datetime.slice(0, 10),
+      schedule_text: `${zoneLabel(form.source_timezone)} · ${formatInZone(startAt, form.source_timezone)}`,
       status: form.status,
       max_students: 8,
       created_by: userId || null,
@@ -211,10 +311,17 @@ export default function BatchesPage() {
                   const count = countByBatch.get(batch.id) || 0;
                   return (
                     <tr key={batch.id}>
-                      <td>{batch.batch_name}<small>{batch.start_date ? `Starts ${new Date(`${batch.start_date}T00:00:00`).toLocaleDateString()}` : "No start date"}</small></td>
+                      <td>{batch.batch_name}<small>{batch.start_at ? `Starts ${formatInZone(batch.start_at, batch.source_timezone || "America/New_York")}` : batch.start_date ? `Starts ${new Date(`${batch.start_date}T00:00:00`).toLocaleDateString()}` : "No start date"}</small></td>
                       <td>{batch.course_name}</td>
                       <td>{batch.trainer_name || "—"}</td>
-                      <td>{batch.schedule_text || "—"}</td>
+                      <td>
+                        {batch.start_at ? (
+                          <>
+                            <span>{formatInZone(batch.start_at, batch.source_timezone || "America/New_York")}</span>
+                            <small>{zoneLabel(batch.source_timezone)} · India: {formatInZone(batch.start_at, "Asia/Kolkata")}</small>
+                          </>
+                        ) : (batch.schedule_text || "—")}
+                      </td>
                       <td>{count} / {batch.max_students}</td>
                       <td><span className={batch.status === "Active" ? `${styles.badge} ${styles.badgeGreen}` : styles.badge}>{batch.status}</span></td>
                       <td><div className={styles.rowActions}><button onClick={() => router.push(`/batches/${batch.id}`)}>Open</button></div></td>
@@ -231,7 +338,7 @@ export default function BatchesPage() {
         <div className={styles.modalBackdrop}>
           <div className={styles.modal}>
             <div className={styles.modalHeader}>
-              <div><h2>Add Batch</h2><p>Maximum batch size is fixed at 8 students.</p></div>
+              <div><h2>Add Batch</h2><p>Set the batch date and time in US or India time. India time is calculated automatically.</p></div>
               <button className={styles.close} onClick={() => setModalOpen(false)}>×</button>
             </div>
             <form className={styles.form} onSubmit={saveBatch}>
@@ -239,9 +346,22 @@ export default function BatchesPage() {
                 <label><span>Batch Name *</span><input value={form.batch_name} onChange={(event) => setForm({ ...form, batch_name: event.target.value })} placeholder="e.g. ALG1-MON-WED-01" /></label>
                 <label><span>Course *</span><select value={form.course_name} onChange={(event) => setForm({ ...form, course_name: event.target.value })}><option value="">Select course</option>{COURSES.map((course) => <option key={course}>{course}</option>)}</select></label>
                 <label><span>Trainer</span><input value={form.trainer_name} onChange={(event) => setForm({ ...form, trainer_name: event.target.value })} placeholder="Trainer name" /></label>
-                <label><span>Schedule</span><input value={form.schedule_text} onChange={(event) => setForm({ ...form, schedule_text: event.target.value })} placeholder="Mon & Wed · 7:00 PM IST" /></label>
-                <label><span>Start Date</span><input type="date" value={form.start_date} onChange={(event) => setForm({ ...form, start_date: event.target.value })} /></label>
+                <label><span>Start Date & Time *</span><input type="datetime-local" value={form.local_datetime} onChange={(event) => setForm({ ...form, local_datetime: event.target.value })} /></label>
+                <label><span>Primary Time Zone</span><select value={form.source_timezone} onChange={(event) => setForm({ ...form, source_timezone: event.target.value })}>{TIMEZONES.map((zone) => <option key={zone.value} value={zone.value}>{zone.label}</option>)}</select></label>
                 <label><span>Status</span><select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}><option>Active</option><option>Upcoming</option><option>Paused</option><option>Completed</option></select></label>
+                <div className={`${styles.timePreview} ${styles.full}`}>
+                  <div>
+                    <span>Selected Time</span>
+                    <strong>{formatInZone(previewIso, form.source_timezone)}</strong>
+                    <small>{zoneLabel(form.source_timezone)}</small>
+                  </div>
+                  <div className={styles.timeArrow}>→</div>
+                  <div>
+                    <span>India Time</span>
+                    <strong>{formatInZone(previewIso, "Asia/Kolkata")}</strong>
+                    <small>India IST</small>
+                  </div>
+                </div>
               </div>
               <div className={styles.modalFooter}>
                 <button type="button" className={styles.secondary} onClick={() => setModalOpen(false)}>Cancel</button>

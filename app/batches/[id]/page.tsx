@@ -18,6 +18,8 @@ type Batch = {
   trainer_name: string | null;
   schedule_text: string | null;
   start_date: string | null;
+  start_at: string | null;
+  source_timezone: string | null;
   status: string;
   max_students: number;
 };
@@ -54,6 +56,34 @@ const EMPTY_SESSION: SessionForm = {
   topic_covered: "",
   status: "Scheduled",
 };
+
+const TIMEZONES = [
+  { value: "America/New_York", label: "US Eastern" },
+  { value: "America/Chicago", label: "US Central" },
+  { value: "America/Denver", label: "US Mountain" },
+  { value: "America/Los_Angeles", label: "US Pacific" },
+  { value: "Asia/Kolkata", label: "India IST" },
+];
+
+function formatInZone(iso: string | null, timeZone: string) {
+  if (!iso) return "Schedule not set";
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZoneName: "short",
+  }).format(new Date(iso));
+}
+
+function zoneLabel(value: string | null) {
+  if (!value) return "US Eastern";
+  return TIMEZONES.find((zone) => zone.value === value)?.label || value;
+}
 
 export default function BatchDetailPage() {
   const params = useParams<{ id: string }>();
@@ -196,7 +226,13 @@ export default function BatchDetailPage() {
           <div>
             <p className={styles.kicker}>LMS · BATCH DETAILS</p>
             <h1>{batch.batch_name}</h1>
-            <p className={styles.subtitle}>{batch.course_name} · {batch.trainer_name || "Trainer not assigned"} · {batch.schedule_text || "Schedule not set"}</p>
+            <p className={styles.subtitle}>{batch.course_name} · {batch.trainer_name || "Trainer not assigned"}</p>
+            {batch.start_at && (
+              <div className={styles.batchScheduleSummary}>
+                <span>{zoneLabel(batch.source_timezone)}: {formatInZone(batch.start_at, batch.source_timezone || "America/New_York")}</span>
+                <span>India IST: {formatInZone(batch.start_at, "Asia/Kolkata")}</span>
+              </div>
+            )}
           </div>
           <div className={styles.headerActions}>
             <button className={styles.secondary} onClick={() => router.push("/batches")}>← Batches</button>
