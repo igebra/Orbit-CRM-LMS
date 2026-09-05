@@ -64,8 +64,10 @@ button,input,select{font:inherit}
 /* DASHBOARD */
 .orbit-dashboard-shell{min-height:100vh;background:linear-gradient(135deg,#f7f7f4 0%,#edf5f4 100%);display:grid;grid-template-columns:270px 1fr}
 .orbit-sidebar{min-height:100vh;background:linear-gradient(180deg,#0f5b5f 0%,#114548 100%);color:white;padding:24px 18px;display:flex;flex-direction:column;justify-content:space-between}
-.orbit-brand-block{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+.orbit-brand-block{display:flex;align-items:flex-end;gap:18px;margin-bottom:28px}
 .orbit-brand-mark{width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,#fff 0%,#d8f3f1 100%);color:var(--orbit-teal-dark);display:flex;align-items:center;justify-content:center;font-weight:800;box-shadow:0 10px 20px rgba(0,0,0,.15)}
+.orbit-brand-mascot{width:48px;height:68px;object-fit:contain;object-position:center bottom;flex:0 0 auto;display:block}
+.orbit-brand-copy{padding-bottom:2px}
 .orbit-brand-title{font-size:24px;font-weight:800;line-height:1}
 .orbit-brand-subtitle{font-size:13px;color:rgba(255,255,255,.78);margin-top:4px}
 .orbit-nav{display:flex;flex-direction:column;gap:9px}

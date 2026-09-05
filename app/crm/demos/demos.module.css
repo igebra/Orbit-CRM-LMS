@@ -22,12 +22,25 @@
   background: transparent;
   color: #fff;
   display: flex;
-  gap: 12px;
-  align-items: center;
+  gap: 18px;
+  align-items: flex-end;
   text-align: left;
   cursor: pointer;
   padding: 0;
   margin-bottom: 28px;
+}
+
+.brandMascot {
+  width: 48px;
+  height: 68px;
+  object-fit: contain;
+  object-position: center bottom;
+  flex: 0 0 auto;
+  display: block;
+}
+
+.brandCopy {
+  padding-bottom: 2px;
 }
 
 .brandMark {

@@ -53,8 +53,12 @@ export default function DashboardPage() {
       <aside className="orbit-sidebar">
         <div>
           <div className="orbit-brand-block">
-            <div className="orbit-brand-mark">O</div>
-            <div>
+            <img
+              src="/orbit-mascot.png"
+              alt="Orbit mascot"
+              className="orbit-brand-mascot"
+            />
+            <div className="orbit-brand-copy">
               <div className="orbit-brand-title">Orbit</div>
               <div className="orbit-brand-subtitle">by igebra.ai</div>
             </div>

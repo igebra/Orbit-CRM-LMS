@@ -640,8 +640,12 @@ export default function LeadsPage() {
             className={styles.brand}
             onClick={() => router.push("/dashboard")}
           >
-            <span className={styles.brandMark}>O</span>
-            <span>
+            <img
+              src="/orbit-mascot.png"
+              alt="Orbit mascot"
+              className={styles.brandMascot}
+            />
+            <span className={styles.brandCopy}>
               <strong>Orbit</strong>
               <small>by igebra.ai</small>
             </span>
