@@ -91,6 +91,7 @@ export default function StudentsPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [userId, setUserId] = useState("");
+  const [role, setRole] = useState("");
   const [students, setStudents] = useState<Student[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [leadOptions, setLeadOptions] = useState<LeadOption[]>([]);
@@ -101,6 +102,8 @@ export default function StudentsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
+  const canDelete = ["super_admin", "admin", "sales", "sales_marketing"].includes(role);
+
   useEffect(() => {
     async function initialize() {
       const { data } = await supabase.auth.getUser();
@@ -110,6 +113,14 @@ export default function StudentsPage() {
       }
       setEmail(data.user.email || "");
       setUserId(data.user.id);
+
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
+
+      setRole(profile?.role || "");
       await Promise.all([loadStudents(), loadLeads()]);
     }
     initialize();
@@ -261,6 +272,31 @@ export default function StudentsPage() {
     await loadStudents();
   }
 
+
+  async function deleteStudent(student: Student) {
+    if (!canDelete) return;
+
+    const confirmed = window.confirm(
+      `Delete ${student.student_name} permanently?\n\nThis will also remove this student's enrollments, batch membership, attendance, homework and linked payment records.`
+    );
+
+    if (!confirmed) return;
+
+    setMessage("");
+
+    const { error } = await supabase.rpc("delete_student_record", {
+      p_student_id: student.id,
+    });
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    setMessage(`${student.student_name} was deleted.`);
+    await loadStudents();
+  }
+
   return (
     <div className={styles.shell}>
       <OrbitSidebar email={email} active="students" />
@@ -309,13 +345,14 @@ export default function StudentsPage() {
                   <th>Course(s)</th>
                   <th>Status</th>
                   <th>Created</th>
+                  {canDelete && <th>Actions</th>}
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={6} className={styles.empty}>Loading students...</td></tr>
+                  <tr><td colSpan={canDelete ? 7 : 6} className={styles.empty}>Loading students...</td></tr>
                 ) : filteredStudents.length === 0 ? (
-                  <tr><td colSpan={6} className={styles.empty}>No students found.</td></tr>
+                  <tr><td colSpan={canDelete ? 7 : 6} className={styles.empty}>No students found.</td></tr>
                 ) : filteredStudents.map((student) => (
                   <tr key={student.id}>
                     <td>{student.student_name}<small>{student.grade || "—"}</small></td>
@@ -324,6 +361,16 @@ export default function StudentsPage() {
                     <td>{(coursesByStudent.get(student.id) || ["—"]).map((course) => <small key={course}>{course}</small>)}</td>
                     <td><span className={styles.badge}>{student.status}</span></td>
                     <td>{new Date(student.created_at).toLocaleDateString()}</td>
+                    {canDelete && (
+                      <td>
+                        <button
+                          className={styles.danger}
+                          onClick={() => deleteStudent(student)}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

@@ -137,6 +137,7 @@ export default function BatchesPage() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
   const canAdmin = role === "super_admin" || role === "admin";
+  const canDelete = ["super_admin", "admin", "sales", "sales_marketing"].includes(role);
 
   useEffect(() => {
     async function init() {
@@ -230,6 +231,31 @@ export default function BatchesPage() {
     await load();
   }
 
+
+  async function deleteBatch(batch: Batch) {
+    if (!canDelete) return;
+
+    const confirmed = window.confirm(
+      `Delete ${batch.batch_name} permanently?\n\nThis will also remove its student assignments, sessions, attendance, homework, trainer history and linked batch payment records.`
+    );
+
+    if (!confirmed) return;
+
+    setMessage("");
+
+    const { error } = await supabase.rpc("delete_batch_record", {
+      p_batch_id: batch.id,
+    });
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    setMessage(`${batch.batch_name} was deleted.`);
+    await load();
+  }
+
   return (
     <div className={styles.shell}>
       <OrbitSidebar email={email} active="batches" />
@@ -283,9 +309,22 @@ export default function BatchesPage() {
                     <td>{counts.get(b.id) || 0} / {b.max_students}</td>
                     <td><span className={styles.badge}>{b.status}</span></td>
                     <td>
-                      <button className={styles.smallButton} onClick={() => router.push(`/batches/${b.id}`)}>
-                        Open
-                      </button>
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        <button
+                          className={styles.smallButton}
+                          onClick={() => router.push(`/batches/${b.id}`)}
+                        >
+                          Open
+                        </button>
+                        {canDelete && (
+                          <button
+                            className={styles.danger}
+                            onClick={() => deleteBatch(b)}
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
