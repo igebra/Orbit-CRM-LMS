@@ -12,7 +12,7 @@ const supabase = createClient(
 
 type Props = {
   email: string;
-  active: "students" | "batches" | "sessions";
+  active: "students" | "batches" | "sessions" | "courses";
 };
 
 export default function OrbitSidebar({ email, active }: Props) {
@@ -67,9 +67,17 @@ export default function OrbitSidebar({ email, active }: Props) {
             <span>▣</span> Batches
           </button>
 
-          <button><span>₹</span> Payments</button>
-          <button><span>✦</span> Courses</button>
+          <button><span>$</span> Payments</button>
+
+          <button
+            className={active === "courses" ? styles.navActive : ""}
+            onClick={() => router.push("/courses")}
+          >
+            <span>✦</span> Courses
+          </button>
+
           <button><span>▤</span> Reports</button>
+
           <button>
             <span>◌</span> AQMATICS
             <small className={styles.soon}>Soon</small>
