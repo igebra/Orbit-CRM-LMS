@@ -102,7 +102,8 @@ export default function StudentsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
-  const canDelete = ["super_admin", "admin", "sales", "sales_marketing"].includes(role);
+  const canManage = ["super_admin", "admin", "sales", "sales_marketing"].includes(role);
+  const canDelete = canManage;
 
   useEffect(() => {
     async function initialize() {
@@ -309,9 +310,11 @@ export default function StudentsPage() {
             <p className={styles.subtitle}>Student profiles, course enrollments and CRM conversions.</p>
           </div>
           <div className={styles.headerActions}>
-            <button className={styles.primary} onClick={() => { setForm(EMPTY_FORM); setModalOpen(true); }}>
-              + Add Student
-            </button>
+            {canManage && (
+              <button className={styles.primary} onClick={() => { setForm(EMPTY_FORM); setModalOpen(true); }}>
+                + Add Student
+              </button>
+            )}
           </div>
         </header>
 
@@ -379,7 +382,7 @@ export default function StudentsPage() {
         </section>
       </main>
 
-      {modalOpen && (
+      {modalOpen && canManage && (
         <div className={styles.modalBackdrop}>
           <div className={styles.modal}>
             <div className={styles.modalHeader}>

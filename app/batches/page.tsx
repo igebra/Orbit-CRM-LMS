@@ -134,7 +134,7 @@ export default function BatchesPage() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
-  const canAdmin = role === "super_admin" || role === "admin";
+  const canAdmin = ["super_admin","admin","sales","sales_marketing"].includes(role);
   const canDelete = ["super_admin", "admin", "sales", "sales_marketing"].includes(role);
 
   useEffect(() => {

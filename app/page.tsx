@@ -11,12 +11,10 @@ const supabase = createClient(
 
 const roles = [
   "Admin",
-  "Sales / Marketing",
+  "Sales Admin",
+  "Marketing",
   "Trainer",
-  "Accounts / Finance",
-  "Viewer / Management",
-  "Parent",
-  "Student",
+  "Finance Admin",
 ];
 
 export default function LoginPage() {
@@ -30,10 +28,18 @@ export default function LoginPage() {
   const [message, setMessage] = useState("");
 
   const [requestOpen, setRequestOpen] = useState(false);
+  const [activateOpen, setActivateOpen] = useState(false);
+  const [requestName, setRequestName] = useState("");
   const [requestEmail, setRequestEmail] = useState("");
   const [requestRole, setRequestRole] = useState("");
   const [requestLoading, setRequestLoading] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
+
+  const [activateEmail, setActivateEmail] = useState("");
+  const [activatePassword, setActivatePassword] = useState("");
+  const [activateConfirm, setActivateConfirm] = useState("");
+  const [activateLoading, setActivateLoading] = useState(false);
+  const [activateMessage, setActivateMessage] = useState("");
 
   useEffect(() => {
     async function checkSession() {
@@ -67,6 +73,27 @@ export default function LoginPage() {
 
     if (error) {
       setMessage("Incorrect email or password.");
+      return;
+    }
+
+    const { data: authData } = await supabase.auth.getUser();
+    const userId = authData.user?.id;
+
+    if (!userId) {
+      await supabase.auth.signOut();
+      setMessage("Could not verify your Orbit access.");
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from("user_profiles")
+      .select("is_active")
+      .eq("id", userId)
+      .single();
+
+    if (!profile?.is_active) {
+      await supabase.auth.signOut();
+      setMessage("Your Orbit access is not active yet.");
       return;
     }
 
@@ -106,34 +133,115 @@ export default function LoginPage() {
     event.preventDefault();
     setRequestMessage("");
 
-    if (!requestEmail.trim() || !requestRole) {
-      setRequestMessage("Enter your email and select a role.");
+    if (!requestName.trim() || !requestEmail.trim() || !requestRole) {
+      setRequestMessage("Enter your name, email and select a role.");
       return;
     }
 
     setRequestLoading(true);
 
-    const { error } = await supabase.from("access_requests").insert({
-      email: requestEmail.trim().toLowerCase(),
-      requested_role: requestRole,
-      status: "Pending",
+    const response = await fetch("/api/access-request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        full_name: requestName.trim(),
+        email: requestEmail.trim().toLowerCase(),
+        requested_role: requestRole,
+      }),
     });
+
+    const result = await response.json().catch(() => ({
+      ok: false,
+      message: "Could not submit the access request.",
+    }));
 
     setRequestLoading(false);
 
-    if (error) {
-      setRequestMessage(error.message);
+    if (!response.ok || !result.ok) {
+      setRequestMessage(result.message || "Could not submit the access request.");
       return;
     }
 
-    setRequestMessage("Access request submitted successfully.");
+    setRequestMessage(result.message || "Access request submitted successfully.");
+    setRequestName("");
     setRequestEmail("");
     setRequestRole("");
   }
 
+  async function activateApprovedAccess(event: FormEvent) {
+    event.preventDefault();
+    setActivateMessage("");
+
+    const cleanEmail = activateEmail.trim().toLowerCase();
+
+    if (!cleanEmail || !activatePassword || !activateConfirm) {
+      setActivateMessage("Enter your email and create a password.");
+      return;
+    }
+
+    if (activatePassword.length < 8) {
+      setActivateMessage("Password must be at least 8 characters.");
+      return;
+    }
+
+    if (activatePassword !== activateConfirm) {
+      setActivateMessage("Passwords do not match.");
+      return;
+    }
+
+    setActivateLoading(true);
+
+    const { data: approved, error: approvalError } = await supabase.rpc(
+      "approved_access_exists",
+      { p_email: cleanEmail }
+    );
+
+    if (approvalError) {
+      setActivateLoading(false);
+      setActivateMessage(approvalError.message);
+      return;
+    }
+
+    if (!approved) {
+      setActivateLoading(false);
+      setActivateMessage("Your access request has not been approved yet.");
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email: cleanEmail,
+      password: activatePassword,
+    });
+
+    setActivateLoading(false);
+
+    if (error) {
+      const lower = error.message.toLowerCase();
+      if (lower.includes("already") || lower.includes("registered")) {
+        setActivateMessage(
+          "An account already exists for this email. Use Sign in or Forgot password."
+        );
+      } else {
+        setActivateMessage(error.message);
+      }
+      return;
+    }
+
+    if (data.session) {
+      router.replace("/dashboard");
+      return;
+    }
+
+    setActivateMessage(
+      "Account created. Check your email if confirmation is required, then sign in."
+    );
+    setActivatePassword("");
+    setActivateConfirm("");
+  }
+
   return (
     <main className="login-shell">
-      <section className={`login-panel ${requestOpen ? "request-is-open" : ""}`}>
+      <section className={`login-panel ${requestOpen || activateOpen ? "request-is-open" : ""}`}>
         <div className="login-content">
           <div className="brand-lockup">
             <div className="orbit-mark" aria-hidden="true">
@@ -222,7 +330,10 @@ export default function LoginPage() {
             <button
               type="button"
               className={`request-access-toggle ${requestOpen ? "active" : ""}`}
-              onClick={() => setRequestOpen((value) => !value)}
+              onClick={() => {
+                setRequestOpen((value) => !value);
+                setActivateOpen(false);
+              }}
             >
               <span className="request-radio">
                 {requestOpen && <span className="request-radio-dot" />}
@@ -233,6 +344,15 @@ export default function LoginPage() {
             {requestOpen && (
               <form className="request-access-form" onSubmit={submitAccessRequest}>
                 <div className="request-grid">
+                  <label>
+                    <span>Name</span>
+                    <input
+                      value={requestName}
+                      onChange={(e) => setRequestName(e.target.value)}
+                      placeholder="Enter your name"
+                    />
+                  </label>
+
                   <label>
                     <span>Email</span>
                     <input
@@ -272,13 +392,76 @@ export default function LoginPage() {
                 </button>
               </form>
             )}
+
+            <button
+              type="button"
+              className={`request-access-toggle ${activateOpen ? "active" : ""}`}
+              style={{ marginLeft: 18 }}
+              onClick={() => {
+                setActivateOpen((value) => !value);
+                setRequestOpen(false);
+              }}
+            >
+              <span className="request-radio">
+                {activateOpen && <span className="request-radio-dot" />}
+              </span>
+              <span>Activate Approved Access</span>
+            </button>
+
+            {activateOpen && (
+              <form className="request-access-form" onSubmit={activateApprovedAccess}>
+                <div className="request-grid">
+                  <label>
+                    <span>Email</span>
+                    <input
+                      type="email"
+                      value={activateEmail}
+                      onChange={(e) => setActivateEmail(e.target.value)}
+                      placeholder="Approved email"
+                    />
+                  </label>
+
+                  <label>
+                    <span>Create Password</span>
+                    <input
+                      type="password"
+                      value={activatePassword}
+                      onChange={(e) => setActivatePassword(e.target.value)}
+                      placeholder="Minimum 8 characters"
+                    />
+                  </label>
+
+                  <label>
+                    <span>Confirm Password</span>
+                    <input
+                      type="password"
+                      value={activateConfirm}
+                      onChange={(e) => setActivateConfirm(e.target.value)}
+                      placeholder="Repeat password"
+                    />
+                  </label>
+                </div>
+
+                {activateMessage && (
+                  <div className="request-message">{activateMessage}</div>
+                )}
+
+                <button
+                  type="submit"
+                  className="request-submit"
+                  disabled={activateLoading}
+                >
+                  {activateLoading ? "Activating..." : "Activate Access"}
+                </button>
+              </form>
+            )}
           </div>
         </div>
 
         <img
           className="brand-characters"
           src="/igebra-characters.png"
-          alt="iGebra brand characters"
+          alt="igebra brand characters"
         />
       </section>
 

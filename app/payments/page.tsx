@@ -149,6 +149,8 @@ export default function PaymentsPage() {
     "super_admin",
     "admin",
     "sales",
+    "sales_marketing",
+    "marketing",
     "viewer_management",
     "accounts_finance",
   ];
@@ -156,8 +158,12 @@ export default function PaymentsPage() {
   const canManageFinance = [
     "super_admin",
     "admin",
+    "sales",
+    "sales_marketing",
     "accounts_finance",
   ].includes(role);
+
+  const isMarketing = role === "marketing";
 
   useEffect(() => {
     async function init() {
@@ -196,10 +202,20 @@ export default function PaymentsPage() {
     setLoading(true);
     setMessage("");
 
+    const marketingRange = getPresetRange("month");
+    const effectiveFrom = role === "marketing" ? marketingRange.from : dateFrom;
+    const effectiveTo = role === "marketing" ? marketingRange.to : dateTo;
+
+    if (role === "marketing") {
+      setPreset("month");
+      setFrom(marketingRange.from);
+      setTo(marketingRange.to);
+    }
+
     const [transactionResult, outstandingResult] = await Promise.all([
       supabase.rpc("payment_report_transactions", {
-        p_from: dateFrom,
-        p_to: dateTo,
+        p_from: effectiveFrom,
+        p_to: effectiveTo,
       }),
       supabase.rpc("payment_outstanding_report"),
     ]);
@@ -222,6 +238,8 @@ export default function PaymentsPage() {
   }
 
   function applyPreset(nextPreset: Preset) {
+    if (role === "marketing" && nextPreset !== "month") return;
+
     setPreset(nextPreset);
 
     if (nextPreset === "custom") return;
@@ -462,6 +480,22 @@ export default function PaymentsPage() {
           </div>
         </header>
 
+        {isMarketing ? (
+          <section className={styles.periodCard}>
+            <div>
+              <strong>Marketing Payment View</strong>
+              <p style={{ margin: "4px 0 0", fontSize: 11, color: "#6B7280" }}>
+                Current month payments only. Historical periods, outstanding balances
+                and payment editing are restricted.
+              </p>
+            </div>
+            <div className={styles.dateRange}>
+              <span style={{ fontSize: 11, fontWeight: 800 }}>
+                {from} → {to}
+              </span>
+            </div>
+          </section>
+        ) : (
         <section className={styles.periodCard}>
           <div className={styles.presetButtons}>
             <button
@@ -537,6 +571,8 @@ export default function PaymentsPage() {
           </div>
         </section>
 
+        )}
+
         {message && <div className={styles.message}>{message}</div>}
 
         <section className={styles.stats}>
@@ -550,16 +586,20 @@ export default function PaymentsPage() {
             <strong>{transactions.length}</strong>
             <small>Selected period</small>
           </div>
-          <div>
-            <span>Current Pending</span>
-            <strong>{money(pending)}</strong>
-            <small>All active payment plans</small>
-          </div>
-          <div>
-            <span>Current Overdue</span>
-            <strong>{money(overdue)}</strong>
-            <small>{outstanding.filter((row) => row.payment_status === "Overdue").length} students</small>
-          </div>
+          {!isMarketing && (
+            <>
+              <div>
+                <span>Current Pending</span>
+                <strong>{money(pending)}</strong>
+                <small>All active payment plans</small>
+              </div>
+              <div>
+                <span>Current Overdue</span>
+                <strong>{money(overdue)}</strong>
+                <small>{outstanding.filter((row) => row.payment_status === "Overdue").length} students</small>
+              </div>
+            </>
+          )}
         </section>
 
         <section className={styles.breakdownGrid}>
@@ -607,6 +647,7 @@ export default function PaymentsPage() {
             </div>
           </div>
 
+          {!isMarketing && (
           <div className={styles.panel}>
             <div className={styles.panelHeader}>
               <div>
@@ -628,6 +669,7 @@ export default function PaymentsPage() {
               )}
             </div>
           </div>
+          )}
         </section>
 
         <section className={styles.panel}>
@@ -690,6 +732,7 @@ export default function PaymentsPage() {
           </div>
         </section>
 
+        {!isMarketing && (
         <section className={styles.panel}>
           <div className={styles.panelHeader}>
             <div>
@@ -757,6 +800,7 @@ export default function PaymentsPage() {
             </table>
           </div>
         </section>
+        )}
       </main>
 
       {paymentOpen && (

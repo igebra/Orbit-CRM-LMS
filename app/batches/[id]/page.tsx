@@ -83,9 +83,9 @@ export default function BatchDetailPage() {
   const [financeForm,setFinanceForm] = useState({student_id:"",total_fee_usd:"",payment_plan:"Monthly",installment_amount_usd:"",plan_start_date:new Date().toISOString().slice(0,10),custom_next_due_date:""});
   const [paymentForm,setPaymentForm] = useState({finance_id:"",student_name:"",amount_usd:"",payment_date:new Date().toISOString().slice(0,10),payment_mode:"Zelle",reference:""});
 
-  const canAdmin = role==="super_admin" || role==="admin";
+  const canAdmin = ["super_admin","admin","sales","sales_marketing"].includes(role);
   const canSeeFinance = ["super_admin","admin","sales","viewer_management","accounts_finance"].includes(role);
-  const canManageFinance = ["super_admin","admin","accounts_finance"].includes(role);
+  const canManageFinance = ["super_admin","admin","sales","sales_marketing","accounts_finance"].includes(role);
   const canTeach = canAdmin || role==="trainer";
 
   useEffect(() => {

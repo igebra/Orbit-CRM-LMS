@@ -19,7 +19,8 @@ type Props = {
     | "courses"
     | "trainers"
     | "reports"
-    | "payments";
+    | "payments"
+    | "access";
 };
 
 export default function OrbitSidebar({ email, active }: Props) {
@@ -49,21 +50,36 @@ export default function OrbitSidebar({ email, active }: Props) {
     router.replace("/");
   }
 
-  const canSeeCrm = [
-    "super_admin","admin","sales","marketing","sales_marketing","viewer_management"
-  ].includes(role);
+  const isSuperAdmin = role === "super_admin";
+  const isAdmin = role === "admin";
+  const isSales = role === "sales" || role === "sales_marketing";
+  const isMarketing = role === "marketing";
+  const isFinance = role === "accounts_finance";
+  const isManagement = role === "viewer_management";
+  const isTrainer = role === "trainer";
 
-  const canSeeTrainers = [
-    "super_admin","admin","sales","sales_marketing","viewer_management"
-  ].includes(role);
+  const canSeeCrm =
+    isSuperAdmin || isAdmin || isSales || isMarketing || isManagement;
 
-  const canSeeReports = [
-    "super_admin","admin","viewer_management"
-  ].includes(role);
+  const canSeeStudents =
+    isSuperAdmin || isAdmin || isSales || isMarketing || isFinance || isManagement;
 
-  const canSeePayments = [
-    "super_admin","admin","sales","viewer_management","accounts_finance"
-  ].includes(role);
+  const canSeeBatches =
+    isSuperAdmin || isAdmin || isSales || isMarketing || isFinance || isManagement || isTrainer;
+
+  const canSeeTrainers =
+    isSuperAdmin || isAdmin || isSales || isMarketing || isManagement;
+
+  const canSeePayments =
+    isSuperAdmin || isAdmin || isSales || isMarketing || isFinance || isManagement;
+
+  const canSeeCourses =
+    isSuperAdmin || isAdmin || isSales || isMarketing || isFinance || isManagement;
+
+  const canSeeReports =
+    isSuperAdmin || isAdmin || isSales || isMarketing || isFinance || isManagement;
+
+  const canSeeAccess = isSuperAdmin || isAdmin;
 
   return (
     <aside className={styles.sidebar}>
@@ -96,19 +112,23 @@ export default function OrbitSidebar({ email, active }: Props) {
             </div>
           )}
 
-          <button
-            className={active === "students" ? styles.navActive : ""}
-            onClick={() => router.push("/students")}
-          >
-            <span>◉</span> Students
-          </button>
+          {canSeeStudents && (
+            <button
+              className={active === "students" ? styles.navActive : ""}
+              onClick={() => router.push("/students")}
+            >
+              <span>◉</span> Students
+            </button>
+          )}
 
-          <button
-            className={active === "batches" || active === "sessions" ? styles.navActive : ""}
-            onClick={() => router.push("/batches")}
-          >
-            <span>▣</span> Batches
-          </button>
+          {canSeeBatches && (
+            <button
+              className={active === "batches" || active === "sessions" ? styles.navActive : ""}
+              onClick={() => router.push("/batches")}
+            >
+              <span>▣</span> Batches
+            </button>
+          )}
 
           {canSeeTrainers && (
             <button
@@ -128,12 +148,14 @@ export default function OrbitSidebar({ email, active }: Props) {
             </button>
           )}
 
-          <button
-            className={active === "courses" ? styles.navActive : ""}
-            onClick={() => router.push("/courses")}
-          >
-            <span>✦</span> Courses
-          </button>
+          {canSeeCourses && (
+            <button
+              className={active === "courses" ? styles.navActive : ""}
+              onClick={() => router.push("/courses")}
+            >
+              <span>✦</span> Courses
+            </button>
+          )}
 
           {canSeeReports && (
             <button
@@ -141,6 +163,15 @@ export default function OrbitSidebar({ email, active }: Props) {
               onClick={() => router.push("/reports")}
             >
               <span>▤</span> Reports
+            </button>
+          )}
+
+          {canSeeAccess && (
+            <button
+              className={active === "access" ? styles.navActive : ""}
+              onClick={() => router.push("/access")}
+            >
+              <span>⚙</span> Access
             </button>
           )}
 

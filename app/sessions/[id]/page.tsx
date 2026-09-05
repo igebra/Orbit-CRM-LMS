@@ -48,8 +48,8 @@ export default function SessionDetailPage() {
     assessment_url:"",trainer_notes:"",trainer_feedback:"",parent_feedback:""
   });
 
-  const canEdit=["super_admin","admin","trainer"].includes(role);
-  const canChangeTrainer=["super_admin","admin"].includes(role);
+  const canEdit=["super_admin","admin","sales","sales_marketing","trainer"].includes(role);
+  const canChangeTrainer=["super_admin","admin","sales","sales_marketing"].includes(role);
   const canMarkAttendance=["super_admin","admin","sales","sales_marketing","trainer"].includes(role);
 
   useEffect(()=>{
