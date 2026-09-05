@@ -4,6 +4,7 @@ import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "re
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import OrbitSidebar from "../../components/OrbitSidebar";
+import SmartLeadImport from "./SmartLeadImport";
 import styles from "./leads.module.css";
 
 const supabase = createClient(
@@ -1310,10 +1311,11 @@ export default function LeadsPage() {
           <div className={styles.importModal}>
             <div className={styles.modalHeader}>
               <div>
-                <h2>Import Leads</h2>
+                <h2>Smart Import Leads</h2>
                 <p>
-                  Upload a CSV file to add leads in bulk. Download the Orbit
-                  template first if you need the correct column format.
+                  Upload Excel or CSV from almost any source. Orbit will detect
+                  the header row, map columns automatically and show a preview
+                  before anything is added to CRM.
                 </p>
               </div>
 
@@ -1327,36 +1329,18 @@ export default function LeadsPage() {
             </div>
 
             <div className={styles.importBody}>
-              <div className={styles.importChoice}>
-                <div>
-                  <strong>1. Download the CSV template</strong>
-                  <p>
-                    Use the template when preparing a new lead sheet for Orbit.
-                  </p>
-                </div>
-                <button
-                  className={styles.secondaryButton}
-                  onClick={downloadTemplate}
-                >
-                  Download Template
-                </button>
-              </div>
-
-              <div className={styles.importChoice}>
-                <div>
-                  <strong>2. Upload your completed CSV</strong>
-                  <p>
-                    Parent First Name and Child Name are required for each row.
-                  </p>
-                </div>
-                <button
-                  className={styles.primaryButton}
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={importing}
-                >
-                  {importing ? "Importing..." : "Choose CSV File"}
-                </button>
-              </div>
+              <SmartLeadImport
+                userId={userId}
+                onImported={async (count, skipped) => {
+                  setMessage(
+                    `${count} lead(s) imported successfully${
+                      skipped ? `. ${skipped} row(s) skipped.` : "."
+                    }`
+                  );
+                  setImportModalOpen(false);
+                  await loadLeads();
+                }}
+              />
             </div>
           </div>
         </div>

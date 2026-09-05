@@ -549,7 +549,9 @@ button.statCard {
 }
 
 .importModal {
-  width: min(680px, 94vw);
+  width: min(1080px, 96vw);
+  max-height: 92vh;
+  overflow-y: auto;
   border-radius: 22px;
   overflow: hidden;
   background: #fff;
