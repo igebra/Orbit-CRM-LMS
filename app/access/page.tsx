@@ -273,6 +273,43 @@ export default function AccessPage() {
     await load();
   }
 
+  async function deleteRequest(request: RequestRow) {
+    const wording =
+      request.status === "Approved"
+        ? "Remove this approval? The user will no longer be able to activate Orbit access."
+        : `Remove this ${request.status.toLowerCase()} access request?`;
+
+    if (!confirm(wording)) {
+      return;
+    }
+
+    setSaving(true);
+    setMessage("");
+
+    const { error } = await supabase.rpc("delete_access_request", {
+      p_request_id: request.request_id,
+    });
+
+    setSaving(false);
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    setMessage(
+      request.status === "Approved"
+        ? "Approval removed."
+        : "Access request removed."
+    );
+    await load();
+  }
+
+  function openUserFromRequest(request: RequestRow) {
+    setTab("users");
+    setSearch(request.email);
+  }
+
   async function grantAccess(event: FormEvent) {
     event.preventDefault();
 
@@ -557,7 +594,7 @@ export default function AccessPage() {
                           </span>
                         </td>
                         <td>
-                          {request.status === "Pending" ? (
+                          {request.status === "Pending" || request.status === "Rejected" ? (
                             <select
                               value={
                                 roleSelections[request.request_id] ||
@@ -595,13 +632,49 @@ export default function AccessPage() {
                               >
                                 Reject
                               </button>
+                              <button
+                                className={styles.deleteRequestButton}
+                                onClick={() => deleteRequest(request)}
+                                disabled={saving}
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          ) : request.status === "Rejected" ? (
+                            <div className={styles.actions}>
+                              <button
+                                className={styles.approveButton}
+                                onClick={() => approve(request)}
+                              >
+                                Approve Again
+                              </button>
+                              <button
+                                className={styles.deleteRequestButton}
+                                onClick={() => deleteRequest(request)}
+                                disabled={saving}
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          ) : accountState(request) === "Waiting Activation" ? (
+                            <div className={styles.actions}>
+                              <button
+                                className={styles.deleteRequestButton}
+                                onClick={() => deleteRequest(request)}
+                                disabled={saving}
+                              >
+                                Remove Approval
+                              </button>
                             </div>
                           ) : (
-                            <span className={styles.muted}>
-                              {request.reviewed_at
-                                ? new Date(request.reviewed_at).toLocaleDateString()
-                                : "—"}
-                            </span>
+                            <div className={styles.actions}>
+                              <button
+                                className={styles.editButton}
+                                onClick={() => openUserFromRequest(request)}
+                              >
+                                Manage User
+                              </button>
+                            </div>
                           )}
                         </td>
                       </tr>
