@@ -10,6 +10,13 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
 );
 
+// Cache the sidebar identity between App Router page changes.
+// Each Orbit page currently remounts the Sidebar. Without this cache,
+// role-based menu items briefly disappear while Supabase is queried again.
+let cachedRole = "";
+let cachedPendingAccess = 0;
+let cachedEmail = "";
+
 type Props = {
   email: string;
   active:
@@ -26,42 +33,102 @@ type Props = {
     | "access";
 };
 
+const PREFETCH_ROUTES = [
+  "/dashboard",
+  "/crm/leads",
+  "/crm/demos",
+  "/students",
+  "/batches",
+  "/trainers",
+  "/payments",
+  "/courses",
+  "/reports",
+  "/access",
+];
+
 export default function OrbitSidebar({ email, active }: Props) {
   const router = useRouter();
+
   const [crmOpen, setCrmOpen] = useState(
     active === "crm-leads" || active === "crm-demos"
   );
-  const [role, setRole] = useState("");
-  const [pendingAccess, setPendingAccess] = useState(0);
+
+  const [role, setRole] = useState(cachedRole);
+  const [pendingAccess, setPendingAccess] = useState(cachedPendingAccess);
+
+  const displayEmail = email || cachedEmail;
 
   useEffect(() => {
-    async function loadRole() {
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) return;
+    if (email) cachedEmail = email;
+  }, [email]);
+
+  useEffect(() => {
+    PREFETCH_ROUTES.forEach((route) => router.prefetch(route));
+  }, [router]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function refreshSidebarIdentity() {
+      // getSession uses the browser's restored session, so the Sidebar
+      // does not wait on another auth validation call during every route change.
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData.session?.user;
+
+      if (!user || cancelled) return;
+
+      if (!cachedEmail && user.email) {
+        cachedEmail = user.email;
+      }
 
       const { data: profile } = await supabase
         .from("user_profiles")
         .select("role")
-        .eq("id", data.user.id)
+        .eq("id", user.id)
         .single();
 
-      const currentRole = profile?.role || "";
-      setRole(currentRole);
+      if (cancelled) return;
+
+      const currentRole = profile?.role || cachedRole || "";
+
+      if (currentRole) {
+        cachedRole = currentRole;
+        setRole(currentRole);
+      }
 
       if (currentRole === "super_admin" || currentRole === "admin") {
         const { data: count } = await supabase.rpc(
           "pending_access_request_count"
         );
-        setPendingAccess(Number(count || 0));
+
+        if (cancelled) return;
+
+        cachedPendingAccess = Number(count || 0);
+        setPendingAccess(cachedPendingAccess);
+      } else {
+        cachedPendingAccess = 0;
+        setPendingAccess(0);
       }
     }
 
-    loadRole();
+    refreshSidebarIdentity();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function signOut() {
+    cachedRole = "";
+    cachedPendingAccess = 0;
+    cachedEmail = "";
+
     await supabase.auth.signOut();
     router.replace("/");
+  }
+
+  function navigate(path: string) {
+    router.push(path);
   }
 
   const isSuperAdmin = role === "super_admin";
@@ -76,30 +143,64 @@ export default function OrbitSidebar({ email, active }: Props) {
     isSuperAdmin || isAdmin || isSales || isMarketing || isManagement;
 
   const canSeeStudents =
-    isSuperAdmin || isAdmin || isSales || isMarketing || isFinance || isManagement;
+    isSuperAdmin ||
+    isAdmin ||
+    isSales ||
+    isMarketing ||
+    isFinance ||
+    isManagement;
 
   const canSeeBatches =
-    isSuperAdmin || isAdmin || isSales || isMarketing || isFinance || isManagement || isTrainer;
+    isSuperAdmin ||
+    isAdmin ||
+    isSales ||
+    isMarketing ||
+    isFinance ||
+    isManagement ||
+    isTrainer;
 
   const canSeeTrainers =
     isSuperAdmin || isAdmin || isSales || isMarketing || isManagement;
 
   const canSeePayments =
-    isSuperAdmin || isAdmin || isSales || isMarketing || isFinance || isManagement;
+    isSuperAdmin ||
+    isAdmin ||
+    isSales ||
+    isMarketing ||
+    isFinance ||
+    isManagement;
 
   const canSeeCourses =
-    isSuperAdmin || isAdmin || isSales || isMarketing || isFinance || isManagement;
+    isSuperAdmin ||
+    isAdmin ||
+    isSales ||
+    isMarketing ||
+    isFinance ||
+    isManagement;
 
   const canSeeReports =
-    isSuperAdmin || isAdmin || isSales || isMarketing || isFinance || isManagement;
+    isSuperAdmin ||
+    isAdmin ||
+    isSales ||
+    isMarketing ||
+    isFinance ||
+    isManagement;
 
   const canSeeAccess = isSuperAdmin || isAdmin;
 
   return (
     <aside className={styles.sidebar}>
       <div>
-        <button className={styles.brand} onClick={() => router.push("/dashboard")}>
-          <img src="/orbit-mascot.png" alt="Orbit mascot" className={styles.brandMascot} />
+        <button
+          className={styles.brand}
+          onClick={() => navigate("/dashboard")}
+        >
+          <img
+            src="/orbit-mascot.png"
+            alt="Orbit mascot"
+            className={styles.brandMascot}
+          />
+
           <span className={styles.brandCopy}>
             <strong>Orbit</strong>
             <small>by igebra.ai</small>
@@ -109,7 +210,7 @@ export default function OrbitSidebar({ email, active }: Props) {
         <nav className={styles.nav}>
           <button
             className={active === "overview" ? styles.navActive : ""}
-            onClick={() => router.push("/dashboard")}
+            onClick={() => navigate("/dashboard")}
           >
             <span>⌂</span> Overview
           </button>
@@ -125,19 +226,27 @@ export default function OrbitSidebar({ email, active }: Props) {
                 onClick={() => setCrmOpen((value) => !value)}
               >
                 <span>◎</span> CRM
-                <span className={styles.chevron}>{crmOpen ? "▾" : "▸"}</span>
+                <span className={styles.chevron}>
+                  {crmOpen ? "▾" : "▸"}
+                </span>
               </button>
+
               {crmOpen && (
                 <div className={styles.subNav}>
                   <button
-                    className={active === "crm-leads" ? styles.navActive : ""}
-                    onClick={() => router.push("/crm/leads")}
+                    className={
+                      active === "crm-leads" ? styles.navActive : ""
+                    }
+                    onClick={() => navigate("/crm/leads")}
                   >
                     Leads
                   </button>
+
                   <button
-                    className={active === "crm-demos" ? styles.navActive : ""}
-                    onClick={() => router.push("/crm/demos")}
+                    className={
+                      active === "crm-demos" ? styles.navActive : ""
+                    }
+                    onClick={() => navigate("/crm/demos")}
                   >
                     Demo Schedule
                   </button>
@@ -149,7 +258,7 @@ export default function OrbitSidebar({ email, active }: Props) {
           {canSeeStudents && (
             <button
               className={active === "students" ? styles.navActive : ""}
-              onClick={() => router.push("/students")}
+              onClick={() => navigate("/students")}
             >
               <span>◉</span> Students
             </button>
@@ -157,8 +266,12 @@ export default function OrbitSidebar({ email, active }: Props) {
 
           {canSeeBatches && (
             <button
-              className={active === "batches" || active === "sessions" ? styles.navActive : ""}
-              onClick={() => router.push("/batches")}
+              className={
+                active === "batches" || active === "sessions"
+                  ? styles.navActive
+                  : ""
+              }
+              onClick={() => navigate("/batches")}
             >
               <span>▣</span> Batches
             </button>
@@ -167,7 +280,7 @@ export default function OrbitSidebar({ email, active }: Props) {
           {canSeeTrainers && (
             <button
               className={active === "trainers" ? styles.navActive : ""}
-              onClick={() => router.push("/trainers")}
+              onClick={() => navigate("/trainers")}
             >
               <span>♙</span> Trainers
             </button>
@@ -176,7 +289,7 @@ export default function OrbitSidebar({ email, active }: Props) {
           {canSeePayments && (
             <button
               className={active === "payments" ? styles.navActive : ""}
-              onClick={() => router.push("/payments")}
+              onClick={() => navigate("/payments")}
             >
               <span>$</span> Payments
             </button>
@@ -185,7 +298,7 @@ export default function OrbitSidebar({ email, active }: Props) {
           {canSeeCourses && (
             <button
               className={active === "courses" ? styles.navActive : ""}
-              onClick={() => router.push("/courses")}
+              onClick={() => navigate("/courses")}
             >
               <span>✦</span> Courses
             </button>
@@ -194,7 +307,7 @@ export default function OrbitSidebar({ email, active }: Props) {
           {canSeeReports && (
             <button
               className={active === "reports" ? styles.navActive : ""}
-              onClick={() => router.push("/reports")}
+              onClick={() => navigate("/reports")}
             >
               <span>▤</span> Reports
             </button>
@@ -203,12 +316,15 @@ export default function OrbitSidebar({ email, active }: Props) {
           {canSeeAccess && (
             <button
               className={active === "access" ? styles.navActive : ""}
-              onClick={() => router.push("/access")}
+              onClick={() => navigate("/access")}
             >
               <span>⚙</span> Access
+
               {pendingAccess > 0 && (
                 <span
-                  title={`${pendingAccess} pending access request${pendingAccess === 1 ? "" : "s"}`}
+                  title={`${pendingAccess} pending access request${
+                    pendingAccess === 1 ? "" : "s"
+                  }`}
                   style={{
                     marginLeft: "auto",
                     minWidth: 20,
@@ -230,7 +346,7 @@ export default function OrbitSidebar({ email, active }: Props) {
             </button>
           )}
 
-          <button>
+          <button type="button">
             <span>◌</span> AQMATICS
             <small className={styles.soon}>Soon</small>
           </button>
@@ -239,13 +355,21 @@ export default function OrbitSidebar({ email, active }: Props) {
 
       <div className={styles.sidebarBottom}>
         <div className={styles.userBox}>
-          <span className={styles.avatar}>{email ? email.charAt(0).toUpperCase() : "A"}</span>
+          <span className={styles.avatar}>
+            {displayEmail
+              ? displayEmail.charAt(0).toUpperCase()
+              : "A"}
+          </span>
+
           <span>
             <strong>Orbit User</strong>
-            <small>{email}</small>
+            <small>{displayEmail}</small>
           </span>
         </div>
-        <button className={styles.signOut} onClick={signOut}>Sign out</button>
+
+        <button className={styles.signOut} onClick={signOut}>
+          Sign out
+        </button>
       </div>
     </aside>
   );
