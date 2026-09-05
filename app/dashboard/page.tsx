@@ -11,7 +11,6 @@ const supabase = createClient(
 
 const menuItems = [
   { key: "overview", label: "Overview", icon: "⌂" },
-  { key: "crm", label: "CRM", icon: "◎" },
   { key: "students", label: "Students", icon: "◉" },
   { key: "batches", label: "Batches", icon: "▣" },
   { key: "payments", label: "Payments", icon: "₹" },
@@ -25,6 +24,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [active, setActive] = useState("overview");
+  const [crmOpen, setCrmOpen] = useState(false);
 
   useEffect(() => {
     async function loadUser() {
@@ -45,7 +45,6 @@ export default function DashboardPage() {
 
   function handleMenu(key: string) {
     setActive(key);
-    if (key === "crm") router.push("/crm/leads");
   }
 
   return (
@@ -65,19 +64,59 @@ export default function DashboardPage() {
           </div>
 
           <nav className="orbit-nav">
-            {menuItems.map((item) => (
+            <button
+              className={`orbit-nav-item ${active === "overview" ? "active" : ""}`}
+              onClick={() => handleMenu("overview")}
+            >
+              <span className="orbit-nav-icon">⌂</span>
+              <span>Overview</span>
+            </button>
+
+            <div className="orbit-crm-group">
               <button
-                key={item.key}
-                className={`orbit-nav-item ${active === item.key ? "active" : ""}`}
-                onClick={() => handleMenu(item.key)}
+                className="orbit-nav-item orbit-crm-toggle"
+                onClick={() => setCrmOpen((value) => !value)}
               >
-                <span className="orbit-nav-icon">{item.icon}</span>
-                <span>{item.label}</span>
-                {item.key === "aqmatics" && (
-                  <span className="orbit-coming-soon">Soon</span>
-                )}
+                <span className="orbit-nav-icon">◎</span>
+                <span>CRM</span>
+                <span className="orbit-crm-chevron">
+                  {crmOpen ? "▾" : "▸"}
+                </span>
               </button>
-            ))}
+
+              {crmOpen && (
+                <div className="orbit-subnav">
+                  <button
+                    className="orbit-subnav-item"
+                    onClick={() => router.push("/crm/leads")}
+                  >
+                    Leads
+                  </button>
+                  <button
+                    className="orbit-subnav-item"
+                    onClick={() => router.push("/crm/demos")}
+                  >
+                    Demo Schedule
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {menuItems
+              .filter((item) => item.key !== "overview")
+              .map((item) => (
+                <button
+                  key={item.key}
+                  className={`orbit-nav-item ${active === item.key ? "active" : ""}`}
+                  onClick={() => handleMenu(item.key)}
+                >
+                  <span className="orbit-nav-icon">{item.icon}</span>
+                  <span>{item.label}</span>
+                  {item.key === "aqmatics" && (
+                    <span className="orbit-coming-soon">Soon</span>
+                  )}
+                </button>
+              ))}
           </nav>
         </div>
 

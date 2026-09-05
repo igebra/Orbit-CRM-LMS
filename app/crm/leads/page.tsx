@@ -232,6 +232,8 @@ export default function LeadsPage() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [crmOpen, setCrmOpen] = useState(true);
+  const [importModalOpen, setImportModalOpen] = useState(false);
 
   useEffect(() => {
     async function initialize() {
@@ -477,6 +479,88 @@ export default function LeadsPage() {
     });
   }
 
+  function csvValue(value: unknown) {
+    const text = value === null || value === undefined ? "" : String(value);
+    return `"${text.replaceAll('"', '""')}"`;
+  }
+
+  function downloadSelectedCsv() {
+    const rows = leads.filter((lead) => selected.has(lead.id));
+
+    if (rows.length === 0) return;
+
+    const headers = [
+      "parent_first_name",
+      "parent_last_name",
+      "child_name",
+      "grade",
+      "email",
+      "phone_country_name",
+      "phone_country_code",
+      "phone_number",
+      "lead_source",
+      "course_interested",
+      "assigned_to",
+      "next_action",
+      "lead_stage",
+      "demo_attended",
+      "demo_attended_course",
+      "next_follow_up_date",
+      "notes",
+      "created_at",
+    ];
+
+    const lines = [
+      headers.join(","),
+      ...rows.map((lead) =>
+        [
+          lead.parent_first_name,
+          lead.parent_last_name,
+          lead.child_name,
+          lead.grade,
+          lead.email,
+          lead.phone_country_name,
+          lead.phone_country_code,
+          lead.phone_number,
+          lead.lead_source,
+          lead.course_interested,
+          lead.assigned_to,
+          lead.next_action,
+          lead.lead_stage,
+          lead.demo_attended ? "Yes" : "No",
+          lead.demo_attended_course,
+          lead.next_follow_up_date,
+          lead.notes,
+          lead.created_at,
+        ]
+          .map(csvValue)
+          .join(",")
+      ),
+    ];
+
+    const blob = new Blob([lines.join("\n")], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `orbit-selected-leads-${rows.length}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function scheduleSelectedDemo() {
+    if (selected.size === 0) return;
+
+    sessionStorage.setItem(
+      "orbit_demo_selected_leads",
+      JSON.stringify(Array.from(selected))
+    );
+
+    router.push("/crm/demos?from=leads");
+  }
+
   function downloadTemplate() {
     const headers = [
       "parent_first_name",
@@ -616,6 +700,7 @@ export default function LeadsPage() {
       }
 
       setMessage(`${payload.length} lead(s) imported successfully.`);
+      setImportModalOpen(false);
       await loadLeads();
     } catch (error) {
       setMessage(
@@ -655,9 +740,26 @@ export default function LeadsPage() {
             <button onClick={() => router.push("/dashboard")}>
               <span>⌂</span> Overview
             </button>
-            <button className={styles.navActive}>
-              <span>◎</span> CRM
-            </button>
+            <div className={styles.crmGroup}>
+              <button
+                className={styles.navActive}
+                onClick={() => setCrmOpen((value) => !value)}
+              >
+                <span>◎</span> CRM
+                <span className={styles.crmChevron}>
+                  {crmOpen ? "▾" : "▸"}
+                </span>
+              </button>
+
+              {crmOpen && (
+                <div className={styles.subNav}>
+                  <button className={styles.subNavActive}>Leads</button>
+                  <button onClick={() => router.push("/crm/demos")}>
+                    Demo Schedule
+                  </button>
+                </div>
+              )}
+            </div>
             <button>
               <span>◉</span> Students
             </button>
@@ -709,29 +811,9 @@ export default function LeadsPage() {
           <div className={styles.headerActions}>
             <button
               className={styles.secondaryButton}
-              onClick={() => router.push("/crm/demos")}
+              onClick={() => setImportModalOpen(true)}
             >
-              Demo Schedule
-            </button>
-
-            <button className={styles.secondaryButton} onClick={downloadTemplate}>
-              Download CSV Template
-            </button>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv,text/csv"
-              hidden
-              onChange={importCsv}
-            />
-
-            <button
-              className={styles.secondaryButton}
-              onClick={() => fileInputRef.current?.click()}
-              disabled={importing}
-            >
-              {importing ? "Importing..." : "Import Leads"}
+              Import Leads
             </button>
 
             <button className={styles.primaryButton} onClick={newLead}>
@@ -770,6 +852,39 @@ export default function LeadsPage() {
 
         {message && <div className={styles.message}>{message}</div>}
 
+        {selected.size > 0 && (
+          <section className={styles.selectionBar}>
+            <div className={styles.selectionCount}>
+              <strong>{selected.size}</strong>
+              <span>{selected.size === 1 ? "Lead selected" : "Leads selected"}</span>
+            </div>
+
+            <div className={styles.selectionActions}>
+              <button onClick={downloadSelectedCsv}>
+                Export CSV
+              </button>
+              <button
+                className={styles.scheduleSelected}
+                onClick={scheduleSelectedDemo}
+              >
+                Schedule Demo
+              </button>
+              <button
+                className={styles.selectionDelete}
+                onClick={bulkDelete}
+              >
+                Delete Selected
+              </button>
+              <button
+                className={styles.clearSelection}
+                onClick={() => setSelected(new Set())}
+              >
+                Clear
+              </button>
+            </div>
+          </section>
+        )}
+
         <section className={styles.tableCard}>
           <div className={styles.toolbar}>
             <input
@@ -798,11 +913,6 @@ export default function LeadsPage() {
               </button>
             )}
 
-            {selected.size > 0 && (
-              <button className={styles.deleteSelected} onClick={bulkDelete}>
-                Delete Selected ({selected.size})
-              </button>
-            )}
 
             <button className={styles.refreshButton} onClick={loadLeads}>
               Refresh
@@ -960,6 +1070,71 @@ export default function LeadsPage() {
           </div>
         </section>
       </main>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv,text/csv"
+        hidden
+        onChange={importCsv}
+      />
+
+      {importModalOpen && (
+        <div className={styles.modalBackdrop}>
+          <div className={styles.importModal}>
+            <div className={styles.modalHeader}>
+              <div>
+                <h2>Import Leads</h2>
+                <p>
+                  Upload a CSV file to add leads in bulk. Download the Orbit
+                  template first if you need the correct column format.
+                </p>
+              </div>
+
+              <button
+                className={styles.closeButton}
+                onClick={() => setImportModalOpen(false)}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className={styles.importBody}>
+              <div className={styles.importChoice}>
+                <div>
+                  <strong>1. Download the CSV template</strong>
+                  <p>
+                    Use the template when preparing a new lead sheet for Orbit.
+                  </p>
+                </div>
+                <button
+                  className={styles.secondaryButton}
+                  onClick={downloadTemplate}
+                >
+                  Download Template
+                </button>
+              </div>
+
+              <div className={styles.importChoice}>
+                <div>
+                  <strong>2. Upload your completed CSV</strong>
+                  <p>
+                    Parent First Name and Child Name are required for each row.
+                  </p>
+                </div>
+                <button
+                  className={styles.primaryButton}
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={importing}
+                >
+                  {importing ? "Importing..." : "Choose CSV File"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {modalOpen && (
         <div className={styles.modalBackdrop}>

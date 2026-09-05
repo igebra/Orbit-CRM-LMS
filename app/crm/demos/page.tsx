@@ -411,6 +411,7 @@ export default function DemoSchedulePage() {
   const [excelHeaders, setExcelHeaders] = useState<string[]>([]);
   const [excelMapping, setExcelMapping] = useState<ExcelMapping>(EMPTY_MAPPING);
   const [excelError, setExcelError] = useState("");
+  const [crmOpen, setCrmOpen] = useState(true);
 
   useEffect(() => {
     async function initialize() {
@@ -423,7 +424,53 @@ export default function DemoSchedulePage() {
 
       setEmail(data.user.email || "");
       setUserId(data.user.id);
-      await Promise.all([loadDemos(), loadLeads()]);
+
+      const [, loadedLeads] = await Promise.all([loadDemos(), loadLeads()]);
+
+      const storedLeadIds = sessionStorage.getItem(
+        "orbit_demo_selected_leads"
+      );
+
+      if (storedLeadIds) {
+        try {
+          const ids = JSON.parse(storedLeadIds) as string[];
+          const selectedLeads = loadedLeads.filter((lead) =>
+            ids.includes(lead.id)
+          );
+
+          if (selectedLeads.length > 0) {
+            const attendees: DemoAttendee[] = selectedLeads.map((lead) => ({
+              temp_id: makeTempId(),
+              lead_id: lead.id,
+              student_name: lead.child_name,
+              grade: lead.grade,
+              contact_email: lead.email,
+              contact_phone: lead.phone_number
+                ? `${lead.phone_country_code || ""} ${lead.phone_number}`.trim()
+                : null,
+              source: "Lead",
+              attendance_status: "Scheduled",
+              attendance_marked_at: null,
+              import_metadata: {},
+            }));
+
+            setEditingId(null);
+            setForm({
+              ...EMPTY_FORM,
+              demo_course: courseFamily(selectedLeads[0].course_interested),
+              attendees,
+            });
+            resetStudentTools();
+            setStudentMode("leads");
+            setModalOpen(true);
+          }
+        } catch {
+          setMessage("Could not load the selected leads into Demo Schedule.");
+        } finally {
+          sessionStorage.removeItem("orbit_demo_selected_leads");
+          window.history.replaceState({}, "", "/crm/demos");
+        }
+      }
     }
 
     initialize();
@@ -506,7 +553,9 @@ export default function DemoSchedulePage() {
       )
       .order("created_at", { ascending: false });
 
-    if (!error) setLeads((data || []) as LeadOption[]);
+    const rows = error ? [] : ((data || []) as LeadOption[]);
+    if (!error) setLeads(rows);
+    return rows;
   }
 
   const previewIso = useMemo(
@@ -1114,13 +1163,26 @@ export default function DemoSchedulePage() {
             </button>
 
             <div className={styles.crmGroup}>
-              <button className={styles.navActive}>
+              <button
+                className={styles.navActive}
+                onClick={() => setCrmOpen((value) => !value)}
+              >
                 <span>◎</span> CRM
+                <span className={styles.crmChevron}>
+                  {crmOpen ? "▾" : "▸"}
+                </span>
               </button>
-              <div className={styles.subNav}>
-                <button onClick={() => router.push("/crm/leads")}>Leads</button>
-                <button className={styles.subNavActive}>Demo Schedule</button>
-              </div>
+
+              {crmOpen && (
+                <div className={styles.subNav}>
+                  <button onClick={() => router.push("/crm/leads")}>
+                    Leads
+                  </button>
+                  <button className={styles.subNavActive}>
+                    Demo Schedule
+                  </button>
+                </div>
+              )}
             </div>
 
             <button><span>◉</span> Students</button>
@@ -1160,9 +1222,6 @@ export default function DemoSchedulePage() {
           </div>
 
           <div className={styles.headerActions}>
-            <button className={styles.secondaryButton} onClick={() => router.push("/crm/leads")}>
-              View Leads
-            </button>
             <button className={styles.primaryButton} onClick={openNewDemo}>
               + Schedule Demo
             </button>

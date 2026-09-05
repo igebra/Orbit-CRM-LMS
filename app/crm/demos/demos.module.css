@@ -96,6 +96,12 @@
   gap: 5px;
 }
 
+.crmChevron {
+  margin-left: auto;
+  font-size: 12px;
+  opacity: .8;
+}
+
 .subNav {
   margin-left: 34px;
   padding-left: 10px;

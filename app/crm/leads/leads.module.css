@@ -91,6 +91,37 @@
   background: rgba(255,255,255,.12) !important;
 }
 
+.crmGroup {
+  display: grid;
+  gap: 5px;
+}
+
+.crmChevron {
+  margin-left: auto;
+  font-size: 12px;
+  opacity: .8;
+}
+
+.subNav {
+  margin-left: 34px;
+  padding-left: 10px;
+  border-left: 1px solid rgba(255,255,255,.18);
+  display: grid;
+  gap: 3px;
+}
+
+.subNav button {
+  padding: 8px 10px;
+  border-radius: 9px;
+  font-size: 12px;
+  color: rgba(255,255,255,.7);
+}
+
+.subNavActive {
+  color: #fff !important;
+  background: rgba(255,255,255,.10) !important;
+}
+
 .soon {
   margin-left: auto;
   padding: 3px 7px;
@@ -275,6 +306,74 @@ button.statCard {
   font-size: 13px;
 }
 
+.selectionBar {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid #b8d4d0;
+  border-radius: 15px;
+  background: #eef8f6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  box-shadow: 0 7px 20px rgba(20,63,63,.05);
+}
+
+.selectionCount {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #31595a;
+}
+
+.selectionCount strong {
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #0f5e61;
+  color: #fff;
+}
+
+.selectionCount span {
+  font-weight: 800;
+}
+
+.selectionActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.selectionActions button {
+  border: 1px solid #bfd2cf;
+  border-radius: 10px;
+  padding: 9px 12px;
+  background: #fff;
+  color: #0f5e61;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.selectionActions .scheduleSelected {
+  border-color: #0f5e61;
+  background: #0f5e61;
+  color: #fff;
+}
+
+.selectionActions .selectionDelete {
+  border-color: #e3bcbc;
+  color: #a53d3d;
+  background: #fff8f8;
+}
+
+.selectionActions .clearSelection {
+  color: #697c7c;
+}
+
 .tableCard {
   border: 1px solid #d9e5e3;
   border-radius: 20px;
@@ -429,6 +528,44 @@ button.statCard {
   padding: 45px !important;
   color: #7a8988;
   text-align: center !important;
+}
+
+.importModal {
+  width: min(680px, 94vw);
+  border-radius: 22px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 25px 70px rgba(14,47,47,.3);
+}
+
+.importBody {
+  padding: 22px 24px 24px;
+  display: grid;
+  gap: 14px;
+}
+
+.importChoice {
+  padding: 17px;
+  border: 1px solid #d9e5e3;
+  border-radius: 15px;
+  background: #f9fbfa;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.importChoice strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #183032;
+}
+
+.importChoice p {
+  margin: 0;
+  color: #748484;
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .modalBackdrop {
@@ -628,6 +765,18 @@ button.statCard {
 
   .notesField {
     grid-column: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .selectionBar,
+  .importChoice {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .selectionActions {
+    justify-content: flex-start;
   }
 }
 
