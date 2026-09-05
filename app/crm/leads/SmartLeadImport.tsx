@@ -484,48 +484,127 @@ function normalizeDate(value: string) {
   return null;
 }
 
-function makeParsedSheet(fileName: string, workbook: XLSX.WorkBook): ParsedSheet {
-  const nonEmptySheets = workbook.SheetNames.map((name) => {
-    const rows = XLSX.utils.sheet_to_json<unknown[]>(workbook.Sheets[name], {
-      header: 1,
-      defval: "",
-      raw: false,
-      blankrows: false,
-    }).map((row) => Array.isArray(row) ? row.map(text) : []);
 
-    return { name, rows, nonEmpty: rows.filter((row) => row.some(Boolean)).length };
-  }).filter((sheet) => sheet.nonEmpty > 0);
+function sheetNamePenalty(name: string) {
+  const n = normal(name);
 
-  const selected = nonEmptySheets[0];
-  if (!selected) throw new Error("The workbook does not contain any data.");
+  if (
+    n.includes("instruction") ||
+    n.includes("read me") ||
+    n.includes("readme") ||
+    n.includes("test case") ||
+    n.includes("sample note")
+  ) {
+    return -120;
+  }
 
-  const headerIndex = findHeaderRow(selected.rows);
-  if (headerIndex < 0) throw new Error("Orbit could not find a header row.");
+  if (
+    n.includes("payment") ||
+    n.includes("batch assignment") ||
+    n === "batches" ||
+    n === "enrollments"
+  ) {
+    return -35;
+  }
 
-  const dataRows = selected.rows
+  return 0;
+}
+
+function makeParsedSheet(
+  fileName: string,
+  sheetName: string,
+  rows: string[][],
+  sheetCount: number
+): ParsedSheet | null {
+  const nonEmptyRows = rows.filter((row) => row.some((cell) => text(cell)));
+  if (!nonEmptyRows.length) return null;
+
+  const headerIndex = findHeaderRow(rows);
+  if (headerIndex < 0) return null;
+
+  const dataRows = rows
     .slice(headerIndex + 1)
     .filter((row) => row.some((cell) => text(cell)));
 
-  const headers = normalizeHeaders(selected.rows[headerIndex], dataRows);
+  if (!dataRows.length) return null;
+
+  const headers = normalizeHeaders(rows[headerIndex], dataRows);
 
   return {
     fileName,
-    sheetName: selected.name,
-    sheetCount: workbook.SheetNames.length,
+    sheetName,
+    sheetCount,
     headerRowNumber: headerIndex + 1,
     headers,
     rows: dataRows,
   };
 }
 
+function scoreSheet(sheet: ParsedSheet) {
+  const mapping = autoMapping(sheet.headers, sheet.rows);
+  const mapped = Object.values(mapping).filter(Boolean);
+  const unique = new Set(mapped);
+
+  const hasParent =
+    unique.has("parent_full_name") ||
+    unique.has("parent_first_name");
+
+  const hasChild = unique.has("child_name");
+  const hasEmail = unique.has("email");
+  const hasPhone = unique.has("phone_number");
+  const hasGrade = unique.has("grade");
+  const hasCourse = unique.has("course_interested");
+
+  let score = unique.size * 12;
+  if (hasParent) score += 55;
+  if (hasChild) score += 55;
+  if (hasParent && hasChild) score += 75;
+  if (hasEmail) score += 22;
+  if (hasPhone) score += 22;
+  if (hasGrade) score += 12;
+  if (hasCourse) score += 12;
+
+  score += Math.min(sheet.rows.length, 100) * 0.45;
+  score += sheetNamePenalty(sheet.sheetName);
+
+  return score;
+}
+
+function analyzeWorkbook(fileName: string, workbook: XLSX.WorkBook) {
+  const parsed = workbook.SheetNames
+    .map((name) => {
+      const rows = XLSX.utils
+        .sheet_to_json<unknown[]>(workbook.Sheets[name], {
+          header: 1,
+          defval: "",
+          raw: false,
+          blankrows: false,
+        })
+        .map((row) => (Array.isArray(row) ? row.map(text) : []));
+
+      return makeParsedSheet(fileName, name, rows, workbook.SheetNames.length);
+    })
+    .filter((sheet): sheet is ParsedSheet => Boolean(sheet))
+    .sort((a, b) => scoreSheet(b) - scoreSheet(a));
+
+  if (!parsed.length) {
+    throw new Error("Orbit could not find a usable data sheet in this workbook.");
+  }
+
+  return parsed;
+}
+
 export default function SmartLeadImport({ userId, onImported }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const [sheets, setSheets] = useState<ParsedSheet[]>([]);
   const [sheet, setSheet] = useState<ParsedSheet | null>(null);
   const [mapping, setMapping] = useState<Record<number, TargetKey>>({});
   const [message, setMessage] = useState("");
   const [reading, setReading] = useState(false);
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState("");
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   async function readFile(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -534,39 +613,67 @@ export default function SmartLeadImport({ userId, onImported }: Props) {
     setReading(true);
     setMessage("");
     setProgress("");
+    setAdvancedOpen(false);
 
     try {
       const extension = file.name.split(".").pop()?.toLowerCase();
-      if (!["xlsx","xls","csv"].includes(extension || "")) {
+
+      if (!["xlsx", "xls", "csv"].includes(extension || "")) {
         throw new Error("Choose an Excel (.xlsx/.xls) or CSV file.");
       }
 
       let workbook: XLSX.WorkBook;
+
       if (extension === "csv") {
         workbook = XLSX.read(await file.text(), { type: "string" });
       } else {
-        workbook = XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: true });
+        workbook = XLSX.read(await file.arrayBuffer(), {
+          type: "array",
+          cellDates: true,
+        });
       }
 
-      const parsed = makeParsedSheet(file.name, workbook);
-      const auto = autoMapping(parsed.headers, parsed.rows);
-      setSheet(parsed);
+      const rankedSheets = analyzeWorkbook(file.name, workbook);
+      const selected = rankedSheets[0];
+      const auto = autoMapping(selected.headers, selected.rows);
+
+      setSheets(rankedSheets);
+      setSheet(selected);
       setMapping(auto);
 
-      const mappedCount = Object.values(auto).filter(Boolean).length;
-      setMessage(`Orbit found ${parsed.rows.length} data row(s) and automatically mapped ${mappedCount} column(s).`);
+      setMessage(
+        `Orbit selected "${selected.sheetName}" and found ${selected.rows.length} record(s).`
+      );
     } catch (error) {
+      setSheets([]);
       setSheet(null);
       setMapping({});
-      setMessage(error instanceof Error ? error.message : "Orbit could not read this file.");
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Orbit could not read this file."
+      );
     } finally {
       setReading(false);
       event.target.value = "";
     }
   }
 
+  function selectSheet(sheetName: string) {
+    const selected = sheets.find((item) => item.sheetName === sheetName);
+    if (!selected) return;
+
+    setSheet(selected);
+    setMapping(autoMapping(selected.headers, selected.rows));
+    setAdvancedOpen(false);
+    setMessage(
+      `Using "${selected.sheetName}" — ${selected.rows.length} record(s) detected.`
+    );
+  }
+
   function valuesForTarget(row: string[], target: TargetKey) {
     if (!target) return [];
+
     return Object.entries(mapping)
       .filter(([, mapped]) => mapped === target)
       .map(([index]) => text(row[Number(index)]))
@@ -574,10 +681,12 @@ export default function SmartLeadImport({ userId, onImported }: Props) {
   }
 
   function buildLead(row: string[], rowIndex: number): PreviewLead {
-    const get = (target: TargetKey) => valuesForTarget(row, target)[0] || "";
+    const get = (target: TargetKey) =>
+      valuesForTarget(row, target)[0] || "";
 
     const fullParent = get("parent_full_name");
     const split = splitName(fullParent);
+
     const parentFirst = get("parent_first_name") || split.first;
     const parentLast = get("parent_last_name") || split.last;
     const child = get("child_name");
@@ -596,13 +705,19 @@ export default function SmartLeadImport({ userId, onImported }: Props) {
 
     const extras = sheet
       ? sheet.headers
-          .map((header, index) => ({ header, value: text(row[index]), mapped: mappedIndexes.has(index) }))
+          .map((header, index) => ({
+            header,
+            value: text(row[index]),
+            mapped: mappedIndexes.has(index),
+          }))
           .filter((item) => item.value && !item.mapped)
           .map((item) => `${item.header}: ${item.value}`)
       : [];
 
     const directNotes = get("notes");
-    const combinedNotes = [directNotes, ...extras].filter(Boolean).join(" | ");
+    const combinedNotes = [directNotes, ...extras]
+      .filter(Boolean)
+      .join(" | ");
 
     const missing: string[] = [];
     if (!parentFirst) missing.push("Parent Name");
@@ -624,7 +739,8 @@ export default function SmartLeadImport({ userId, onImported }: Props) {
         phone_country_code: phone.countryCode,
         phone_number: phone.number,
         lead_source: source,
-        partner_name: source === "Partners" ? get("partner_name") || null : null,
+        partner_name:
+          source === "Partners" ? get("partner_name") || null : null,
         course_interested: normalizeCourse(get("course_interested")),
         assigned_to: normalizeOwner(get("assigned_to")),
         next_action: normalizeNextAction(get("next_action")),
@@ -646,9 +762,35 @@ export default function SmartLeadImport({ userId, onImported }: Props) {
   const validRows = preview.filter((row) => row.valid);
   const invalidRows = preview.filter((row) => !row.valid);
 
+  const mappedFields = Object.values(mapping).filter(Boolean).length;
+
+  const hasParentMapping =
+    Object.values(mapping).includes("parent_full_name") ||
+    Object.values(mapping).includes("parent_first_name");
+
+  const hasChildMapping = Object.values(mapping).includes("child_name");
+
+  function setRequiredField(target: TargetKey, sourceIndex: string) {
+    const next = { ...mapping };
+
+    Object.keys(next).forEach((key) => {
+      if (next[Number(key)] === target) {
+        next[Number(key)] = "";
+      }
+    });
+
+    if (sourceIndex !== "") {
+      next[Number(sourceIndex)] = target;
+    }
+
+    setMapping(next);
+  }
+
   async function importRows() {
     if (!validRows.length) {
-      setMessage("No rows are ready. Map Parent Name and Child / Student Name first.");
+      setMessage(
+        "No rows are ready yet. Choose the Parent Name and Child / Student Name columns."
+      );
       return;
     }
 
@@ -663,6 +805,7 @@ export default function SmartLeadImport({ userId, onImported }: Props) {
 
       for (let index = 0; index < payload.length; index += chunkSize) {
         const chunk = payload.slice(index, index + chunkSize);
+
         const { error } = await supabase.from("leads").insert(chunk);
         if (error) throw error;
 
@@ -671,38 +814,39 @@ export default function SmartLeadImport({ userId, onImported }: Props) {
       }
 
       setProgress("");
-      setMessage(
-        `${imported} lead(s) imported successfully${
-          invalidRows.length ? `. ${invalidRows.length} row(s) were skipped because required names were missing.` : "."
-        }`
-      );
 
       await onImported(imported, invalidRows.length);
     } catch (error) {
       setProgress("");
-      setMessage(error instanceof Error ? error.message : "Orbit could not import the leads.");
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Orbit could not import the leads."
+      );
     } finally {
       setImporting(false);
     }
   }
 
   function reset() {
+    setSheets([]);
     setSheet(null);
     setMapping({});
     setMessage("");
     setProgress("");
+    setAdvancedOpen(false);
   }
 
-  return (
-    <div className={styles.wrap}>
-      {!sheet ? (
+  if (!sheet) {
+    return (
+      <div className={styles.wrap}>
         <div className={styles.start}>
           <div>
             <h3>Upload Excel or CSV</h3>
             <p>
-              Column order and column names do not need to match Orbit. Orbit
-              detects the header row, understands common column names and maps
-              the data into CRM fields.
+              Upload the file as you received it. Orbit will choose the most
+              likely data sheet, detect the header row and prepare the CRM
+              fields automatically.
             </p>
           </div>
 
@@ -724,138 +868,281 @@ export default function SmartLeadImport({ userId, onImported }: Props) {
           />
 
           <div className={styles.support}>
-            <strong>Supported:</strong> .xlsx, .xls and .csv · one data sheet · column order can be completely different.
+            <strong>No template required.</strong> .xlsx, .xls and .csv are
+            supported.
           </div>
         </div>
-      ) : (
-        <>
-          <div className={styles.fileBar}>
-            <div>
-              <strong>{sheet.fileName}</strong>
-              <span>
-                Sheet: {sheet.sheetName} · Header detected on row {sheet.headerRowNumber} · {sheet.rows.length} data rows
-              </span>
-              {sheet.sheetCount > 1 && (
-                <small>
-                  Workbook has {sheet.sheetCount} sheets. Orbit is reading the first non-empty sheet: {sheet.sheetName}.
-                </small>
-              )}
-            </div>
-            <button type="button" onClick={reset}>Choose Another File</button>
+
+        {message && <div className={styles.message}>{message}</div>}
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.wrap}>
+      <div className={styles.fileBar}>
+        <div>
+          <strong>{sheet.fileName}</strong>
+          <span>
+            Using sheet: <b>{sheet.sheetName}</b> · Header row{" "}
+            {sheet.headerRowNumber}
+          </span>
+        </div>
+
+        <div className={styles.fileActions}>
+          {sheets.length > 1 && (
+            <label>
+              <span>Change sheet</span>
+              <select
+                value={sheet.sheetName}
+                onChange={(event) => selectSheet(event.target.value)}
+              >
+                {sheets.map((item) => (
+                  <option key={item.sheetName} value={item.sheetName}>
+                    {item.sheetName}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
+          <button type="button" onClick={reset}>
+            Choose Another File
+          </button>
+        </div>
+      </div>
+
+      <section className={styles.summary}>
+        <div>
+          <span>Records Detected</span>
+          <strong>{preview.length}</strong>
+        </div>
+        <div>
+          <span>Ready to Import</span>
+          <strong>{validRows.length}</strong>
+        </div>
+        <div>
+          <span>Need Attention</span>
+          <strong>{invalidRows.length}</strong>
+        </div>
+      </section>
+
+      {message && <div className={styles.message}>{message}</div>}
+
+      {(!hasParentMapping || !hasChildMapping) && (
+        <section className={styles.attentionCard}>
+          <div>
+            <h3>One quick check</h3>
+            <p>
+              Orbit needs these two fields before it can safely create CRM
+              leads.
+            </p>
           </div>
 
-          {message && <div className={styles.message}>{message}</div>}
-
-          <section className={styles.mappingCard}>
-            <div className={styles.sectionHead}>
-              <div>
-                <h3>Check Column Mapping</h3>
-                <p>
-                  Orbit mapped what it could automatically. Change a dropdown only if a source column belongs somewhere else.
-                </p>
-              </div>
-            </div>
-
-            <div className={styles.mappingGrid}>
-              {sheet.headers.map((header, index) => (
-                <div className={styles.mappingRow} key={`${header}-${index}`}>
-                  <div>
-                    <strong>{header}</strong>
-                    <small>
-                      {sheet.rows.slice(0, 3).map((row) => text(row[index])).filter(Boolean).join(" · ") || "Empty column"}
-                    </small>
-                  </div>
-                  <span>→</span>
-                  <select
-                    value={mapping[index] || ""}
-                    onChange={(event) =>
-                      setMapping({ ...mapping, [index]: event.target.value as TargetKey })
-                    }
-                  >
-                    {TARGET_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className={styles.previewCard}>
-            <div className={styles.sectionHead}>
-              <div>
-                <h3>Import Preview</h3>
-                <p>{validRows.length} ready · {invalidRows.length} need attention</p>
-              </div>
-              <div className={styles.legend}>
-                <span className={styles.ready}>Ready</span>
-                {invalidRows.length > 0 && <span className={styles.needs}>Needs Mapping</span>}
-              </div>
-            </div>
-
-            <div className={styles.tableWrap}>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Excel Row</th><th>Parent</th><th>Child</th><th>Grade</th>
-                    <th>Contact</th><th>Course</th><th>Source</th><th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {preview.slice(0, 8).map((row) => (
-                    <tr key={row.sourceRow}>
-                      <td>{row.sourceRow}</td>
-                      <td>{row.payload.parent_first_name} {row.payload.parent_last_name || ""}</td>
-                      <td>{row.payload.child_name || "—"}</td>
-                      <td>{row.payload.grade || "—"}</td>
-                      <td>
-                        {row.payload.email || "—"}
-                        <small>
-                          {row.payload.phone_number ? `${row.payload.phone_country_code} ${row.payload.phone_number}` : "—"}
-                        </small>
-                      </td>
-                      <td>{row.payload.course_interested || "—"}</td>
-                      <td>{row.payload.lead_source || "—"}</td>
-                      <td>
-                        <span className={row.valid ? styles.ready : styles.needs}>
-                          {row.valid ? "Ready" : `Missing ${row.missing.join(", ")}`}
-                        </span>
-                      </td>
-                    </tr>
+          <div className={styles.requiredFields}>
+            {!hasParentMapping && (
+              <label>
+                <span>Which column contains Parent Name?</span>
+                <select
+                  defaultValue=""
+                  onChange={(event) =>
+                    setRequiredField(
+                      "parent_full_name",
+                      event.target.value
+                    )
+                  }
+                >
+                  <option value="">Choose column</option>
+                  {sheet.headers.map((header, index) => (
+                    <option key={`${header}-${index}`} value={index}>
+                      {header}
+                    </option>
                   ))}
-                </tbody>
-              </table>
-            </div>
-
-            {preview.length > 8 && (
-              <p className={styles.previewNote}>Showing the first 8 rows. All {preview.length} rows will be processed.</p>
+                </select>
+              </label>
             )}
-          </section>
 
-          <div className={styles.footer}>
-            <div>
-              <strong>{validRows.length} lead(s) ready to import</strong>
-              <span>
-                Extra columns that are not mapped are preserved automatically inside Notes, so source information is not lost.
-              </span>
-            </div>
-            <button
-              type="button"
-              className={styles.importButton}
-              onClick={importRows}
-              disabled={importing || validRows.length === 0}
-            >
-              {importing
-                ? progress || "Importing..."
-                : invalidRows.length
-                ? `Import ${validRows.length} Ready Rows`
-                : `Import All ${validRows.length} Leads`}
-            </button>
+            {!hasChildMapping && (
+              <label>
+                <span>Which column contains Child / Student Name?</span>
+                <select
+                  defaultValue=""
+                  onChange={(event) =>
+                    setRequiredField("child_name", event.target.value)
+                  }
+                >
+                  <option value="">Choose column</option>
+                  {sheet.headers.map((header, index) => (
+                    <option key={`${header}-${index}`} value={index}>
+                      {header}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
           </div>
-        </>
+        </section>
       )}
 
-      {!sheet && message && <div className={styles.message}>{message}</div>}
+      <section className={styles.previewCard}>
+        <div className={styles.sectionHead}>
+          <div>
+            <h3>Import Preview</h3>
+            <p>
+              Check a few records below. Orbit will process all{" "}
+              {preview.length} rows.
+            </p>
+          </div>
+
+          <span
+            className={
+              invalidRows.length === 0 ? styles.ready : styles.needs
+            }
+          >
+            {invalidRows.length === 0
+              ? "Ready to Import"
+              : `${invalidRows.length} Need Attention`}
+          </span>
+        </div>
+
+        <div className={styles.tableWrap}>
+          <table>
+            <thead>
+              <tr>
+                <th>Parent</th>
+                <th>Child</th>
+                <th>Grade</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Course</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {preview.slice(0, 6).map((row) => (
+                <tr key={row.sourceRow}>
+                  <td>
+                    {row.payload.parent_first_name}{" "}
+                    {row.payload.parent_last_name || ""}
+                  </td>
+                  <td>{row.payload.child_name || "—"}</td>
+                  <td>{row.payload.grade || "—"}</td>
+                  <td>
+                    {row.payload.phone_number
+                      ? `${row.payload.phone_country_code} ${row.payload.phone_number}`
+                      : "—"}
+                  </td>
+                  <td>{row.payload.email || "—"}</td>
+                  <td>{row.payload.course_interested || "—"}</td>
+                  <td>
+                    <span
+                      className={
+                        row.valid ? styles.ready : styles.needs
+                      }
+                    >
+                      {row.valid
+                        ? "Ready"
+                        : `Missing ${row.missing.join(", ")}`}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {preview.length > 6 && (
+          <p className={styles.previewNote}>
+            Showing 6 of {preview.length} records.
+          </p>
+        )}
+      </section>
+
+      <button
+        type="button"
+        className={styles.advancedToggle}
+        onClick={() => setAdvancedOpen((value) => !value)}
+      >
+        {advancedOpen ? "Hide detected fields" : "Review detected fields"}{" "}
+        <span>{mappedFields} mapped</span>
+      </button>
+
+      {advancedOpen && (
+        <section className={styles.mappingCard}>
+          <div className={styles.sectionHead}>
+            <div>
+              <h3>Detected Fields</h3>
+              <p>
+                Optional. Change these only when Orbit has put a column in the
+                wrong CRM field.
+              </p>
+            </div>
+          </div>
+
+          <div className={styles.mappingGrid}>
+            {sheet.headers.map((header, index) => (
+              <div
+                className={styles.mappingRow}
+                key={`${header}-${index}`}
+              >
+                <div>
+                  <strong>{header}</strong>
+                  <small>
+                    {sheet.rows
+                      .slice(0, 3)
+                      .map((row) => text(row[index]))
+                      .filter(Boolean)
+                      .join(" · ") || "Empty column"}
+                  </small>
+                </div>
+
+                <span>→</span>
+
+                <select
+                  value={mapping[index] || ""}
+                  onChange={(event) =>
+                    setMapping({
+                      ...mapping,
+                      [index]: event.target.value as TargetKey,
+                    })
+                  }
+                >
+                  {TARGET_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <div className={styles.footer}>
+        <div>
+          <strong>{validRows.length} lead(s) ready</strong>
+          <span>
+            Unrecognised extra columns are kept automatically in Notes.
+            Existing duplicate detection will still flag duplicates after
+            import.
+          </span>
+        </div>
+
+        <button
+          type="button"
+          className={styles.importButton}
+          onClick={importRows}
+          disabled={importing || validRows.length === 0}
+        >
+          {importing
+            ? progress || "Importing..."
+            : invalidRows.length
+            ? `Import ${validRows.length} Ready Leads`
+            : `Import All ${validRows.length} Leads`}
+        </button>
+      </div>
     </div>
   );
 }
