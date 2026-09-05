@@ -1185,8 +1185,8 @@ export default function DemoSchedulePage() {
               )}
             </div>
 
-            <button><span>◉</span> Students</button>
-            <button><span>▣</span> Batches</button>
+            <button onClick={() => router.push("/students")}><span>◉</span> Students</button>
+            <button onClick={() => router.push("/batches")}><span>▣</span> Batches</button>
             <button><span>₹</span> Payments</button>
             <button><span>✦</span> Courses</button>
             <button><span>▤</span> Reports</button>

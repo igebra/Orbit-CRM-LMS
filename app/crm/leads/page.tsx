@@ -30,6 +30,14 @@ const LEAD_SOURCES = [
 
 const ASSIGNED_TO = ["Madhu", "Armaity", "Karuna"];
 
+const PARTNERS = [
+  "Hari Vangala",
+  "Shiva Chidara",
+  "Chandra Shekar",
+  "Vijay Devuluru",
+  "Satya Prakash",
+];
+
 const NEXT_ACTIONS = [
   "Need to Call",
   "Awaiting response",
@@ -49,6 +57,14 @@ const SCHOOL_COURSES = [
     ["01", "02", "03"].map((level) => `Coding4AI ${group} - Level ${level}`)
   ),
   ...GRADES.map((grade) => `Math - ${grade}`),
+  "AP Pre-Calculus",
+  "AP Calculus AB",
+  "AP Calculus BC",
+  "AP Statistics",
+  "SAT and PSAT",
+  "Algebra 1",
+  "Geometry",
+  "Algebra 2",
 ];
 
 const COUNTRIES = [
@@ -81,6 +97,7 @@ type Lead = {
   phone_country_code: string;
   phone_number: string | null;
   lead_source: string | null;
+  partner_name: string | null;
   course_interested: string | null;
   assigned_to: string | null;
   next_action: string | null;
@@ -89,6 +106,7 @@ type Lead = {
   demo_trainer: string | null;
   demo_attended: boolean;
   demo_attended_course: string | null;
+  demo_attended_at: string | null;
   next_follow_up_date: string | null;
   notes: string | null;
   converted_at: string | null;
@@ -109,6 +127,7 @@ type FormState = {
   phone_country_code: string;
   phone_number: string;
   lead_source: string;
+  partner_name: string;
   course_interested: string;
   assigned_to: string;
   next_action: string;
@@ -131,6 +150,7 @@ const EMPTY_FORM: FormState = {
   phone_country_code: "+1",
   phone_number: "",
   lead_source: "",
+  partner_name: "",
   course_interested: "",
   assigned_to: "",
   next_action: "Need to Call",
@@ -292,6 +312,7 @@ export default function LeadsPage() {
         lead.phone_country_code,
         lead.phone_number,
         lead.lead_source,
+        lead.partner_name,
         lead.course_interested,
         lead.assigned_to,
         lead.next_action,
@@ -335,6 +356,7 @@ export default function LeadsPage() {
       phone_country_code: lead.phone_country_code || "+1",
       phone_number: lead.phone_number || "",
       lead_source: lead.lead_source || "",
+      partner_name: lead.partner_name || "",
       course_interested: lead.course_interested || "",
       assigned_to: lead.assigned_to || "",
       next_action: lead.next_action || "",
@@ -380,6 +402,7 @@ export default function LeadsPage() {
       phone_country_code: form.phone_country_code,
       phone_number: clean(form.phone_number),
       lead_source: clean(form.lead_source),
+      partner_name: form.lead_source === "Partners" ? clean(form.partner_name) : null,
       course_interested: clean(form.course_interested),
       assigned_to: clean(form.assigned_to),
       next_action: clean(form.next_action),
@@ -499,12 +522,14 @@ export default function LeadsPage() {
       "phone_country_code",
       "phone_number",
       "lead_source",
+      "partner_name",
       "course_interested",
       "assigned_to",
       "next_action",
       "lead_stage",
       "demo_attended",
       "demo_attended_course",
+      "demo_attended_at",
       "next_follow_up_date",
       "notes",
       "created_at",
@@ -523,12 +548,14 @@ export default function LeadsPage() {
           lead.phone_country_code,
           lead.phone_number,
           lead.lead_source,
+          lead.partner_name,
           lead.course_interested,
           lead.assigned_to,
           lead.next_action,
           lead.lead_stage,
           lead.demo_attended ? "Yes" : "No",
           lead.demo_attended_course,
+          lead.demo_attended_at,
           lead.next_follow_up_date,
           lead.notes,
           lead.created_at,
@@ -572,6 +599,7 @@ export default function LeadsPage() {
       "phone_country_code",
       "phone_number",
       "lead_source",
+      "partner_name",
       "course_interested",
       "assigned_to",
       "next_action",
@@ -590,6 +618,7 @@ export default function LeadsPage() {
       "+1",
       "5551234567",
       "Meta Ads",
+      "",
       "AiEdge Middle School - Level 01",
       "Madhu",
       "Need to Call",
@@ -662,6 +691,10 @@ export default function LeadsPage() {
             phone_number:
               pick(row, ["phone_number", "phone", "mobile"]) || null,
             lead_source: pick(row, ["lead_source", "source"]) || null,
+            partner_name:
+              pick(row, ["lead_source", "source"]) === "Partners"
+                ? pick(row, ["partner_name", "partner"]) || null
+                : null,
             course_interested:
               pick(row, [
                 "course_interested",
@@ -760,10 +793,10 @@ export default function LeadsPage() {
                 </div>
               )}
             </div>
-            <button>
+            <button onClick={() => router.push("/students")}>
               <span>◉</span> Students
             </button>
-            <button>
+            <button onClick={() => router.push("/batches")}>
               <span>▣</span> Batches
             </button>
             <button>
@@ -1005,7 +1038,12 @@ export default function LeadsPage() {
                         </small>
                       </td>
 
-                      <td>{lead.lead_source || "—"}</td>
+                      <td>
+                        <span>{lead.lead_source || "—"}</span>
+                        {lead.lead_source === "Partners" && lead.partner_name && (
+                          <small>{lead.partner_name}</small>
+                        )}
+                      </td>
                       <td>{lead.course_interested || "—"}</td>
                       <td>{lead.assigned_to || "—"}</td>
 
@@ -1024,8 +1062,11 @@ export default function LeadsPage() {
                       <td>
                         {lead.demo_attended ? (
                           <>
-                            <span className={styles.stageBadge}>✓ Demo Attended</span>
+                            <span className={styles.stageBadge}>✓ Attended</span>
                             <small>{lead.demo_attended_course || "Demo"}</small>
+                            {lead.demo_attended_at && (
+                              <small>{new Date(lead.demo_attended_at).toLocaleDateString()}</small>
+                            )}
                           </>
                         ) : lead.demo_scheduled_at ? (
                           <>
@@ -1263,13 +1304,9 @@ export default function LeadsPage() {
                       setForm({
                         ...form,
                         lead_source: event.target.value,
-                        demo_attended:
-                          event.target.value === "Demo"
-                            ? form.demo_attended
-                            : false,
-                        demo_attended_course:
-                          event.target.value === "Demo"
-                            ? form.demo_attended_course
+                        partner_name:
+                          event.target.value === "Partners"
+                            ? form.partner_name
                             : "",
                       })
                     }
@@ -1280,6 +1317,23 @@ export default function LeadsPage() {
                     ))}
                   </select>
                 </label>
+
+                {form.lead_source === "Partners" && (
+                  <label>
+                    <span>Partner Name</span>
+                    <select
+                      value={form.partner_name}
+                      onChange={(event) =>
+                        setForm({ ...form, partner_name: event.target.value })
+                      }
+                    >
+                      <option value="">Select partner</option>
+                      {PARTNERS.map((partner) => (
+                        <option key={partner}>{partner}</option>
+                      ))}
+                    </select>
+                  </label>
+                )}
 
                 <label>
                   <span>Course Interested</span>

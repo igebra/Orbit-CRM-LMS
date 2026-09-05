@@ -45,6 +45,8 @@ export default function DashboardPage() {
 
   function handleMenu(key: string) {
     setActive(key);
+    if (key === "students") router.push("/students");
+    if (key === "batches") router.push("/batches");
   }
 
   return (
@@ -187,13 +189,13 @@ export default function DashboardPage() {
                 <p>Leads, demos, follow-ups and conversions.</p>
               </button>
 
-              <button className="orbit-module-card">
+              <button className="orbit-module-card" onClick={() => router.push("/students")}>
                 <div className="orbit-module-icon">◉</div>
                 <h3>Students</h3>
                 <p>Profiles, enrolments and multi-course mapping.</p>
               </button>
 
-              <button className="orbit-module-card">
+              <button className="orbit-module-card" onClick={() => router.push("/batches")}>
                 <div className="orbit-module-icon">▣</div>
                 <h3>Batches</h3>
                 <p>Trainer assignment, attendance and topics covered.</p>
