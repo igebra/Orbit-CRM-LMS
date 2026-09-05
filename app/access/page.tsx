@@ -307,6 +307,75 @@ export default function AccessPage() {
     await load();
   }
 
+  async function sendPasswordReset(user: UserRow) {
+    const userEmail = (user.email || "").trim();
+
+    if (!userEmail) {
+      setMessage("This user does not have an email address.");
+      return;
+    }
+
+    if (!confirm(`Send a password reset link to ${userEmail}?`)) {
+      return;
+    }
+
+    setMessage("");
+
+    const redirectTo =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/reset-password`
+        : undefined;
+
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      userEmail,
+      { redirectTo }
+    );
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    setMessage(`Password reset link sent to ${userEmail}.`);
+  }
+
+  async function removeUserAccess(user: UserRow) {
+    if (user.user_id === userId) {
+      setMessage("You cannot remove your own Orbit access.");
+      return;
+    }
+
+    if (!isSuperAdmin && user.role === "super_admin") {
+      setMessage("Only a Super Admin can manage another Super Admin.");
+      return;
+    }
+
+    if (!confirm(
+      `Remove Orbit access for ${user.email || user.full_name || "this user"}? Their history will be kept.`
+    )) {
+      return;
+    }
+
+    setSaving(true);
+    setMessage("");
+
+    const { error } = await supabase.rpc("update_orbit_user_access", {
+      p_user_id: user.user_id,
+      p_role: user.role,
+      p_is_active: false,
+    });
+
+    setSaving(false);
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    setMessage("User access removed.");
+    await load();
+  }
+
   function openUser(user: UserRow) {
     setEditUser(user);
     setEditRole(user.role);
@@ -588,12 +657,31 @@ export default function AccessPage() {
                             ) : protectedFromAdmin ? (
                               <span className={styles.muted}>Protected</span>
                             ) : (
-                              <button
-                                className={styles.editButton}
-                                onClick={() => openUser(user)}
-                              >
-                                Manage
-                              </button>
+                              <div className={styles.userActions}>
+                                <button
+                                  className={styles.editButton}
+                                  onClick={() => openUser(user)}
+                                >
+                                  Manage
+                                </button>
+
+                                <button
+                                  className={styles.resetButton}
+                                  onClick={() => sendPasswordReset(user)}
+                                >
+                                  Reset Password
+                                </button>
+
+                                {user.is_active && (
+                                  <button
+                                    className={styles.removeButton}
+                                    onClick={() => removeUserAccess(user)}
+                                    disabled={saving}
+                                  >
+                                    Remove User
+                                  </button>
+                                )}
+                              </div>
                             )}
                           </td>
                         </tr>
@@ -610,8 +698,8 @@ export default function AccessPage() {
           <strong>Simple access flow:</strong> users can request access, or an
           Admin can grant it directly with <strong>+ Add User</strong>. After
           approval, the user selects <strong>Activate Approved Access</strong>
-          on the login page and creates their own password. No Orbit email
-          notification is required.
+          on the login page and creates their own password. Admins can later
+          send a password reset link or remove the user&apos;s Orbit access.
         </div>
       </main>
 

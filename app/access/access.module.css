@@ -60,3 +60,10 @@
   .formGrid{grid-template-columns:1fr}
   .full{grid-column:auto}
 }
+
+
+.userActions{display:flex;gap:6px;flex-wrap:wrap}
+.resetButton,.removeButton{border-radius:8px;padding:6px 8px;font-size:10px;font-weight:800;cursor:pointer}
+.resetButton{border:1px solid #cbdad7;background:#fff;color:#0f5e61}
+.removeButton{border:1px solid #efc5c1;background:#fff;color:#9e413b}
+.removeButton:disabled{opacity:.55;cursor:not-allowed}
