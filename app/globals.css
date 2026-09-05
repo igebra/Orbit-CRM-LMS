@@ -71,9 +71,15 @@ button,input,select{font:inherit}
 .orbit-brand-title{font-size:24px;font-weight:800;line-height:1}
 .orbit-brand-subtitle{font-size:13px;color:rgba(255,255,255,.78);margin-top:4px}
 .orbit-nav{display:flex;flex-direction:column;gap:9px}
-.orbit-nav-item{width:100%;border:none;background:transparent;color:rgba(255,255,255,.9);display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;font-size:15px;cursor:pointer;text-align:left;transition:.2s ease}
+.orbit-nav-item{width:100%;border:none;background:transparent;color:rgba(255,255,255,.9);display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:14px;font-size:15px;cursor:pointer;text-align:left;transition:.2s ease}
 .orbit-nav-item:hover{background:rgba(255,255,255,.1)}
 .orbit-nav-item.active{background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.orbit-crm-group{display:grid;gap:2px}
+.orbit-crm-toggle{width:100%}
+.orbit-crm-chevron{margin-left:auto;font-size:12px;opacity:.8}
+.orbit-subnav{margin-left:34px;padding-left:10px;border-left:1px solid rgba(255,255,255,.18);display:grid;gap:1px}
+.orbit-subnav-item{width:100%;border:0;border-radius:9px;padding:6px 10px;background:transparent;color:rgba(255,255,255,.7);font-size:12px;text-align:left;cursor:pointer}
+.orbit-subnav-item:hover{background:rgba(255,255,255,.10);color:#fff}
 .orbit-nav-icon{width:22px;text-align:center}
 .orbit-coming-soon{margin-left:auto;font-size:11px;background:rgba(217,133,59,.18);color:#ffd2a5;padding:4px 8px;border-radius:999px}
 .orbit-sidebar-footer{display:flex;flex-direction:column;gap:14px}
