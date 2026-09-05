@@ -1,0 +1,69 @@
+
+.shell{min-height:100vh;background:#f3f7f6;display:grid;grid-template-columns:245px 1fr;color:#173637}
+.main{padding:32px 34px 52px;min-width:0}
+.header{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:18px}
+.header h1{margin:4px 0 6px;font-size:36px}
+.header p{margin:0;color:#758584;font-size:14px}
+.kicker{font-size:12px!important;color:#d9792e!important;font-weight:900;letter-spacing:.08em}
+.primary,.secondary{border-radius:9px;padding:10px 13px;font-weight:800;cursor:pointer}
+.primary{border:1px solid #c6752e;background:#df8a3d;color:#fff}
+.secondary{border:1px solid #cddbd8;background:#fff;color:#0f5e61}
+.primary:disabled,.secondary:disabled{opacity:.55;cursor:not-allowed}
+
+.periodCard{background:#fff;border:1px solid #d8e5e2;border-radius:14px;padding:13px;margin-bottom:14px;display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap}
+.presetButtons{display:flex;gap:6px;flex-wrap:wrap}
+.presetButtons button{border:1px solid #cfddda;background:#fff;color:#5c706f;border-radius:9px;padding:8px 10px;font-size:11px;font-weight:800;cursor:pointer}
+.presetButtons .activePreset{background:#0f5e61;color:#fff;border-color:#0f5e61}
+.dateRange{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap}
+.dateRange label span{display:block;font-size:10px;font-weight:800;margin-bottom:5px}
+.dateRange input{height:39px;border:1px solid #cedbd8;border-radius:9px;padding:0 9px;background:#fff}
+
+.message{margin-bottom:14px;padding:10px 12px;background:#fff4e7;border:1px solid #f0d3b2;border-radius:10px;color:#80532e;font-size:12px}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.stats>div{background:#fff;border:1px solid #d8e5e2;border-radius:13px;padding:14px}
+.stats span,.stats strong,.stats small{display:block}
+.stats span{color:#7b8a89;font-size:11px}
+.stats strong{font-size:23px;margin:4px 0}
+.stats small{color:#8a9795;font-size:10px}
+
+.breakdownGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.panel{background:#fff;border:1px solid #d8e5e2;border-radius:14px;overflow:hidden;margin-bottom:14px}
+.panelHeader{padding:14px 15px;border-bottom:1px solid #e5ecea;display:flex;justify-content:space-between;gap:12px;align-items:center}
+.panelHeader h2{margin:0;font-size:15px}
+.panelHeader p{margin:3px 0 0;color:#81908f;font-size:10px}
+.breakdownList{padding:9px}
+.breakdownList>div{display:flex;justify-content:space-between;gap:10px;padding:9px 8px;border-bottom:1px solid #edf1f0}
+.breakdownList>div:last-child{border-bottom:0}
+.breakdownList span{font-size:11px;color:#556967}
+.breakdownList strong{font-size:12px}
+.search{width:min(300px,100%);height:38px;border:1px solid #cfdcd9;border-radius:9px;padding:0 10px}
+
+.tableWrap{overflow:auto}
+.tableWrap table{width:100%;border-collapse:collapse;min-width:1000px}
+.tableWrap th,.tableWrap td{text-align:left;padding:11px 12px;border-bottom:1px solid #edf1f0;font-size:11px;vertical-align:top}
+.tableWrap th{font-size:9.5px;text-transform:uppercase;color:#758482;background:#fbfdfc;letter-spacing:.04em}
+.tableWrap td small{display:block;margin-top:3px;color:#83908f;font-size:9.5px}
+.status{display:inline-block;border-radius:999px;padding:4px 7px;background:#eef3f2;color:#617170;font-size:9.5px;font-weight:800}
+.overdue{background:#ffe6e4;color:#a33e38}
+.dueSoon{background:#fff0dd;color:#96602c}
+.paid{background:#e5f5e8;color:#2e7440}
+.empty{text-align:center!important;color:#82908f!important;padding:28px!important}
+
+@media(max-width:1050px){
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .breakdownGrid{grid-template-columns:1fr}
+}
+@media(max-width:800px){
+  .shell{grid-template-columns:1fr}
+  .main{padding:24px 18px}
+  .header{flex-direction:column}
+  .stats{grid-template-columns:1fr}
+  .periodCard{align-items:stretch}
+  .dateRange{width:100%}
+  .dateRange label{flex:1}
+  .dateRange input{width:100%}
+  .dateRange .primary{width:100%}
+  .panelHeader{align-items:stretch;flex-direction:column}
+  .search{width:100%}
+}

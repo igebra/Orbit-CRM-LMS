@@ -18,7 +18,8 @@ type Props = {
     | "sessions"
     | "courses"
     | "trainers"
-    | "reports";
+    | "reports"
+    | "payments";
 };
 
 export default function OrbitSidebar({ email, active }: Props) {
@@ -118,7 +119,14 @@ export default function OrbitSidebar({ email, active }: Props) {
             </button>
           )}
 
-          {canSeePayments && <button><span>$</span> Payments</button>}
+          {canSeePayments && (
+            <button
+              className={active === "payments" ? styles.navActive : ""}
+              onClick={() => router.push("/payments")}
+            >
+              <span>$</span> Payments
+            </button>
+          )}
 
           <button
             className={active === "courses" ? styles.navActive : ""}
