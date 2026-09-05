@@ -39,6 +39,19 @@ type Outstanding = {
   payment_status: string;
 };
 
+const PAYMENT_MODES = [
+  "Zelle",
+  "Stripe",
+  "Razorpay",
+  "UPI",
+  "Bank Transfer",
+  "Credit/Debit Card",
+  "PayPal",
+  "Cash",
+  "Cheque",
+  "Other",
+];
+
 type Preset =
   | "week"
   | "month"
@@ -112,6 +125,7 @@ export default function PaymentsPage() {
   const defaultRange = getPresetRange("month");
 
   const [email, setEmail] = useState("");
+  const [userId, setUserId] = useState("");
   const [role, setRole] = useState("");
   const [preset, setPreset] = useState<Preset>("month");
   const [from, setFrom] = useState(defaultRange.from);
@@ -121,6 +135,15 @@ export default function PaymentsPage() {
   const [search, setSearch] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [paymentOpen, setPaymentOpen] = useState(false);
+  const [savingPayment, setSavingPayment] = useState(false);
+  const [paymentForm, setPaymentForm] = useState({
+    finance_id: "",
+    amount_usd: "",
+    payment_date: localIso(new Date()),
+    payment_mode: "Zelle",
+    reference: "",
+  });
 
   const allowedRoles = [
     "super_admin",
@@ -129,6 +152,12 @@ export default function PaymentsPage() {
     "viewer_management",
     "accounts_finance",
   ];
+
+  const canManageFinance = [
+    "super_admin",
+    "admin",
+    "accounts_finance",
+  ].includes(role);
 
   useEffect(() => {
     async function init() {
@@ -140,6 +169,7 @@ export default function PaymentsPage() {
       }
 
       setEmail(data.user.email || "");
+      setUserId(data.user.id);
 
       const { data: profile } = await supabase
         .from("user_profiles")
@@ -287,6 +317,65 @@ export default function PaymentsPage() {
     return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
   }, [outstanding]);
 
+
+  function openManualPayment() {
+    const firstOutstanding = outstanding.find((row) => Number(row.pending_usd || 0) > 0);
+
+    setPaymentForm({
+      finance_id: firstOutstanding?.finance_id || "",
+      amount_usd: "",
+      payment_date: localIso(new Date()),
+      payment_mode: "Zelle",
+      reference: "",
+    });
+
+    setPaymentOpen(true);
+  }
+
+  async function saveManualPayment(event: React.FormEvent) {
+    event.preventDefault();
+
+    if (!paymentForm.finance_id) {
+      setMessage("Select a student / batch.");
+      return;
+    }
+
+    const amount = Number(paymentForm.amount_usd);
+
+    if (!amount || amount <= 0) {
+      setMessage("Enter a valid payment amount.");
+      return;
+    }
+
+    if (!paymentForm.payment_date) {
+      setMessage("Payment Date is required.");
+      return;
+    }
+
+    setSavingPayment(true);
+    setMessage("");
+
+    const { error } = await supabase.from("payment_transactions").insert({
+      finance_id: paymentForm.finance_id,
+      amount_usd: amount,
+      payment_date: paymentForm.payment_date,
+      payment_mode: paymentForm.payment_mode,
+      reference: paymentForm.reference.trim() || null,
+      created_by: userId || null,
+    });
+
+    setSavingPayment(false);
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    setPaymentOpen(false);
+    setMessage("Payment recorded successfully.");
+    await loadReports(from, to);
+  }
+
   function exportCsv() {
     const headers = [
       "Date",
@@ -356,13 +445,21 @@ export default function PaymentsPage() {
             </p>
           </div>
 
-          <button
-            className={styles.secondary}
-            onClick={exportCsv}
-            disabled={filteredTransactions.length === 0}
-          >
-            Export CSV
-          </button>
+          <div className={styles.headerActions}>
+            {canManageFinance && (
+              <button className={styles.primary} onClick={openManualPayment}>
+                + Add Payment
+              </button>
+            )}
+
+            <button
+              className={styles.secondary}
+              onClick={exportCsv}
+              disabled={filteredTransactions.length === 0}
+            >
+              Export CSV
+            </button>
+          </div>
         </header>
 
         <section className={styles.periodCard}>
@@ -661,6 +758,130 @@ export default function PaymentsPage() {
           </div>
         </section>
       </main>
+
+      {paymentOpen && (
+        <div className={styles.backdrop}>
+          <div className={styles.modal}>
+            <div className={styles.modalHeader}>
+              <div>
+                <h2>Add Payment</h2>
+                <p>Record a payment received manually.</p>
+              </div>
+              <button
+                type="button"
+                className={styles.close}
+                onClick={() => setPaymentOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={saveManualPayment}>
+              <div className={styles.formGrid}>
+                <label className={styles.full}>
+                  <span>Student / Batch *</span>
+                  <select
+                    value={paymentForm.finance_id}
+                    onChange={(event) =>
+                      setPaymentForm({
+                        ...paymentForm,
+                        finance_id: event.target.value,
+                      })
+                    }
+                  >
+                    <option value="">Select student / batch</option>
+                    {outstanding.map((row) => (
+                      <option key={row.finance_id} value={row.finance_id}>
+                        {row.student_name} — {row.batch_name} — Pending {money(row.pending_usd)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  <span>Amount USD *</span>
+                  <input
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    value={paymentForm.amount_usd}
+                    onChange={(event) =>
+                      setPaymentForm({
+                        ...paymentForm,
+                        amount_usd: event.target.value,
+                      })
+                    }
+                    placeholder="0.00"
+                  />
+                </label>
+
+                <label>
+                  <span>Payment Date *</span>
+                  <input
+                    type="date"
+                    value={paymentForm.payment_date}
+                    onChange={(event) =>
+                      setPaymentForm({
+                        ...paymentForm,
+                        payment_date: event.target.value,
+                      })
+                    }
+                  />
+                </label>
+
+                <label>
+                  <span>Payment Mode *</span>
+                  <select
+                    value={paymentForm.payment_mode}
+                    onChange={(event) =>
+                      setPaymentForm({
+                        ...paymentForm,
+                        payment_mode: event.target.value,
+                      })
+                    }
+                  >
+                    {PAYMENT_MODES.map((mode) => (
+                      <option key={mode}>{mode}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  <span>Reference / Transaction ID</span>
+                  <input
+                    value={paymentForm.reference}
+                    onChange={(event) =>
+                      setPaymentForm({
+                        ...paymentForm,
+                        reference: event.target.value,
+                      })
+                    }
+                    placeholder="Optional"
+                  />
+                </label>
+              </div>
+
+              <div className={styles.modalFooter}>
+                <button
+                  type="button"
+                  className={styles.secondary}
+                  onClick={() => setPaymentOpen(false)}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className={styles.primary}
+                  disabled={savingPayment}
+                >
+                  {savingPayment ? "Saving..." : "Save Payment"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
