@@ -86,6 +86,45 @@ const COUNTRIES = [
   { name: "Hong Kong", code: "+852" },
 ];
 
+
+const FOLLOW_UP_ACTIONS = [
+  "Called",
+  "Email sent",
+  "WhatsApp sent",
+  "Awaiting response",
+  "No answer",
+  "Interested",
+  "Not Interested",
+  "Other",
+];
+
+type LeadActivity = {
+  id: string;
+  lead_id: string;
+  action_type: string;
+  notes: string | null;
+  next_follow_up_date: string | null;
+  created_at: string;
+};
+
+type FollowUpForm = {
+  action_type: string;
+  notes: string;
+  next_follow_up_date: string;
+};
+
+const EMPTY_FOLLOW_UP: FollowUpForm = {
+  action_type: "Called",
+  notes: "",
+  next_follow_up_date: "",
+};
+
+function localTodayIso() {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 10);
+}
+
 type Lead = {
   id: string;
   parent_first_name: string;
@@ -237,6 +276,7 @@ export default function LeadsPage() {
 
   const [email, setEmail] = useState("");
   const [userId, setUserId] = useState("");
+  const [role, setRole] = useState("");
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -246,6 +286,7 @@ export default function LeadsPage() {
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState("All stages");
   const [duplicateFilter, setDuplicateFilter] = useState(false);
+  const [followUpFilter, setFollowUpFilter] = useState("All follow-ups");
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -254,6 +295,29 @@ export default function LeadsPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [crmOpen, setCrmOpen] = useState(true);
   const [importModalOpen, setImportModalOpen] = useState(false);
+
+  const [followUpOpen, setFollowUpOpen] = useState(false);
+  const [followUpLead, setFollowUpLead] = useState<Lead | null>(null);
+  const [followUpForm, setFollowUpForm] = useState<FollowUpForm>(EMPTY_FOLLOW_UP);
+  const [activities, setActivities] = useState<LeadActivity[]>([]);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [followUpSaving, setFollowUpSaving] = useState(false);
+  const [convertingId, setConvertingId] = useState<string | null>(null);
+
+  const canManageCrm = [
+    "super_admin",
+    "admin",
+    "sales",
+    "marketing",
+    "sales_marketing",
+  ].includes(role);
+
+  const canConvertLead = [
+    "super_admin",
+    "admin",
+    "sales",
+    "sales_marketing",
+  ].includes(role);
 
   useEffect(() => {
     async function initialize() {
@@ -266,6 +330,14 @@ export default function LeadsPage() {
 
       setEmail(authData.user.email || "");
       setUserId(authData.user.id);
+
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("role")
+        .eq("id", authData.user.id)
+        .single();
+
+      setRole(profile?.role || "");
       await loadLeads();
     }
 
@@ -301,6 +373,16 @@ export default function LeadsPage() {
 
       if (duplicateFilter && !lead.is_duplicate) return false;
 
+      if (followUpFilter !== "All follow-ups") {
+        const today = localTodayIso();
+        const date = lead.next_follow_up_date;
+
+        if (followUpFilter === "Due today" && date !== today) return false;
+        if (followUpFilter === "Overdue" && (!date || date >= today)) return false;
+        if (followUpFilter === "Upcoming" && (!date || date <= today)) return false;
+        if (followUpFilter === "No follow-up" && date) return false;
+      }
+
       if (!q) return true;
 
       const haystack = [
@@ -324,7 +406,7 @@ export default function LeadsPage() {
 
       return haystack.includes(q);
     });
-  }, [leads, search, stageFilter, duplicateFilter]);
+  }, [leads, search, stageFilter, duplicateFilter, followUpFilter]);
 
   const stats = useMemo(
     () => ({
@@ -500,6 +582,103 @@ export default function LeadsPage() {
       });
       return next;
     });
+  }
+
+
+  async function openFollowUp(lead: Lead) {
+    setFollowUpLead(lead);
+    setFollowUpForm({
+      action_type: lead.next_action || "Called",
+      notes: "",
+      next_follow_up_date: lead.next_follow_up_date || "",
+    });
+    setActivities([]);
+    setFollowUpOpen(true);
+    setActivityLoading(true);
+
+    const { data, error } = await supabase
+      .from("lead_activities")
+      .select("id,lead_id,action_type,notes,next_follow_up_date,created_at")
+      .eq("lead_id", lead.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      setMessage(error.message);
+    } else {
+      setActivities((data || []) as LeadActivity[]);
+    }
+
+    setActivityLoading(false);
+  }
+
+  async function saveFollowUp(event: FormEvent) {
+    event.preventDefault();
+    if (!followUpLead) return;
+
+    setFollowUpSaving(true);
+    setMessage("");
+
+    const { error } = await supabase.rpc("record_lead_follow_up", {
+      p_lead_id: followUpLead.id,
+      p_action_type: followUpForm.action_type,
+      p_notes: clean(followUpForm.notes),
+      p_next_follow_up_date: clean(followUpForm.next_follow_up_date),
+    });
+
+    setFollowUpSaving(false);
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    setFollowUpOpen(false);
+    setFollowUpLead(null);
+    setFollowUpForm(EMPTY_FOLLOW_UP);
+    setMessage("Follow-up saved.");
+    await loadLeads();
+  }
+
+  async function convertLead(lead: Lead) {
+    if (lead.converted_student_id) {
+      router.push("/students");
+      return;
+    }
+
+    if (
+      !window.confirm(
+        `Convert ${lead.child_name} into a Student profile${
+          lead.course_interested ? ` and enroll in ${lead.course_interested}` : ""
+        }?`
+      )
+    ) {
+      return;
+    }
+
+    setConvertingId(lead.id);
+    setMessage("");
+
+    const { error } = await supabase.rpc("convert_lead_to_student", {
+      p_lead_id: lead.id,
+    });
+
+    setConvertingId(null);
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    setMessage(`${lead.child_name} has been converted to a Student.`);
+    await loadLeads();
+  }
+
+  function followUpClass(date: string | null) {
+    if (!date) return "";
+    const today = localTodayIso();
+    if (date < today) return styles.followUpOverdue;
+    if (date === today) return styles.followUpToday;
+    return styles.followUpUpcoming;
   }
 
   function csvValue(value: unknown) {
@@ -937,6 +1116,17 @@ export default function LeadsPage() {
               ))}
             </select>
 
+            <select
+              value={followUpFilter}
+              onChange={(event) => setFollowUpFilter(event.target.value)}
+            >
+              <option>All follow-ups</option>
+              <option>Due today</option>
+              <option>Overdue</option>
+              <option>Upcoming</option>
+              <option>No follow-up</option>
+            </select>
+
             {duplicateFilter && (
               <button
                 className={styles.duplicateFilter}
@@ -1086,11 +1276,16 @@ export default function LeadsPage() {
                       </td>
 
                       <td>
-                        {lead.next_follow_up_date
-                          ? new Date(
+                        {lead.next_follow_up_date ? (
+                          <span className={`${styles.followUpDate} ${followUpClass(lead.next_follow_up_date)}`}>
+                            {new Date(
                               `${lead.next_follow_up_date}T00:00:00`
-                            ).toLocaleDateString()
-                          : "—"}
+                            ).toLocaleDateString()}
+                          </span>
+                        ) : (
+                          "—"
+                        )}
+                        {lead.next_action && <small>{lead.next_action}</small>}
                       </td>
 
                       <td>
@@ -1100,12 +1295,38 @@ export default function LeadsPage() {
                       <td>
                         <div className={styles.rowActions}>
                           <button onClick={() => editLead(lead)}>Edit</button>
-                          <button
-                            className={styles.deleteButton}
-                            onClick={() => deleteLead(lead.id)}
-                          >
-                            Delete
-                          </button>
+
+                          {canManageCrm && (
+                            <button
+                              className={styles.followUpButton}
+                              onClick={() => openFollowUp(lead)}
+                            >
+                              Follow-up
+                            </button>
+                          )}
+
+                          {lead.converted_student_id ? (
+                            <button onClick={() => router.push("/students")}>
+                              Student
+                            </button>
+                          ) : canConvertLead && lead.lead_stage !== "Lost" ? (
+                            <button
+                              className={styles.convertButton}
+                              disabled={convertingId === lead.id}
+                              onClick={() => convertLead(lead)}
+                            >
+                              {convertingId === lead.id ? "Converting..." : "Convert"}
+                            </button>
+                          ) : null}
+
+                          {canManageCrm && (
+                            <button
+                              className={styles.deleteButton}
+                              onClick={() => deleteLead(lead.id)}
+                            >
+                              Delete
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -1176,6 +1397,133 @@ export default function LeadsPage() {
                 >
                   {importing ? "Importing..." : "Choose CSV File"}
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {followUpOpen && followUpLead && (
+        <div className={styles.modalBackdrop}>
+          <div className={styles.followUpModal}>
+            <div className={styles.modalHeader}>
+              <div>
+                <h2>Lead Follow-up</h2>
+                <p>
+                  {followUpLead.parent_first_name} · {followUpLead.child_name}
+                </p>
+              </div>
+              <button
+                className={styles.closeButton}
+                onClick={() => setFollowUpOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className={styles.followUpBody}>
+              <form className={styles.form} onSubmit={saveFollowUp}>
+                <div className={styles.formGrid}>
+                  <label>
+                    <span>Action *</span>
+                    <select
+                      value={followUpForm.action_type}
+                      onChange={(event) =>
+                        setFollowUpForm({
+                          ...followUpForm,
+                          action_type: event.target.value,
+                        })
+                      }
+                    >
+                      {FOLLOW_UP_ACTIONS.map((action) => (
+                        <option key={action}>{action}</option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>Next Follow-up Date</span>
+                    <input
+                      type="date"
+                      value={followUpForm.next_follow_up_date}
+                      onChange={(event) =>
+                        setFollowUpForm({
+                          ...followUpForm,
+                          next_follow_up_date: event.target.value,
+                        })
+                      }
+                    />
+                  </label>
+
+                  <label className={styles.fullWidth}>
+                    <span>Notes</span>
+                    <textarea
+                      rows={4}
+                      value={followUpForm.notes}
+                      onChange={(event) =>
+                        setFollowUpForm({
+                          ...followUpForm,
+                          notes: event.target.value,
+                        })
+                      }
+                      placeholder="What happened on this follow-up?"
+                    />
+                  </label>
+                </div>
+
+                <div className={styles.modalFooter}>
+                  <button
+                    type="button"
+                    className={styles.cancelButton}
+                    onClick={() => setFollowUpOpen(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className={styles.primaryButton}
+                    disabled={followUpSaving}
+                  >
+                    {followUpSaving ? "Saving..." : "Save Follow-up"}
+                  </button>
+                </div>
+              </form>
+
+              <div className={styles.activityPanel}>
+                <div className={styles.activityHeading}>
+                  <strong>Follow-up History</strong>
+                  <span>{activities.length} activities</span>
+                </div>
+
+                {activityLoading ? (
+                  <div className={styles.activityEmpty}>Loading history...</div>
+                ) : activities.length === 0 ? (
+                  <div className={styles.activityEmpty}>
+                    No follow-up history yet.
+                  </div>
+                ) : (
+                  <div className={styles.activityList}>
+                    {activities.map((activity) => (
+                      <div className={styles.activityItem} key={activity.id}>
+                        <div className={styles.activityTop}>
+                          <strong>{activity.action_type}</strong>
+                          <span>
+                            {new Date(activity.created_at).toLocaleString()}
+                          </span>
+                        </div>
+                        {activity.notes && <p>{activity.notes}</p>}
+                        {activity.next_follow_up_date && (
+                          <small>
+                            Next follow-up:{" "}
+                            {new Date(
+                              `${activity.next_follow_up_date}T00:00:00`
+                            ).toLocaleDateString()}
+                          </small>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
