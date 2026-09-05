@@ -12,281 +12,203 @@ const supabase = createClient(
 );
 
 type Session = {
-  id: string;
-  batch_id: string;
-  session_number: number | null;
-  session_date: string;
-  topic_covered: string | null;
-  status: string;
-  zoom_recording_url: string | null;
-  deck_url: string | null;
-  homework_url: string | null;
-  assessment_url: string | null;
-  trainer_feedback: string | null;
-  parent_feedback: string | null;
+  id:string; batch_id:string; session_number:number|null; session_date:string;
+  topic_planned:string|null; topic_covered:string|null; status:string;
+  zoom_meeting_url:string|null; zoom_recording_url:string|null; deck_url:string|null;
+  homework_given:boolean; homework_url:string|null; assessment_url:string|null;
+  trainer_notes:string|null; trainer_feedback:string|null; parent_feedback:string|null; trainer_name:string|null;
 };
-
-type Batch = {
-  id: string;
-  batch_name: string;
-  course_name: string;
-  trainer_name: string | null;
-};
-
-type Student = {
-  id: string;
-  student_name: string;
-  grade: string | null;
-};
-
-type AttendanceRow = {
-  student_id: string;
-  attendance_status: string;
-};
-
-type FormState = {
-  topic_covered: string;
-  status: string;
-  zoom_recording_url: string;
-  deck_url: string;
-  homework_url: string;
-  assessment_url: string;
-  trainer_feedback: string;
-  parent_feedback: string;
-};
+type Batch = {id:string;batch_name:string;course_name:string;trainer_name:string|null;recurring_zoom_url:string|null};
+type Student = {id:string;student_name:string;grade:string|null};
+type Att = {student_id:string;attendance_status:string};
+type Hw = {student_id:string;homework_completed:boolean};
 
 export default function SessionDetailPage() {
-  const params = useParams<{ id: string }>();
-  const router = useRouter();
-  const sessionId = params.id;
+  const {id:sessionId}=useParams<{id:string}>();
+  const router=useRouter();
 
-  const [email, setEmail] = useState("");
-  const [userId, setUserId] = useState("");
-  const [session, setSession] = useState<Session | null>(null);
-  const [batch, setBatch] = useState<Batch | null>(null);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [attendance, setAttendance] = useState<Record<string, string>>({});
-  const [form, setForm] = useState<FormState>({
-    topic_covered: "",
-    status: "Scheduled",
-    zoom_recording_url: "",
-    deck_url: "",
-    homework_url: "",
-    assessment_url: "",
-    trainer_feedback: "",
-    parent_feedback: "",
+  const [email,setEmail]=useState("");
+  const [userId,setUserId]=useState("");
+  const [role,setRole]=useState("");
+  const [session,setSession]=useState<Session|null>(null);
+  const [batch,setBatch]=useState<Batch|null>(null);
+  const [students,setStudents]=useState<Student[]>([]);
+  const [attendance,setAttendance]=useState<Record<string,string>>({});
+  const [homework,setHomework]=useState<Record<string,boolean>>({});
+  const [loading,setLoading]=useState(true);
+  const [saving,setSaving]=useState(false);
+  const [message,setMessage]=useState("");
+
+  const [form,setForm]=useState({
+    topic_planned:"",topic_covered:"",status:"Scheduled",zoom_meeting_url:"",
+    zoom_recording_url:"",deck_url:"",homework_given:false,homework_url:"",
+    assessment_url:"",trainer_notes:"",trainer_feedback:"",parent_feedback:""
   });
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
 
-  useEffect(() => {
-    async function initialize() {
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) {
-        router.replace("/");
-        return;
-      }
-      setEmail(data.user.email || "");
-      setUserId(data.user.id);
-      await loadPage();
+  const canEdit=["super_admin","admin","trainer"].includes(role);
+
+  useEffect(()=>{
+    async function init(){
+      const {data}=await supabase.auth.getUser();
+      if(!data.user)return router.replace("/");
+      setEmail(data.user.email||"");setUserId(data.user.id);
+      const {data:p}=await supabase.from("user_profiles").select("role").eq("id",data.user.id).single();
+      setRole(p?.role||"");
+      await load();
     }
-    initialize();
-  }, [router, sessionId]);
+    init();
+  },[router,sessionId]);
 
-  async function loadPage() {
+  async function load(){
     setLoading(true);
-    const sessionResult = await supabase.from("class_sessions").select("*").eq("id", sessionId).single();
-
-    if (sessionResult.error || !sessionResult.data) {
-      setMessage(sessionResult.error?.message || "Session not found.");
-      setLoading(false);
-      return;
-    }
-
-    const loadedSession = sessionResult.data as Session;
-    setSession(loadedSession);
+    const s=await supabase.from("class_sessions").select("*").eq("id",sessionId).single();
+    if(s.error||!s.data){setMessage(s.error?.message||"Session not found.");setLoading(false);return;}
+    const ss=s.data as Session;setSession(ss);
     setForm({
-      topic_covered: loadedSession.topic_covered || "",
-      status: loadedSession.status,
-      zoom_recording_url: loadedSession.zoom_recording_url || "",
-      deck_url: loadedSession.deck_url || "",
-      homework_url: loadedSession.homework_url || "",
-      assessment_url: loadedSession.assessment_url || "",
-      trainer_feedback: loadedSession.trainer_feedback || "",
-      parent_feedback: loadedSession.parent_feedback || "",
+      topic_planned:ss.topic_planned||"",topic_covered:ss.topic_covered||"",status:ss.status,
+      zoom_meeting_url:ss.zoom_meeting_url||"",zoom_recording_url:ss.zoom_recording_url||"",
+      deck_url:ss.deck_url||"",homework_given:Boolean(ss.homework_given),homework_url:ss.homework_url||"",
+      assessment_url:ss.assessment_url||"",trainer_notes:ss.trainer_notes||"",
+      trainer_feedback:ss.trainer_feedback||"",parent_feedback:ss.parent_feedback||""
     });
 
-    const [batchResult, rosterResult, attendanceResult] = await Promise.all([
-      supabase.from("batches").select("id,batch_name,course_name,trainer_name").eq("id", loadedSession.batch_id).single(),
-      supabase.from("batch_students").select("student_id").eq("batch_id", loadedSession.batch_id),
-      supabase.from("session_attendance").select("student_id,attendance_status").eq("session_id", sessionId),
+    const [b,r,a,h]=await Promise.all([
+      supabase.from("batches").select("id,batch_name,course_name,trainer_name,recurring_zoom_url").eq("id",ss.batch_id).single(),
+      supabase.from("batch_students").select("student_id").eq("batch_id",ss.batch_id),
+      supabase.from("session_attendance").select("student_id,attendance_status").eq("session_id",sessionId),
+      supabase.from("session_homework").select("student_id,homework_completed").eq("session_id",sessionId),
     ]);
+    if(!b.error)setBatch(b.data as Batch);
 
-    if (!batchResult.error) setBatch(batchResult.data as Batch);
-
-    const studentIds = (rosterResult.data || []).map((row) => row.student_id as string);
-    let rosterStudents: Student[] = [];
-    if (studentIds.length > 0) {
-      const studentResult = await supabase.from("students").select("id,student_name,grade").in("id", studentIds).order("student_name");
-      rosterStudents = (studentResult.data || []) as Student[];
+    const ids=(r.data||[]).map(x=>x.student_id as string);
+    let roster:Student[]=[];
+    if(ids.length){
+      const st=await supabase.from("students").select("id,student_name,grade").in("id",ids).order("student_name");
+      roster=(st.data||[]) as Student[];
     }
-    setStudents(rosterStudents);
+    setStudents(roster);
 
-    const existing = new Map<string, string>();
-    ((attendanceResult.data || []) as AttendanceRow[]).forEach((row) => existing.set(row.student_id, row.attendance_status));
-    const map: Record<string, string> = {};
-    rosterStudents.forEach((student) => {
-      map[student.id] = existing.get(student.id) || "Present";
-    });
-    setAttendance(map);
-    setLoading(false);
+    const am=new Map<string,string>();((a.data||[]) as Att[]).forEach(x=>am.set(x.student_id,x.attendance_status));
+    const hm=new Map<string,boolean>();((h.data||[]) as Hw[]).forEach(x=>hm.set(x.student_id,x.homework_completed));
+    const ao:Record<string,string>={};const ho:Record<string,boolean>={};
+    roster.forEach(x=>{ao[x.id]=am.get(x.id)||"Present";ho[x.id]=hm.get(x.id)||false;});
+    setAttendance(ao);setHomework(ho);setLoading(false);
   }
 
-  const attendanceSummary = useMemo(() => {
-    const values = Object.values(attendance);
-    return {
-      present: values.filter((value) => value === "Present").length,
-      absent: values.filter((value) => value === "Absent").length,
-      excused: values.filter((value) => value === "Excused").length,
-    };
-  }, [attendance]);
+  const summary=useMemo(()=>Object.values(attendance).reduce((a,x)=>({...a,[x]:(a[x]||0)+1}),{} as Record<string,number>),[attendance]);
 
-  async function saveSession(event: FormEvent) {
-    event.preventDefault();
-    if (!session) return;
-    setSaving(true);
-    setMessage("");
+  async function save(e:FormEvent){
+    e.preventDefault();if(!session)return;
+    setSaving(true);setMessage("");
 
-    const { error: sessionError } = await supabase
-      .from("class_sessions")
-      .update({
-        topic_covered: form.topic_covered.trim() || null,
-        status: form.status,
-        zoom_recording_url: form.zoom_recording_url.trim() || null,
-        deck_url: form.deck_url.trim() || null,
-        homework_url: form.homework_url.trim() || null,
-        assessment_url: form.assessment_url.trim() || null,
-        trainer_feedback: form.trainer_feedback.trim() || null,
-        parent_feedback: form.parent_feedback.trim() || null,
-        updated_by: userId || null,
-      })
-      .eq("id", sessionId);
+    const up=await supabase.from("class_sessions").update({
+      topic_planned:form.topic_planned.trim()||null,topic_covered:form.topic_covered.trim()||null,
+      status:form.status,zoom_meeting_url:form.zoom_meeting_url.trim()||null,
+      zoom_recording_url:form.zoom_recording_url.trim()||null,deck_url:form.deck_url.trim()||null,
+      homework_given:form.homework_given,homework_url:form.homework_given?(form.homework_url.trim()||null):null,
+      assessment_url:form.assessment_url.trim()||null,trainer_notes:form.trainer_notes.trim()||null,
+      trainer_feedback:form.trainer_feedback.trim()||null,parent_feedback:form.parent_feedback.trim()||null,
+      updated_by:userId||null,
+    }).eq("id",sessionId);
+    if(up.error){setSaving(false);return setMessage(up.error.message);}
 
-    if (sessionError) {
-      setMessage(sessionError.message);
-      setSaving(false);
-      return;
-    }
+    if(students.length){
+      const ar=students.map(x=>({session_id:sessionId,student_id:x.id,attendance_status:attendance[x.id]||"Present",updated_by:userId||null,updated_at:new Date().toISOString()}));
+      const au=await supabase.from("session_attendance").upsert(ar,{onConflict:"session_id,student_id"});
+      if(au.error){setSaving(false);return setMessage(au.error.message);}
 
-    if (students.length > 0) {
-      const rows = students.map((student) => ({
-        session_id: sessionId,
-        student_id: student.id,
-        attendance_status: attendance[student.id] || "Present",
-        updated_by: userId || null,
-        updated_at: new Date().toISOString(),
-      }));
-      const { error: attendanceError } = await supabase
-        .from("session_attendance")
-        .upsert(rows, { onConflict: "session_id,student_id" });
-      if (attendanceError) {
-        setMessage(attendanceError.message);
-        setSaving(false);
-        return;
+      if(form.homework_given){
+        const hr=students.map(x=>({session_id:sessionId,student_id:x.id,homework_completed:Boolean(homework[x.id]),updated_by:userId||null,updated_at:new Date().toISOString()}));
+        const hu=await supabase.from("session_homework").upsert(hr,{onConflict:"session_id,student_id"});
+        if(hu.error){setSaving(false);return setMessage(hu.error.message);}
       }
     }
 
-    setMessage("Session updated successfully.");
-    setSaving(false);
-    await loadPage();
+    setSaving(false);setMessage("Session updated successfully.");await load();
   }
 
-  if (loading) {
-    return (
-      <div className={styles.shell}>
-        <OrbitSidebar email={email} active="sessions" />
-        <main className={styles.main}><div className={styles.empty}>Loading session...</div></main>
-      </div>
-    );
-  }
+  if(loading||!session)return <div className={styles.shell}><OrbitSidebar email={email} active="sessions"/><main className={styles.main}><div className={styles.empty}>{loading?"Loading session...":message||"Session not found."}</div></main></div>;
 
-  if (!session) {
-    return (
-      <div className={styles.shell}>
-        <OrbitSidebar email={email} active="sessions" />
-        <main className={styles.main}><div className={styles.message}>{message || "Session not found."}</div></main>
-      </div>
-    );
-  }
+  const meeting=form.zoom_meeting_url||batch?.recurring_zoom_url||"";
 
   return (
     <div className={styles.shell}>
-      <OrbitSidebar email={email} active="sessions" />
+      <OrbitSidebar email={email} active="sessions"/>
       <main className={styles.main}>
         <header className={styles.header}>
           <div>
             <p className={styles.kicker}>LMS · CLASS SESSION</p>
-            <h1>{session.session_number ? `Session ${session.session_number}` : "Class Session"}</h1>
-            <p className={styles.subtitle}>
-              {batch?.batch_name || "Batch"} · {batch?.course_name || "Course"} · {new Date(`${session.session_date}T00:00:00`).toLocaleDateString()}
-            </p>
+            <h1>{session.session_number?`Session ${session.session_number}`:"Class Session"}</h1>
+            <p className={styles.subtitle}>{batch?.batch_name||"Batch"} · {batch?.course_name||"Course"} · {session.session_date}</p>
           </div>
           <div className={styles.headerActions}>
-            {batch && <button className={styles.secondary} onClick={() => router.push(`/batches/${batch.id}`)}>← Batch</button>}
+            {meeting&&<a href={meeting} target="_blank" rel="noreferrer" className={styles.primaryLink}>Open Zoom</a>}
+            {batch&&<button className={styles.secondary} onClick={()=>router.push(`/batches/${batch.id}`)}>← Batch</button>}
           </div>
         </header>
 
-        {message && <div className={styles.message}>{message}</div>}
+        {message&&<div className={styles.message}>{message}</div>}
 
-        <form onSubmit={saveSession}>
+        <form onSubmit={save}>
           <section className={styles.grid2}>
             <div className={styles.panel}>
-              <div className={styles.panelHeader}><div><h2>Class Details</h2><span>{batch?.trainer_name || "Trainer not assigned"}</span></div></div>
+              <div className={styles.panelHeader}><div><h2>Class Details</h2><span>{session.trainer_name||batch?.trainer_name||"Trainer not assigned"}</span></div></div>
+
               <div className={styles.formGrid}>
-                <label className={styles.full}><span>Topic Covered</span><input value={form.topic_covered} onChange={(event) => setForm({ ...form, topic_covered: event.target.value })} placeholder="What was taught in this class?" /></label>
-                <label><span>Status</span><select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}><option>Scheduled</option><option>Completed</option><option>Cancelled</option></select></label>
+                <label className={styles.full}><span>Topic Planned</span><input disabled={!canEdit} value={form.topic_planned} onChange={e=>setForm({...form,topic_planned:e.target.value})}/></label>
+                <label className={styles.full}><span>Topic Covered</span><input disabled={!canEdit} value={form.topic_covered} onChange={e=>setForm({...form,topic_covered:e.target.value})}/></label>
+                <label><span>Status</span><select disabled={!canEdit} value={form.status} onChange={e=>setForm({...form,status:e.target.value})}><option>Scheduled</option><option>Completed</option><option>Cancelled</option><option>Rescheduled</option></select></label>
+                <label className={styles.full}><span>Session Zoom Link (optional override)</span><input disabled={!canEdit} type="url" value={form.zoom_meeting_url} onChange={e=>setForm({...form,zoom_meeting_url:e.target.value})}/></label>
               </div>
 
               <h3 className={styles.sectionTitle}>Attendance</h3>
               <div className={styles.attendanceGrid}>
-                {students.length === 0 ? <div className={styles.empty}>No students in this batch.</div> : students.map((student) => (
-                  <div className={styles.attendanceRow} key={student.id}>
-                    <div><strong>{student.student_name}</strong><small>{student.grade || "—"}</small></div>
-                    <select value={attendance[student.id] || "Present"} onChange={(event) => setAttendance({ ...attendance, [student.id]: event.target.value })}>
-                      <option>Present</option><option>Absent</option><option>Excused</option>
-                    </select>
-                  </div>
-                ))}
+                {students.map(x=><div className={styles.attendanceRow} key={x.id}>
+                  <div><strong>{x.student_name}</strong><small>{x.grade||"—"}</small></div>
+                  <select disabled={!canEdit} value={attendance[x.id]||"Present"} onChange={e=>setAttendance({...attendance,[x.id]:e.target.value})}>
+                    <option>Present</option><option>Absent</option><option>Late</option><option>Excused</option>
+                  </select>
+                </div>)}
               </div>
-              {students.length > 0 && <p className={styles.subtitle}>Present {attendanceSummary.present} · Absent {attendanceSummary.absent} · Excused {attendanceSummary.excused}</p>}
+              <p className={styles.subtitle}>Present {summary.Present||0} · Absent {summary.Absent||0} · Late {summary.Late||0} · Excused {summary.Excused||0}</p>
             </div>
 
             <div className={styles.panel}>
-              <div className={styles.panelHeader}><div><h2>Class Materials</h2><span>Paste Drive, Zoom or document links</span></div></div>
+              <div className={styles.panelHeader}><div><h2>Class Materials</h2><span>PPT, recording, homework and assessment</span></div></div>
               <div className={styles.formGrid}>
-                <label className={styles.full}><span>Zoom Recording</span><input type="url" value={form.zoom_recording_url} onChange={(event) => setForm({ ...form, zoom_recording_url: event.target.value })} placeholder="https://..." /></label>
-                <label className={styles.full}><span>PPT / Deck</span><input type="url" value={form.deck_url} onChange={(event) => setForm({ ...form, deck_url: event.target.value })} placeholder="https://..." /></label>
-                <label className={styles.full}><span>Homework / Worksheet</span><input type="url" value={form.homework_url} onChange={(event) => setForm({ ...form, homework_url: event.target.value })} placeholder="https://..." /></label>
-                <label className={styles.full}><span>Assessment Sheet</span><input type="url" value={form.assessment_url} onChange={(event) => setForm({ ...form, assessment_url: event.target.value })} placeholder="https://..." /></label>
+                <label className={styles.full}><span>PPT / Trainer Deck</span><input disabled={!canEdit} type="url" value={form.deck_url} onChange={e=>setForm({...form,deck_url:e.target.value})}/></label>
+                <label className={styles.full}><span>Zoom Recording</span><input disabled={!canEdit} type="url" value={form.zoom_recording_url} onChange={e=>setForm({...form,zoom_recording_url:e.target.value})}/></label>
+                <label><span>Homework Given?</span><select disabled={!canEdit} value={form.homework_given?"Yes":"No"} onChange={e=>setForm({...form,homework_given:e.target.value==="Yes"})}><option>No</option><option>Yes</option></select></label>
+                {form.homework_given&&<label className={styles.full}><span>Homework / Worksheet</span><input disabled={!canEdit} type="url" value={form.homework_url} onChange={e=>setForm({...form,homework_url:e.target.value})}/></label>}
+                <label className={styles.full}><span>Assessment Sheet</span><input disabled={!canEdit} type="url" value={form.assessment_url} onChange={e=>setForm({...form,assessment_url:e.target.value})}/></label>
+              </div>
+
+              {form.homework_given&&<>
+                <h3 className={styles.sectionTitle}>Homework Completion</h3>
+                <div className={styles.attendanceGrid}>{students.map(x=><div className={styles.attendanceRow} key={x.id}>
+                  <div><strong>{x.student_name}</strong><small>Completed?</small></div>
+                  <select disabled={!canEdit} value={homework[x.id]?"Yes":"No"} onChange={e=>setHomework({...homework,[x.id]:e.target.value==="Yes"})}><option>No</option><option>Yes</option></select>
+                </div>)}</div>
+              </>}
+            </div>
+          </section>
+
+          <section className={styles.grid2} style={{marginTop:16}}>
+            <div className={styles.panel}>
+              <div className={styles.panelHeader}><div><h2>Trainer Notes</h2><span>Internal teaching notes</span></div></div>
+              <div className={styles.formGrid}><label className={styles.full}><span>Internal Notes</span><textarea disabled={!canEdit} rows={5} value={form.trainer_notes} onChange={e=>setForm({...form,trainer_notes:e.target.value})}/></label></div>
+            </div>
+
+            <div className={styles.panel}>
+              <div className={styles.panelHeader}><div><h2>Feedback</h2><span>Academic and parent updates</span></div></div>
+              <div className={styles.formGrid}>
+                <label className={styles.full}><span>Trainer Feedback</span><textarea disabled={!canEdit} rows={3} value={form.trainer_feedback} onChange={e=>setForm({...form,trainer_feedback:e.target.value})}/></label>
+                <label className={styles.full}><span>Parent Update</span><textarea disabled={!canEdit} rows={3} value={form.parent_feedback} onChange={e=>setForm({...form,parent_feedback:e.target.value})}/></label>
               </div>
             </div>
           </section>
 
-          <section className={styles.grid2} style={{ marginTop: 16 }}>
-            <div className={styles.panel}>
-              <div className={styles.panelHeader}><div><h2>Trainer Feedback</h2><span>Academic observation after class</span></div></div>
-              <div className={styles.formGrid}><label className={styles.full}><span>Trainer Notes</span><textarea rows={6} value={form.trainer_feedback} onChange={(event) => setForm({ ...form, trainer_feedback: event.target.value })} placeholder="Progress, strengths, areas to practice..." /></label></div>
-            </div>
-            <div className={styles.panel}>
-              <div className={styles.panelHeader}><div><h2>Parent Feedback</h2><span>Update prepared for parent</span></div></div>
-              <div className={styles.formGrid}><label className={styles.full}><span>Parent Update</span><textarea rows={6} value={form.parent_feedback} onChange={(event) => setForm({ ...form, parent_feedback: event.target.value })} placeholder="Short parent-facing progress update..." /></label></div>
-            </div>
-          </section>
-
-          <div className={styles.modalFooter} style={{ marginTop: 18 }}>
-            <button type="submit" className={styles.primary} disabled={saving}>{saving ? "Saving..." : "Save Session"}</button>
-          </div>
+          {canEdit&&<div className={styles.modalFooter} style={{marginTop:18}}><button className={styles.primary} disabled={saving}>{saving?"Saving...":"Save Session"}</button></div>}
         </form>
       </main>
     </div>

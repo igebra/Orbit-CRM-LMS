@@ -11,7 +11,6 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
 );
 
-const GRADES = Array.from({ length: 10 }, (_, i) => `Grade ${String(i + 1).padStart(2, "0")}`);
 const TIMEZONES = [
   { value: "America/New_York", label: "US Eastern" },
   { value: "America/Chicago", label: "US Central" },
@@ -21,17 +20,16 @@ const TIMEZONES = [
 ];
 
 const COURSES = [
-  ...["Elementary", "Middle School", "High School"].flatMap((group) => ["01", "02", "03"].map((level) => `AiEdge ${group} - Level ${level}`)),
-  ...["Elementary", "Middle School", "High School"].flatMap((group) => ["01", "02", "03"].map((level) => `Coding4AI ${group} - Level ${level}`)),
-  ...GRADES.map((grade) => `Math - ${grade}`),
-  "AP Pre-Calculus",
-  "AP Calculus AB",
-  "AP Calculus BC",
-  "AP Statistics",
-  "SAT and PSAT",
-  "Algebra 1",
-  "Geometry",
-  "Algebra 2",
+  "AiEdge Elementary - Level 01","AiEdge Elementary - Level 02","AiEdge Elementary - Level 03",
+  "AiEdge Middle School - Level 01","AiEdge Middle School - Level 02","AiEdge Middle School - Level 03",
+  "AiEdge High School - Level 01","AiEdge High School - Level 02","AiEdge High School - Level 03",
+  "Coding4AI Elementary - Level 01","Coding4AI Elementary - Level 02","Coding4AI Elementary - Level 03",
+  "Coding4AI Middle School - Level 01","Coding4AI Middle School - Level 02","Coding4AI Middle School - Level 03",
+  "Coding4AI High School - Level 01","Coding4AI High School - Level 02","Coding4AI High School - Level 03",
+  "Math - Grade 01","Math - Grade 02","Math - Grade 03","Math - Grade 04","Math - Grade 05",
+  "Math - Grade 06","Math - Grade 07","Math - Grade 08","Math - Grade 09","Math - Grade 10",
+  "AP Pre-Calculus","AP Calculus AB","AP Calculus BC","AP Statistics","SAT and PSAT",
+  "Algebra 1","Geometry","Algebra 2",
 ];
 
 type Batch = {
@@ -39,212 +37,185 @@ type Batch = {
   batch_name: string;
   course_name: string;
   trainer_name: string | null;
-  schedule_text: string | null;
-  start_date: string | null;
+  trainer_user_id: string | null;
   start_at: string | null;
   source_timezone: string | null;
+  end_date: string | null;
+  planned_sessions: number | null;
+  recurring_zoom_url: string | null;
   status: string;
   max_students: number;
-  created_at: string;
 };
 
-type BatchStudent = { batch_id: string; student_id: string };
+type Roster = { batch_id: string; student_id: string };
+
+type Trainer = {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+};
 
 type FormState = {
   batch_name: string;
   course_name: string;
+  trainer_user_id: string;
   trainer_name: string;
   local_datetime: string;
   source_timezone: string;
+  end_date: string;
+  planned_sessions: string;
+  recurring_zoom_url: string;
   status: string;
 };
 
 const EMPTY_FORM: FormState = {
   batch_name: "",
   course_name: "",
+  trainer_user_id: "",
   trainer_name: "",
   local_datetime: "",
   source_timezone: "America/New_York",
+  end_date: "",
+  planned_sessions: "",
+  recurring_zoom_url: "",
   status: "Active",
 };
 
-function getTimeZoneOffsetMs(date: Date, timeZone: string) {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
+function offsetMs(date: Date, zone: string) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: zone,
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
     hourCycle: "h23",
-  });
+  }).formatToParts(date);
 
-  const parts = formatter.formatToParts(date);
   const map: Record<string, string> = {};
-  for (const part of parts) {
-    if (part.type !== "literal") map[part.type] = part.value;
-  }
+  for (const p of parts) if (p.type !== "literal") map[p.type] = p.value;
 
-  const asUtc = Date.UTC(
-    Number(map.year),
-    Number(map.month) - 1,
-    Number(map.day),
-    Number(map.hour),
-    Number(map.minute),
-    Number(map.second)
-  );
-
-  return asUtc - date.getTime();
+  return Date.UTC(
+    Number(map.year), Number(map.month) - 1, Number(map.day),
+    Number(map.hour), Number(map.minute), Number(map.second)
+  ) - date.getTime();
 }
 
-function localDateTimeToUtc(localDateTime: string, timeZone: string) {
-  if (!localDateTime) return null;
+function localToUtc(value: string, zone: string) {
+  if (!value) return null;
+  const [d, t] = value.split("T");
+  if (!d || !t) return null;
+  const [y, m, day] = d.split("-").map(Number);
+  const [h, min] = t.split(":").map(Number);
 
-  const [datePart, timePart] = localDateTime.split("T");
-  if (!datePart || !timePart) return null;
-
-  const [year, month, day] = datePart.split("-").map(Number);
-  const [hour, minute] = timePart.split(":").map(Number);
-
-  const guess = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
-  const firstOffset = getTimeZoneOffsetMs(guess, timeZone);
-  let result = new Date(guess.getTime() - firstOffset);
-
-  const correctedOffset = getTimeZoneOffsetMs(result, timeZone);
-  if (correctedOffset !== firstOffset) {
-    result = new Date(guess.getTime() - correctedOffset);
-  }
-
+  const guess = new Date(Date.UTC(y, m - 1, day, h, min));
+  const first = offsetMs(guess, zone);
+  let result = new Date(guess.getTime() - first);
+  const second = offsetMs(result, zone);
+  if (second !== first) result = new Date(guess.getTime() - second);
   return result.toISOString();
 }
 
-function formatInZone(iso: string | null, timeZone: string) {
-  if (!iso) return "Not scheduled";
-
+function fmt(iso: string | null, zone: string) {
+  if (!iso) return "—";
   return new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-    timeZoneName: "short",
+    timeZone: zone,
+    day: "2-digit", month: "short", year: "numeric",
+    hour: "numeric", minute: "2-digit", hour12: true, timeZoneName: "short",
   }).format(new Date(iso));
-}
-
-function zoneLabel(value: string | null) {
-  if (!value) return "US Eastern";
-  return TIMEZONES.find((zone) => zone.value === value)?.label || value;
 }
 
 export default function BatchesPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [userId, setUserId] = useState("");
+  const [role, setRole] = useState("");
   const [batches, setBatches] = useState<Batch[]>([]);
-  const [rosterRows, setRosterRows] = useState<BatchStudent[]>([]);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All statuses");
+  const [roster, setRoster] = useState<Roster[]>([]);
+  const [trainers, setTrainers] = useState<Trainer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
+  const canAdmin = role === "super_admin" || role === "admin";
+
   useEffect(() => {
-    async function initialize() {
+    async function init() {
       const { data } = await supabase.auth.getUser();
-      if (!data.user) {
-        router.replace("/");
-        return;
-      }
+      if (!data.user) return router.replace("/");
       setEmail(data.user.email || "");
       setUserId(data.user.id);
-      await loadBatches();
+
+      const { data: profile } = await supabase
+        .from("user_profiles").select("role").eq("id", data.user.id).single();
+
+      setRole(profile?.role || "");
+      await load();
     }
-    initialize();
+    init();
   }, [router]);
 
-  async function loadBatches() {
+  async function load() {
     setLoading(true);
-    const [{ data: batchData, error: batchError }, { data: rosterData, error: rosterError }] = await Promise.all([
+
+    const [b, r, t] = await Promise.all([
       supabase.from("batches").select("*").order("created_at", { ascending: false }),
       supabase.from("batch_students").select("batch_id,student_id"),
+      supabase.from("user_profiles").select("id,full_name,email").eq("role","trainer").eq("is_active",true).order("full_name"),
     ]);
 
-    if (batchError || rosterError) {
-      setMessage(batchError?.message || rosterError?.message || "Could not load batches.");
-      setBatches([]);
-      setRosterRows([]);
-    } else {
-      setBatches((batchData || []) as Batch[]);
-      setRosterRows((rosterData || []) as BatchStudent[]);
-    }
+    if (b.error) setMessage(b.error.message);
+    setBatches((b.data || []) as Batch[]);
+    setRoster((r.data || []) as Roster[]);
+    setTrainers((t.data || []) as Trainer[]);
     setLoading(false);
   }
 
-  const countByBatch = useMemo(() => {
-    const map = new Map<string, number>();
-    rosterRows.forEach((row) => map.set(row.batch_id, (map.get(row.batch_id) || 0) + 1));
-    return map;
-  }, [rosterRows]);
+  const counts = useMemo(() => {
+    const m = new Map<string, number>();
+    roster.forEach((x) => m.set(x.batch_id, (m.get(x.batch_id) || 0) + 1));
+    return m;
+  }, [roster]);
 
-  const filteredBatches = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return batches.filter((batch) => {
-      if (statusFilter !== "All statuses" && batch.status !== statusFilter) return false;
-      if (!q) return true;
-      return [batch.batch_name, batch.course_name, batch.trainer_name, batch.source_timezone]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase()
-        .includes(q);
-    });
-  }, [batches, search, statusFilter]);
-
-  const previewIso = useMemo(
-    () => localDateTimeToUtc(form.local_datetime, form.source_timezone),
+  const preview = useMemo(
+    () => localToUtc(form.local_datetime, form.source_timezone),
     [form.local_datetime, form.source_timezone]
   );
 
-  const stats = useMemo(() => ({
-    total: batches.length,
-    active: batches.filter((batch) => batch.status === "Active").length,
-    students: rosterRows.length,
-    capacity: batches.reduce((sum, batch) => sum + batch.max_students, 0),
-  }), [batches, rosterRows]);
+  function chooseTrainer(id: string) {
+    const trainer = trainers.find((x) => x.id === id);
+    setForm((f) => ({
+      ...f,
+      trainer_user_id: id,
+      trainer_name: trainer?.full_name || trainer?.email || f.trainer_name,
+    }));
+  }
 
-  async function saveBatch(event: FormEvent) {
+  async function save(event: FormEvent) {
     event.preventDefault();
-    if (!form.batch_name.trim() || !form.course_name) {
-      setMessage("Batch Name and Course are required.");
+    if (!form.batch_name.trim() || !form.course_name || !form.local_datetime) {
+      setMessage("Batch Name, Course and Start Date & Time are required.");
       return;
     }
 
-    if (!form.local_datetime) {
-      setMessage("Start Date & Time is required.");
-      return;
-    }
-
-    const startAt = localDateTimeToUtc(form.local_datetime, form.source_timezone);
+    const startAt = localToUtc(form.local_datetime, form.source_timezone);
     if (!startAt) {
-      setMessage("Please select a valid batch date and time.");
+      setMessage("Please select a valid date and time.");
       return;
     }
 
     setSaving(true);
-    setMessage("");
+
     const { error } = await supabase.from("batches").insert({
       batch_name: form.batch_name.trim(),
       course_name: form.course_name,
+      trainer_user_id: form.trainer_user_id || null,
       trainer_name: form.trainer_name.trim() || null,
       start_at: startAt,
       source_timezone: form.source_timezone,
-      start_date: form.local_datetime.slice(0, 10),
-      schedule_text: `${zoneLabel(form.source_timezone)} · ${formatInZone(startAt, form.source_timezone)}`,
+      start_date: form.local_datetime.slice(0,10),
+      end_date: form.end_date || null,
+      planned_sessions: form.planned_sessions ? Number(form.planned_sessions) : null,
+      recurring_zoom_url: form.recurring_zoom_url.trim() || null,
       status: form.status,
       max_students: 8,
       created_by: userId || null,
@@ -252,82 +223,72 @@ export default function BatchesPage() {
     });
 
     setSaving(false);
-    if (error) {
-      setMessage(error.message);
-      return;
-    }
+    if (error) return setMessage(error.message);
 
     setModalOpen(false);
     setForm(EMPTY_FORM);
-    await loadBatches();
+    await load();
   }
 
   return (
     <div className={styles.shell}>
       <OrbitSidebar email={email} active="batches" />
+
       <main className={styles.main}>
         <header className={styles.header}>
           <div>
             <p className={styles.kicker}>LMS · BATCHES</p>
             <h1>Batches</h1>
-            <p className={styles.subtitle}>Course groups, trainers, student rosters and class sessions.</p>
+            <p className={styles.subtitle}>Manage trainers, schedules, students and class operations.</p>
           </div>
-          <div className={styles.headerActions}>
-            <button className={styles.primary} onClick={() => { setForm(EMPTY_FORM); setModalOpen(true); }}>+ Add Batch</button>
-          </div>
-        </header>
 
-        <section className={styles.stats}>
-          <div className={styles.stat}><span>Total Batches</span><strong>{stats.total}</strong></div>
-          <div className={styles.stat}><span>Active Batches</span><strong>{stats.active}</strong></div>
-          <div className={styles.stat}><span>Students Assigned</span><strong>{stats.students}</strong></div>
-          <div className={styles.stat}><span>Total Capacity</span><strong>{stats.capacity}</strong></div>
-        </section>
+          {canAdmin && (
+            <button className={styles.primary} onClick={() => setModalOpen(true)}>
+              + Add Batch
+            </button>
+          )}
+        </header>
 
         {message && <div className={styles.message}>{message}</div>}
 
         <section className={styles.card}>
-          <div className={styles.toolbar}>
-            <input type="search" placeholder="Search batch, course, trainer..." value={search} onChange={(event) => setSearch(event.target.value)} />
-            <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-              <option>All statuses</option>
-              <option>Active</option>
-              <option>Upcoming</option>
-              <option>Paused</option>
-              <option>Completed</option>
-            </select>
-            <button className={styles.smallButton} onClick={loadBatches}>↻</button>
-          </div>
-
           <div className={styles.tableWrap}>
             <table>
-              <thead><tr><th>Batch</th><th>Course</th><th>Trainer</th><th>Schedule</th><th>Students</th><th>Status</th><th>Actions</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>Batch</th>
+                  <th>Course</th>
+                  <th>Trainer</th>
+                  <th>Selected Time</th>
+                  <th>India Time</th>
+                  <th>End Date</th>
+                  <th>Students</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={7} className={styles.empty}>Loading batches...</td></tr>
-                ) : filteredBatches.length === 0 ? (
-                  <tr><td colSpan={7} className={styles.empty}>No batches found.</td></tr>
-                ) : filteredBatches.map((batch) => {
-                  const count = countByBatch.get(batch.id) || 0;
-                  return (
-                    <tr key={batch.id}>
-                      <td>{batch.batch_name}<small>{batch.start_at ? `Starts ${formatInZone(batch.start_at, batch.source_timezone || "America/New_York")}` : batch.start_date ? `Starts ${new Date(`${batch.start_date}T00:00:00`).toLocaleDateString()}` : "No start date"}</small></td>
-                      <td>{batch.course_name}</td>
-                      <td>{batch.trainer_name || "—"}</td>
-                      <td>
-                        {batch.start_at ? (
-                          <>
-                            <span>{formatInZone(batch.start_at, batch.source_timezone || "America/New_York")}</span>
-                            <small>{zoneLabel(batch.source_timezone)} · India: {formatInZone(batch.start_at, "Asia/Kolkata")}</small>
-                          </>
-                        ) : (batch.schedule_text || "—")}
-                      </td>
-                      <td>{count} / {batch.max_students}</td>
-                      <td><span className={batch.status === "Active" ? `${styles.badge} ${styles.badgeGreen}` : styles.badge}>{batch.status}</span></td>
-                      <td><div className={styles.rowActions}><button onClick={() => router.push(`/batches/${batch.id}`)}>Open</button></div></td>
-                    </tr>
-                  );
-                })}
+                  <tr><td colSpan={9} className={styles.empty}>Loading batches...</td></tr>
+                ) : batches.length === 0 ? (
+                  <tr><td colSpan={9} className={styles.empty}>No batches found.</td></tr>
+                ) : batches.map((b) => (
+                  <tr key={b.id}>
+                    <td>{b.batch_name}</td>
+                    <td>{b.course_name}</td>
+                    <td>{b.trainer_name || "—"}</td>
+                    <td>{fmt(b.start_at, b.source_timezone || "America/New_York")}</td>
+                    <td>{fmt(b.start_at, "Asia/Kolkata")}</td>
+                    <td>{b.end_date || "—"}</td>
+                    <td>{counts.get(b.id) || 0} / {b.max_students}</td>
+                    <td><span className={styles.badge}>{b.status}</span></td>
+                    <td>
+                      <button className={styles.smallButton} onClick={() => router.push(`/batches/${b.id}`)}>
+                        Open
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -338,31 +299,72 @@ export default function BatchesPage() {
         <div className={styles.modalBackdrop}>
           <div className={styles.modal}>
             <div className={styles.modalHeader}>
-              <div><h2>Add Batch</h2><p>Set the batch date and time in US or India time. India time is calculated automatically.</p></div>
+              <div><h2>Add Batch</h2><p>Create the batch and operational schedule.</p></div>
               <button className={styles.close} onClick={() => setModalOpen(false)}>×</button>
             </div>
-            <form className={styles.form} onSubmit={saveBatch}>
+
+            <form className={styles.form} onSubmit={save}>
               <div className={styles.formGrid}>
-                <label><span>Batch Name *</span><input value={form.batch_name} onChange={(event) => setForm({ ...form, batch_name: event.target.value })} placeholder="e.g. ALG1-MON-WED-01" /></label>
-                <label><span>Course *</span><select value={form.course_name} onChange={(event) => setForm({ ...form, course_name: event.target.value })}><option value="">Select course</option>{COURSES.map((course) => <option key={course}>{course}</option>)}</select></label>
-                <label><span>Trainer</span><input value={form.trainer_name} onChange={(event) => setForm({ ...form, trainer_name: event.target.value })} placeholder="Trainer name" /></label>
-                <label><span>Start Date & Time *</span><input type="datetime-local" value={form.local_datetime} onChange={(event) => setForm({ ...form, local_datetime: event.target.value })} /></label>
-                <label><span>Primary Time Zone</span><select value={form.source_timezone} onChange={(event) => setForm({ ...form, source_timezone: event.target.value })}>{TIMEZONES.map((zone) => <option key={zone.value} value={zone.value}>{zone.label}</option>)}</select></label>
-                <label><span>Status</span><select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}><option>Active</option><option>Upcoming</option><option>Paused</option><option>Completed</option></select></label>
+                <label>
+                  <span>Batch Name *</span>
+                  <input value={form.batch_name} onChange={(e) => setForm({...form,batch_name:e.target.value})}/>
+                </label>
+
+                <label>
+                  <span>Course *</span>
+                  <select value={form.course_name} onChange={(e) => setForm({...form,course_name:e.target.value})}>
+                    <option value="">Select course</option>
+                    {COURSES.map((x) => <option key={x}>{x}</option>)}
+                  </select>
+                </label>
+
+                <label>
+                  <span>Trainer Account</span>
+                  <select value={form.trainer_user_id} onChange={(e) => chooseTrainer(e.target.value)}>
+                    <option value="">Select trainer account</option>
+                    {trainers.map((x) => <option key={x.id} value={x.id}>{x.full_name || x.email || "Trainer"}</option>)}
+                  </select>
+                </label>
+
+                <label>
+                  <span>Trainer Display Name</span>
+                  <input value={form.trainer_name} onChange={(e) => setForm({...form,trainer_name:e.target.value})}/>
+                </label>
+
+                <label>
+                  <span>Start Date & Time *</span>
+                  <input type="datetime-local" value={form.local_datetime} onChange={(e) => setForm({...form,local_datetime:e.target.value})}/>
+                </label>
+
+                <label>
+                  <span>Primary Time Zone</span>
+                  <select value={form.source_timezone} onChange={(e) => setForm({...form,source_timezone:e.target.value})}>
+                    {TIMEZONES.map((z) => <option key={z.value} value={z.value}>{z.label}</option>)}
+                  </select>
+                </label>
+
                 <div className={`${styles.timePreview} ${styles.full}`}>
-                  <div>
-                    <span>Selected Time</span>
-                    <strong>{formatInZone(previewIso, form.source_timezone)}</strong>
-                    <small>{zoneLabel(form.source_timezone)}</small>
-                  </div>
+                  <div><span>Selected Time</span><strong>{preview ? fmt(preview,form.source_timezone) : "Select date & time"}</strong></div>
                   <div className={styles.timeArrow}>→</div>
-                  <div>
-                    <span>India Time</span>
-                    <strong>{formatInZone(previewIso, "Asia/Kolkata")}</strong>
-                    <small>India IST</small>
-                  </div>
+                  <div><span>India Time</span><strong>{preview ? fmt(preview,"Asia/Kolkata") : "Select date & time"}</strong></div>
                 </div>
+
+                <label>
+                  <span>Batch End Date</span>
+                  <input type="date" value={form.end_date} onChange={(e) => setForm({...form,end_date:e.target.value})}/>
+                </label>
+
+                <label>
+                  <span>Planned Sessions</span>
+                  <input type="number" min="1" value={form.planned_sessions} onChange={(e) => setForm({...form,planned_sessions:e.target.value})}/>
+                </label>
+
+                <label className={styles.full}>
+                  <span>Recurring Zoom Link</span>
+                  <input type="url" value={form.recurring_zoom_url} onChange={(e) => setForm({...form,recurring_zoom_url:e.target.value})} placeholder="https://zoom.us/j/..."/>
+                </label>
               </div>
+
               <div className={styles.modalFooter}>
                 <button type="button" className={styles.secondary} onClick={() => setModalOpen(false)}>Cancel</button>
                 <button type="submit" className={styles.primary} disabled={saving}>{saving ? "Saving..." : "Add Batch"}</button>
