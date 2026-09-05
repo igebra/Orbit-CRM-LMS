@@ -914,8 +914,13 @@ export default function LeadsPage() {
             )}
 
 
-            <button className={styles.refreshButton} onClick={loadLeads}>
-              Refresh
+            <button
+              className={styles.refreshButton}
+              onClick={loadLeads}
+              aria-label="Refresh leads"
+              title="Refresh leads"
+            >
+              ↻
             </button>
           </div>
 

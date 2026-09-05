@@ -222,6 +222,19 @@
 .cancelButton,
 .refreshButton,
 .deleteSelected,
+
+.refreshButton {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 42px;
+  font-size: 23px;
+  line-height: 1;
+  font-weight: 500;
+}
+
 .duplicateFilter {
   border-radius: 11px;
   padding: 10px 14px;
@@ -434,8 +447,9 @@ button.statCard {
 .tableWrap th {
   padding: 12px 10px;
   background: #f5f8f7;
-  color: #4d6666;
+  color: #385657;
   font-size: 12px;
+  font-weight: 700;
   text-align: left;
   white-space: nowrap;
   border-bottom: 1px solid #e5ecea;
@@ -446,6 +460,11 @@ button.statCard {
   border-bottom: 1px solid #edf1f0;
   vertical-align: top;
   font-size: 13px;
+  font-weight: 400;
+}
+
+.tableWrap tbody td strong {
+  font-weight: 400;
 }
 
 .tableWrap td strong,
