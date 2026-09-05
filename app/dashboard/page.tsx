@@ -1,252 +1,533 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
+import OrbitSidebar from "../components/OrbitSidebar";
+import styles from "./dashboard.module.css";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
 );
 
-const menuItems = [
-  { key: "overview", label: "Overview", icon: "⌂" },
-  { key: "students", label: "Students", icon: "◉" },
-  { key: "batches", label: "Batches", icon: "▣" },
-  { key: "payments", label: "Payments", icon: "₹" },
-  { key: "courses", label: "Courses", icon: "✦" },
-  { key: "reports", label: "Reports", icon: "▤" },
-  { key: "aqmatics", label: "AQMATICS", icon: "◌" },
-  { key: "settings", label: "Settings", icon: "⚙" },
-];
+type Metric = {
+  label: string;
+  value: string;
+  note: string;
+  href?: string;
+};
+
+type FocusItem = {
+  label: string;
+  value: string;
+  href?: string;
+};
+
+function localIso(date: Date) {
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 10);
+}
+
+function money(value: number) {
+  return `$${Number(value || 0).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+function displayRole(role: string) {
+  const map: Record<string, string> = {
+    super_admin: "Super Admin",
+    admin: "Admin",
+    sales: "Sales Admin",
+    sales_marketing: "Sales Admin",
+    marketing: "Marketing",
+    trainer: "Trainer",
+    accounts_finance: "Finance Admin",
+    viewer_management: "Management",
+    parent: "Parent",
+    student: "Student",
+  };
+
+  return map[role] || "Orbit User";
+}
 
 export default function DashboardPage() {
   const router = useRouter();
+
   const [email, setEmail] = useState("");
-  const [active, setActive] = useState("overview");
-  const [crmOpen, setCrmOpen] = useState(false);
+  const [role, setRole] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const [leadCount, setLeadCount] = useState<number | null>(null);
+  const [studentCount, setStudentCount] = useState<number | null>(null);
+  const [batchCount, setBatchCount] = useState<number | null>(null);
+  const [trainerCount, setTrainerCount] = useState<number | null>(null);
+  const [monthCollections, setMonthCollections] = useState<number | null>(null);
+  const [upcomingClasses, setUpcomingClasses] = useState<number | null>(null);
+
+  const [followUpsDue, setFollowUpsDue] = useState<number | null>(null);
+  const [overduePayments, setOverduePayments] = useState<number | null>(null);
+  const [pendingAccess, setPendingAccess] = useState<number | null>(null);
 
   useEffect(() => {
-    async function loadUser() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+    async function init() {
+      const { data } = await supabase.auth.getUser();
+
+      if (!data.user) {
         router.replace("/");
         return;
       }
-      setEmail(user.email || "");
+
+      setEmail(data.user.email || "");
+
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("role,is_active")
+        .eq("id", data.user.id)
+        .single();
+
+      if (!profile?.is_active) {
+        await supabase.auth.signOut();
+        router.replace("/");
+        return;
+      }
+
+      const currentRole = profile?.role || "";
+      setRole(currentRole);
+
+      await loadDashboard(currentRole);
+      setLoading(false);
     }
-    loadUser();
+
+    init();
   }, [router]);
 
-  async function handleSignOut() {
-    await supabase.auth.signOut();
-    router.replace("/");
+  async function loadDashboard(currentRole: string) {
+    const isSuperAdmin = currentRole === "super_admin";
+    const isAdmin = currentRole === "admin";
+    const isSales =
+      currentRole === "sales" || currentRole === "sales_marketing";
+    const isMarketing = currentRole === "marketing";
+    const isFinance = currentRole === "accounts_finance";
+    const isManagement = currentRole === "viewer_management";
+    const isTrainer = currentRole === "trainer";
+
+    const canSeeCrm =
+      isSuperAdmin || isAdmin || isSales || isMarketing || isManagement;
+
+    const canSeeStudents =
+      isSuperAdmin ||
+      isAdmin ||
+      isSales ||
+      isMarketing ||
+      isFinance ||
+      isManagement;
+
+    const canSeeBatches =
+      isSuperAdmin ||
+      isAdmin ||
+      isSales ||
+      isMarketing ||
+      isFinance ||
+      isManagement ||
+      isTrainer;
+
+    const canSeeTrainers =
+      isSuperAdmin || isAdmin || isSales || isMarketing || isManagement;
+
+    const canSeePayments =
+      isSuperAdmin ||
+      isAdmin ||
+      isSales ||
+      isMarketing ||
+      isFinance ||
+      isManagement;
+
+    const canSeeAccess = isSuperAdmin || isAdmin;
+
+    const today = new Date();
+    const todayIso = localIso(today);
+    const sevenDays = new Date(today);
+    sevenDays.setDate(today.getDate() + 7);
+    const sevenDaysIso = localIso(sevenDays);
+
+    const monthStart = localIso(
+      new Date(today.getFullYear(), today.getMonth(), 1)
+    );
+
+    const tasks: Promise<void>[] = [];
+
+    if (canSeeCrm) {
+      tasks.push(
+        (async () => {
+          const { count } = await supabase
+            .from("leads")
+            .select("id", { count: "exact", head: true });
+          setLeadCount(count ?? 0);
+
+          const { count: dueCount } = await supabase
+            .from("leads")
+            .select("id", { count: "exact", head: true })
+            .not("next_follow_up_date", "is", null)
+            .lte("next_follow_up_date", todayIso)
+            .not("lead_stage", "in", '("Enrolled","Lost")');
+
+          setFollowUpsDue(dueCount ?? 0);
+        })()
+      );
+    }
+
+    if (canSeeStudents) {
+      tasks.push(
+        (async () => {
+          const { count } = await supabase
+            .from("students")
+            .select("id", { count: "exact", head: true });
+          setStudentCount(count ?? 0);
+        })()
+      );
+    }
+
+    if (canSeeBatches) {
+      tasks.push(
+        (async () => {
+          const { count: activeBatches } = await supabase
+            .from("batches")
+            .select("id", { count: "exact", head: true })
+            .eq("status", "Active");
+
+          setBatchCount(activeBatches ?? 0);
+
+          const { count: classCount } = await supabase
+            .from("class_sessions")
+            .select("id", { count: "exact", head: true })
+            .gte("session_date", todayIso)
+            .lte("session_date", sevenDaysIso)
+            .in("status", ["Scheduled", "Rescheduled"]);
+
+          setUpcomingClasses(classCount ?? 0);
+        })()
+      );
+    }
+
+    if (canSeeTrainers) {
+      tasks.push(
+        (async () => {
+          const { count } = await supabase
+            .from("trainers")
+            .select("id", { count: "exact", head: true })
+            .eq("status", "Active");
+          setTrainerCount(count ?? 0);
+        })()
+      );
+    }
+
+    if (canSeePayments) {
+      tasks.push(
+        (async () => {
+          const { data: transactions } = await supabase.rpc(
+            "payment_report_transactions",
+            {
+              p_from: monthStart,
+              p_to: todayIso,
+            }
+          );
+
+          const collected = (transactions || []).reduce(
+            (sum: number, row: { amount_usd?: number }) =>
+              sum + Number(row.amount_usd || 0),
+            0
+          );
+
+          setMonthCollections(collected);
+
+          if (!isMarketing) {
+            const { data: outstanding } = await supabase.rpc(
+              "payment_outstanding_report"
+            );
+
+            const overdue = (outstanding || []).filter(
+              (row: { payment_status?: string }) =>
+                row.payment_status === "Overdue"
+            ).length;
+
+            setOverduePayments(overdue);
+          }
+        })()
+      );
+    }
+
+    if (canSeeAccess) {
+      tasks.push(
+        (async () => {
+          const { data } = await supabase.rpc(
+            "pending_access_request_count"
+          );
+          setPendingAccess(Number(data || 0));
+        })()
+      );
+    }
+
+    await Promise.all(tasks);
   }
 
-  function handleMenu(key: string) {
-    setActive(key);
-    if (key === "students") router.push("/students");
-    if (key === "batches") router.push("/batches");
-  }
+  const metrics = useMemo<Metric[]>(() => {
+    const items: Metric[] = [];
+
+    if (leadCount !== null) {
+      items.push({
+        label: "Leads",
+        value: String(leadCount),
+        note: "CRM leads",
+        href: "/crm/leads",
+      });
+    }
+
+    if (studentCount !== null) {
+      items.push({
+        label: "Students",
+        value: String(studentCount),
+        note: "Student profiles",
+        href: "/students",
+      });
+    }
+
+    if (batchCount !== null) {
+      items.push({
+        label: "Active Batches",
+        value: String(batchCount),
+        note: "Currently active",
+        href: "/batches",
+      });
+    }
+
+    if (trainerCount !== null) {
+      items.push({
+        label: "Active Trainers",
+        value: String(trainerCount),
+        note: "Trainer directory",
+        href: "/trainers",
+      });
+    }
+
+    if (monthCollections !== null) {
+      items.push({
+        label: "This Month Collections",
+        value: money(monthCollections),
+        note: "Payments received",
+        href: "/payments",
+      });
+    }
+
+    if (upcomingClasses !== null) {
+      items.push({
+        label: "Upcoming Classes",
+        value: String(upcomingClasses),
+        note: "Next 7 days",
+        href: "/batches",
+      });
+    }
+
+    return items.slice(0, 6);
+  }, [
+    leadCount,
+    studentCount,
+    batchCount,
+    trainerCount,
+    monthCollections,
+    upcomingClasses,
+  ]);
+
+  const focusItems = useMemo<FocusItem[]>(() => {
+    const items: FocusItem[] = [];
+
+    if (pendingAccess !== null && pendingAccess > 0) {
+      items.push({
+        label: "Pending access requests",
+        value: String(pendingAccess),
+        href: "/access",
+      });
+    }
+
+    if (followUpsDue !== null && followUpsDue > 0) {
+      items.push({
+        label: "Lead follow-ups due",
+        value: String(followUpsDue),
+        href: "/crm/leads",
+      });
+    }
+
+    if (overduePayments !== null && overduePayments > 0) {
+      items.push({
+        label: "Overdue payment accounts",
+        value: String(overduePayments),
+        href: "/payments",
+      });
+    }
+
+    if (upcomingClasses !== null) {
+      items.push({
+        label: "Classes in next 7 days",
+        value: String(upcomingClasses),
+        href: "/batches",
+      });
+    }
+
+    if (items.length === 0) {
+      items.push({
+        label: "No urgent items right now",
+        value: "✓",
+      });
+    }
+
+    return items;
+  }, [pendingAccess, followUpsDue, overduePayments, upcomingClasses]);
+
+  const quickLinks = useMemo(() => {
+    const links: { label: string; note: string; href: string }[] = [];
+
+    if (leadCount !== null) {
+      links.push({
+        label: "CRM",
+        note: "Leads, demos and follow-ups",
+        href: "/crm/leads",
+      });
+    }
+
+    if (studentCount !== null) {
+      links.push({
+        label: "Students",
+        note: "Profiles and enrollments",
+        href: "/students",
+      });
+    }
+
+    if (batchCount !== null) {
+      links.push({
+        label: "Batches",
+        note: "Classes, trainers and attendance",
+        href: "/batches",
+      });
+    }
+
+    if (monthCollections !== null) {
+      links.push({
+        label: "Payments",
+        note: "Collections and payment reports",
+        href: "/payments",
+      });
+    }
+
+    if (trainerCount !== null) {
+      links.push({
+        label: "Trainers",
+        note: "Trainer directory",
+        href: "/trainers",
+      });
+    }
+
+    return links.slice(0, 5);
+  }, [leadCount, studentCount, batchCount, monthCollections, trainerCount]);
 
   return (
-    <div className="orbit-dashboard-shell">
-      <aside className="orbit-sidebar">
-        <div>
-          <div className="orbit-brand-block">
-            <img
-              src="/orbit-mascot.png"
-              alt="Orbit mascot"
-              className="orbit-brand-mascot"
-            />
-            <div className="orbit-brand-copy">
-              <div className="orbit-brand-title">Orbit</div>
-              <div className="orbit-brand-subtitle">by igebra.ai</div>
-            </div>
-          </div>
+    <div className={styles.shell}>
+      <OrbitSidebar email={email} active="overview" />
 
-          <nav className="orbit-nav">
-            <button
-              className={`orbit-nav-item ${active === "overview" ? "active" : ""}`}
-              onClick={() => handleMenu("overview")}
-            >
-              <span className="orbit-nav-icon">⌂</span>
-              <span>Overview</span>
-            </button>
-
-            <div className="orbit-crm-group">
-              <button
-                className="orbit-nav-item orbit-crm-toggle"
-                onClick={() => setCrmOpen((value) => !value)}
-              >
-                <span className="orbit-nav-icon">◎</span>
-                <span>CRM</span>
-                <span className="orbit-crm-chevron">
-                  {crmOpen ? "▾" : "▸"}
-                </span>
-              </button>
-
-              {crmOpen && (
-                <div className="orbit-subnav">
-                  <button
-                    className="orbit-subnav-item"
-                    onClick={() => router.push("/crm/leads")}
-                  >
-                    Leads
-                  </button>
-                  <button
-                    className="orbit-subnav-item"
-                    onClick={() => router.push("/crm/demos")}
-                  >
-                    Demo Schedule
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {menuItems
-              .filter((item) => item.key !== "overview")
-              .map((item) => (
-                <button
-                  key={item.key}
-                  className={`orbit-nav-item ${active === item.key ? "active" : ""}`}
-                  onClick={() => handleMenu(item.key)}
-                >
-                  <span className="orbit-nav-icon">{item.icon}</span>
-                  <span>{item.label}</span>
-                  {item.key === "aqmatics" && (
-                    <span className="orbit-coming-soon">Soon</span>
-                  )}
-                </button>
-              ))}
-          </nav>
-        </div>
-
-        <div className="orbit-sidebar-footer">
-          <div className="orbit-user-card">
-            <div className="orbit-user-avatar">
-              {email ? email.charAt(0).toUpperCase() : "A"}
-            </div>
-            <div>
-              <div className="orbit-user-name">Orbit User</div>
-              <div className="orbit-user-email">{email}</div>
-            </div>
-          </div>
-          <button className="orbit-signout-btn" onClick={handleSignOut}>
-            Sign out
-          </button>
-        </div>
-      </aside>
-
-      <main className="orbit-main">
-        <header className="orbit-topbar">
+      <main className={styles.main}>
+        <header className={styles.header}>
           <div>
-            <p className="orbit-topbar-kicker">CRM · LMS · Operations</p>
-            <h1>
-              Welcome to Orbit workspace <span>by igebra.ai</span>
-            </h1>
-            <p className="orbit-topbar-subtext">
-              Manage leads, students, batches, payments and courses from one place.
+            <p className={styles.kicker}>CRM · LMS · OPERATIONS</p>
+            <h1>Orbit Overview</h1>
+            <p>
+              A quick view of what is happening across your Orbit workspace.
             </p>
           </div>
-          <div className="orbit-email-pill">{email || "Loading..."}</div>
+
+          <div className={styles.userPill}>
+            <strong>{displayRole(role)}</strong>
+            <span>{email}</span>
+          </div>
         </header>
 
-        <section className="orbit-stats-grid">
-          <div className="orbit-stat-card">
-            <span className="orbit-stat-label">CRM</span>
-            <h3>Lead Management</h3>
-            <p>Track enquiries, demos, follow-ups and conversions.</p>
-          </div>
-          <div className="orbit-stat-card">
-            <span className="orbit-stat-label">Students</span>
-            <h3>Enrolments</h3>
-            <p>View enrolled students, course mappings and status.</p>
-          </div>
-          <div className="orbit-stat-card">
-            <span className="orbit-stat-label">Batches</span>
-            <h3>Class Operations</h3>
-            <p>Manage batches, trainers, attendance and homework.</p>
-          </div>
-          <div className="orbit-stat-card">
-            <span className="orbit-stat-label">Payments</span>
-            <h3>Collections</h3>
-            <p>Track fees collected, pending balances and due dates.</p>
-          </div>
-        </section>
+        {loading ? (
+          <div className={styles.loading}>Loading Orbit overview...</div>
+        ) : (
+          <>
+            <section className={styles.metrics}>
+              {metrics.map((metric) => (
+                <button
+                  key={metric.label}
+                  className={styles.metricCard}
+                  onClick={() => metric.href && router.push(metric.href)}
+                >
+                  <span>{metric.label}</span>
+                  <strong>{metric.value}</strong>
+                  <small>{metric.note}</small>
+                </button>
+              ))}
+            </section>
 
-        <section className="orbit-content-grid">
-          <div className="orbit-panel orbit-panel-large">
-            <div className="orbit-panel-header">
-              <h2>Quick Access</h2>
-              <span>Workspace Modules</span>
-            </div>
+            <section className={styles.contentGrid}>
+              <div className={styles.panel}>
+                <div className={styles.panelHeader}>
+                  <div>
+                    <h2>Today's Focus</h2>
+                    <p>Items that may need attention</p>
+                  </div>
+                </div>
 
-            <div className="orbit-module-grid">
-              <button className="orbit-module-card" onClick={() => router.push("/crm/leads")}>
-                <div className="orbit-module-icon">◎</div>
-                <h3>CRM</h3>
-                <p>Leads, demos, follow-ups and conversions.</p>
-              </button>
+                <div className={styles.focusList}>
+                  {focusItems.map((item) => (
+                    <button
+                      key={item.label}
+                      onClick={() => item.href && router.push(item.href)}
+                      disabled={!item.href}
+                    >
+                      <span>{item.label}</span>
+                      <strong>{item.value}</strong>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-              <button className="orbit-module-card" onClick={() => router.push("/students")}>
-                <div className="orbit-module-icon">◉</div>
-                <h3>Students</h3>
-                <p>Profiles, enrolments and multi-course mapping.</p>
-              </button>
+              <div className={styles.panel}>
+                <div className={styles.panelHeader}>
+                  <div>
+                    <h2>Quick Access</h2>
+                    <p>Open the modules you use most</p>
+                  </div>
+                </div>
 
-              <button className="orbit-module-card" onClick={() => router.push("/batches")}>
-                <div className="orbit-module-icon">▣</div>
-                <h3>Batches</h3>
-                <p>Trainer assignment, attendance and topics covered.</p>
-              </button>
+                <div className={styles.quickGrid}>
+                  {quickLinks.map((link) => (
+                    <button
+                      key={link.href}
+                      onClick={() => router.push(link.href)}
+                    >
+                      <strong>{link.label}</strong>
+                      <span>{link.note}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </section>
 
-              <button className="orbit-module-card">
-                <div className="orbit-module-icon">₹</div>
-                <h3>Payments</h3>
-                <p>Fee plans, payment mode, due dates and pending amounts.</p>
-              </button>
-
-              <button className="orbit-module-card">
-                <div className="orbit-module-icon">✦</div>
-                <h3>Courses</h3>
-                <p>AiEdge, Coding4AI and Math course library.</p>
-              </button>
-
-              <button className="orbit-module-card">
-                <div className="orbit-module-icon">▤</div>
-                <h3>Reports</h3>
-                <p>Operational summaries and management insights.</p>
-              </button>
-            </div>
-          </div>
-
-          <div className="orbit-panel">
-            <div className="orbit-panel-header">
-              <h2>Today's Focus</h2>
-              <span>Suggested actions</span>
-            </div>
-            <ul className="orbit-task-list">
-              <li>Review new incoming leads</li>
-              <li>Check demo follow-ups</li>
-              <li>Confirm pending enrolments</li>
-              <li>Review payment dues</li>
-              <li>Assign trainers to active batches</li>
-            </ul>
-          </div>
-
-          <div className="orbit-panel">
-            <div className="orbit-panel-header">
-              <h2>Platform Scope</h2>
-              <span>Current structure</span>
-            </div>
-            <div className="orbit-scope-box">
-              <p><strong>iGebra:</strong> CRM + LMS operations</p>
-              <p><strong>AQMATICS:</strong> <span className="orbit-muted">Next phase</span></p>
-              <p><strong>Access:</strong> Admin, sales, trainer, accounts, parent and student roles.</p>
-            </div>
-          </div>
-        </section>
+            <section className={styles.footerNote}>
+              <div>
+                <strong>igebra.ai operations</strong>
+                <span>
+                  CRM, Students, Batches, Trainers, Payments, Courses and Reports.
+                </span>
+              </div>
+              <div>
+                <strong>AQMATICS</strong>
+                <span>Coming in a later phase.</span>
+              </div>
+            </section>
+          </>
+        )}
       </main>
     </div>
   );
