@@ -5,8 +5,6 @@ export const runtime = "nodejs";
 
 const DEFAULT_RECIPIENTS = [
   "azhar@igebra.ai",
-  "svemula@igebra.ai",
-  "shiva.chidara@igebra.ai",
 ];
 
 const ALLOWED_ROLES = [
@@ -80,7 +78,6 @@ export async function POST(request: Request) {
 
     const apiKey = process.env.RESEND_API_KEY;
 
-    // The request is already safely stored even if email is not configured yet.
     if (!apiKey) {
       return NextResponse.json({
         ok: true,
