@@ -3,6 +3,7 @@
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
+import OrbitSidebar from "../../components/OrbitSidebar";
 import styles from "./leads.module.css";
 
 const supabase = createClient(
@@ -293,7 +294,6 @@ export default function LeadsPage() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [crmOpen, setCrmOpen] = useState(true);
   const [importModalOpen, setImportModalOpen] = useState(false);
 
   const [followUpOpen, setFollowUpOpen] = useState(false);
@@ -309,6 +309,22 @@ export default function LeadsPage() {
     "admin",
     "sales",
     "marketing",
+    "sales_marketing",
+  ].includes(role);
+
+  const canViewCrm = [
+    "super_admin",
+    "admin",
+    "sales",
+    "marketing",
+    "sales_marketing",
+    "viewer_management",
+  ].includes(role);
+
+  const canScheduleDemo = [
+    "super_admin",
+    "admin",
+    "sales",
     "sales_marketing",
   ].includes(role);
 
@@ -337,7 +353,23 @@ export default function LeadsPage() {
         .eq("id", authData.user.id)
         .single();
 
-      setRole(profile?.role || "");
+      const currentRole = profile?.role || "";
+      setRole(currentRole);
+
+      if (
+        ![
+          "super_admin",
+          "admin",
+          "sales",
+          "marketing",
+          "sales_marketing",
+          "viewer_management",
+        ].includes(currentRole)
+      ) {
+        router.replace("/dashboard");
+        return;
+      }
+
       await loadLeads();
     }
 
@@ -924,91 +956,10 @@ export default function LeadsPage() {
     }
   }
 
-  async function signOut() {
-    await supabase.auth.signOut();
-    router.replace("/");
-  }
 
   return (
     <div className={styles.shell}>
-      <aside className={styles.sidebar}>
-        <div>
-          <button
-            className={styles.brand}
-            onClick={() => router.push("/dashboard")}
-          >
-            <img
-              src="/orbit-mascot.png"
-              alt="Orbit mascot"
-              className={styles.brandMascot}
-            />
-            <span className={styles.brandCopy}>
-              <strong>Orbit</strong>
-              <small>by igebra.ai</small>
-            </span>
-          </button>
-
-          <nav className={styles.nav}>
-            <button onClick={() => router.push("/dashboard")}>
-              <span>⌂</span> Overview
-            </button>
-            <div className={styles.crmGroup}>
-              <button
-                className={styles.navActive}
-                onClick={() => setCrmOpen((value) => !value)}
-              >
-                <span>◎</span> CRM
-                <span className={styles.crmChevron}>
-                  {crmOpen ? "▾" : "▸"}
-                </span>
-              </button>
-
-              {crmOpen && (
-                <div className={styles.subNav}>
-                  <button className={styles.subNavActive}>Leads</button>
-                  <button onClick={() => router.push("/crm/demos")}>
-                    Demo Schedule
-                  </button>
-                </div>
-              )}
-            </div>
-            <button onClick={() => router.push("/students")}>
-              <span>◉</span> Students
-            </button>
-            <button onClick={() => router.push("/batches")}>
-              <span>▣</span> Batches
-            </button>
-            <button>
-              <span>₹</span> Payments
-            </button>
-            <button>
-              <span>✦</span> Courses
-            </button>
-            <button>
-              <span>▤</span> Reports
-            </button>
-            <button>
-              <span>◌</span> AQMATICS
-              <small className={styles.soon}>Soon</small>
-            </button>
-          </nav>
-        </div>
-
-        <div className={styles.sidebarBottom}>
-          <div className={styles.userBox}>
-            <span className={styles.avatar}>
-              {email ? email.charAt(0).toUpperCase() : "A"}
-            </span>
-            <span>
-              <strong>Orbit User</strong>
-              <small>{email}</small>
-            </span>
-          </div>
-          <button className={styles.signOut} onClick={signOut}>
-            Sign out
-          </button>
-        </div>
-      </aside>
+      <OrbitSidebar email={email} active="crm-leads" />
 
       <main className={styles.main}>
         <header className={styles.header}>
@@ -1020,18 +971,20 @@ export default function LeadsPage() {
             </p>
           </div>
 
-          <div className={styles.headerActions}>
-            <button
-              className={styles.secondaryButton}
-              onClick={() => setImportModalOpen(true)}
-            >
-              Import Leads
-            </button>
+          {canManageCrm && (
+            <div className={styles.headerActions}>
+              <button
+                className={styles.secondaryButton}
+                onClick={() => setImportModalOpen(true)}
+              >
+                Import Leads
+              </button>
 
-            <button className={styles.primaryButton} onClick={newLead}>
-              + Add Lead
-            </button>
-          </div>
+              <button className={styles.primaryButton} onClick={newLead}>
+                + Add Lead
+              </button>
+            </div>
+          )}
         </header>
 
         <section className={styles.statsGrid}>
@@ -1064,7 +1017,7 @@ export default function LeadsPage() {
 
         {message && <div className={styles.message}>{message}</div>}
 
-        {selected.size > 0 && (
+        {selected.size > 0 && canManageCrm && (
           <section className={styles.selectionBar}>
             <div className={styles.selectionCount}>
               <strong>{selected.size}</strong>
@@ -1075,12 +1028,14 @@ export default function LeadsPage() {
               <button onClick={downloadSelectedCsv}>
                 Export CSV
               </button>
-              <button
-                className={styles.scheduleSelected}
-                onClick={scheduleSelectedDemo}
-              >
-                Schedule Demo
-              </button>
+              {canScheduleDemo && (
+                <button
+                  className={styles.scheduleSelected}
+                  onClick={scheduleSelectedDemo}
+                >
+                  Schedule Demo
+                </button>
+              )}
               <button
                 className={styles.selectionDelete}
                 onClick={bulkDelete}
@@ -1160,6 +1115,7 @@ export default function LeadsPage() {
                         filteredLeads.every((lead) => selected.has(lead.id))
                       }
                       onChange={toggleAllVisible}
+                      disabled={!canManageCrm}
                     />
                   </th>
                   <th>Parent</th>
@@ -1200,6 +1156,7 @@ export default function LeadsPage() {
                           type="checkbox"
                           checked={selected.has(lead.id)}
                           onChange={() => toggleSelected(lead.id)}
+                          disabled={!canManageCrm}
                         />
                       </td>
 
@@ -1294,7 +1251,9 @@ export default function LeadsPage() {
 
                       <td>
                         <div className={styles.rowActions}>
-                          <button onClick={() => editLead(lead)}>Edit</button>
+                          {canManageCrm && (
+                            <button onClick={() => editLead(lead)}>Edit</button>
+                          )}
 
                           {canManageCrm && (
                             <button
@@ -1346,7 +1305,7 @@ export default function LeadsPage() {
         onChange={importCsv}
       />
 
-      {importModalOpen && (
+      {importModalOpen && canManageCrm && (
         <div className={styles.modalBackdrop}>
           <div className={styles.importModal}>
             <div className={styles.modalHeader}>
@@ -1530,7 +1489,7 @@ export default function LeadsPage() {
         </div>
       )}
 
-      {modalOpen && (
+      {modalOpen && canManageCrm && (
         <div className={styles.modalBackdrop}>
           <div className={styles.modal}>
             <div className={styles.modalHeader}>

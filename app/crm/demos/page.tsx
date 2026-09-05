@@ -10,6 +10,7 @@ import {
 } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
+import OrbitSidebar from "../../components/OrbitSidebar";
 import * as XLSX from "xlsx";
 import styles from "./demos.module.css";
 
@@ -382,6 +383,7 @@ export default function DemoSchedulePage() {
 
   const [email, setEmail] = useState("");
   const [userId, setUserId] = useState("");
+  const [role, setRole] = useState("");
   const [demos, setDemos] = useState<DemoSession[]>([]);
   const [leads, setLeads] = useState<LeadOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -411,7 +413,13 @@ export default function DemoSchedulePage() {
   const [excelHeaders, setExcelHeaders] = useState<string[]>([]);
   const [excelMapping, setExcelMapping] = useState<ExcelMapping>(EMPTY_MAPPING);
   const [excelError, setExcelError] = useState("");
-  const [crmOpen, setCrmOpen] = useState(true);
+
+  const canManageDemo = [
+    "super_admin",
+    "admin",
+    "sales",
+    "sales_marketing",
+  ].includes(role);
 
   useEffect(() => {
     async function initialize() {
@@ -425,6 +433,36 @@ export default function DemoSchedulePage() {
       setEmail(data.user.email || "");
       setUserId(data.user.id);
 
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
+
+      const currentRole = profile?.role || "";
+      setRole(currentRole);
+
+      if (
+        ![
+          "super_admin",
+          "admin",
+          "sales",
+          "sales_marketing",
+          "marketing",
+          "viewer_management",
+        ].includes(currentRole)
+      ) {
+        router.replace("/dashboard");
+        return;
+      }
+
+      const canManageCurrent = [
+        "super_admin",
+        "admin",
+        "sales",
+        "sales_marketing",
+      ].includes(currentRole);
+
       const [, loadedLeads] = await Promise.all([loadDemos(), loadLeads()]);
 
       const storedLeadIds = sessionStorage.getItem(
@@ -432,6 +470,12 @@ export default function DemoSchedulePage() {
       );
 
       if (storedLeadIds) {
+        if (!canManageCurrent) {
+          sessionStorage.removeItem("orbit_demo_selected_leads");
+          setMessage("Demo Schedule is view-only for your role.");
+          return;
+        }
+
         try {
           const ids = JSON.parse(storedLeadIds) as string[];
           const selectedLeads = loadedLeads.filter((lead) =>
@@ -1136,80 +1180,10 @@ export default function DemoSchedulePage() {
     await Promise.all([loadDemos(), loadLeads()]);
   }
 
-  async function signOut() {
-    await supabase.auth.signOut();
-    router.replace("/");
-  }
 
   return (
     <div className={styles.shell}>
-      <aside className={styles.sidebar}>
-        <div>
-          <button className={styles.brand} onClick={() => router.push("/dashboard")}>
-            <img
-              src="/orbit-mascot.png"
-              alt="Orbit mascot"
-              className={styles.brandMascot}
-            />
-            <span className={styles.brandCopy}>
-              <strong>Orbit</strong>
-              <small>by igebra.ai</small>
-            </span>
-          </button>
-
-          <nav className={styles.nav}>
-            <button onClick={() => router.push("/dashboard")}>
-              <span>⌂</span> Overview
-            </button>
-
-            <div className={styles.crmGroup}>
-              <button
-                className={styles.navActive}
-                onClick={() => setCrmOpen((value) => !value)}
-              >
-                <span>◎</span> CRM
-                <span className={styles.crmChevron}>
-                  {crmOpen ? "▾" : "▸"}
-                </span>
-              </button>
-
-              {crmOpen && (
-                <div className={styles.subNav}>
-                  <button onClick={() => router.push("/crm/leads")}>
-                    Leads
-                  </button>
-                  <button className={styles.subNavActive}>
-                    Demo Schedule
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <button onClick={() => router.push("/students")}><span>◉</span> Students</button>
-            <button onClick={() => router.push("/batches")}><span>▣</span> Batches</button>
-            <button><span>₹</span> Payments</button>
-            <button><span>✦</span> Courses</button>
-            <button><span>▤</span> Reports</button>
-            <button>
-              <span>◌</span> AQMATICS
-              <small className={styles.soon}>Soon</small>
-            </button>
-          </nav>
-        </div>
-
-        <div className={styles.sidebarBottom}>
-          <div className={styles.userBox}>
-            <span className={styles.avatar}>
-              {email ? email.charAt(0).toUpperCase() : "A"}
-            </span>
-            <span>
-              <strong>Orbit User</strong>
-              <small>{email}</small>
-            </span>
-          </div>
-          <button className={styles.signOut} onClick={signOut}>Sign out</button>
-        </div>
-      </aside>
+      <OrbitSidebar email={email} active="crm-demos" />
 
       <main className={styles.main}>
         <header className={styles.header}>
@@ -1221,11 +1195,13 @@ export default function DemoSchedulePage() {
             </p>
           </div>
 
-          <div className={styles.headerActions}>
-            <button className={styles.primaryButton} onClick={openNewDemo}>
-              + Schedule Demo
-            </button>
-          </div>
+          {canManageDemo && (
+            <div className={styles.headerActions}>
+              <button className={styles.primaryButton} onClick={openNewDemo}>
+                + Schedule Demo
+              </button>
+            </div>
+          )}
         </header>
 
         <section className={styles.statsGrid}>
@@ -1322,10 +1298,21 @@ export default function DemoSchedulePage() {
                         </td>
                         <td><span className={styles.statusBadge}>{demo.status}</span></td>
                         <td>
-                          <div className={styles.rowActions}>
-                            <button onClick={() => editDemo(demo)}>Edit / Attendance</button>
-                            <button className={styles.deleteButton} onClick={() => deleteDemo(demo.id)}>Delete</button>
-                          </div>
+                          {canManageDemo ? (
+                            <div className={styles.rowActions}>
+                              <button onClick={() => editDemo(demo)}>
+                                Edit / Attendance
+                              </button>
+                              <button
+                                className={styles.deleteButton}
+                                onClick={() => deleteDemo(demo.id)}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          ) : (
+                            <span>View only</span>
+                          )}
                         </td>
                       </tr>
                     );
@@ -1337,7 +1324,7 @@ export default function DemoSchedulePage() {
         </section>
       </main>
 
-      {modalOpen && (
+      {modalOpen && canManageDemo && (
         <div className={styles.modalBackdrop}>
           <div className={styles.modal}>
             <div className={styles.modalHeader}>

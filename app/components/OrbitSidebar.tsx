@@ -14,6 +14,8 @@ type Props = {
   email: string;
   active:
     | "overview"
+    | "crm-leads"
+    | "crm-demos"
     | "students"
     | "batches"
     | "sessions"
@@ -26,7 +28,9 @@ type Props = {
 
 export default function OrbitSidebar({ email, active }: Props) {
   const router = useRouter();
-  const [crmOpen, setCrmOpen] = useState(false);
+  const [crmOpen, setCrmOpen] = useState(
+    active === "crm-leads" || active === "crm-demos"
+  );
   const [role, setRole] = useState("");
   const [pendingAccess, setPendingAccess] = useState(0);
 
@@ -112,14 +116,31 @@ export default function OrbitSidebar({ email, active }: Props) {
 
           {canSeeCrm && (
             <div className={styles.crmGroup}>
-              <button onClick={() => setCrmOpen((value) => !value)}>
+              <button
+                className={
+                  active === "crm-leads" || active === "crm-demos"
+                    ? styles.navActive
+                    : ""
+                }
+                onClick={() => setCrmOpen((value) => !value)}
+              >
                 <span>◎</span> CRM
                 <span className={styles.chevron}>{crmOpen ? "▾" : "▸"}</span>
               </button>
               {crmOpen && (
                 <div className={styles.subNav}>
-                  <button onClick={() => router.push("/crm/leads")}>Leads</button>
-                  <button onClick={() => router.push("/crm/demos")}>Demo Schedule</button>
+                  <button
+                    className={active === "crm-leads" ? styles.navActive : ""}
+                    onClick={() => router.push("/crm/leads")}
+                  >
+                    Leads
+                  </button>
+                  <button
+                    className={active === "crm-demos" ? styles.navActive : ""}
+                    onClick={() => router.push("/crm/demos")}
+                  >
+                    Demo Schedule
+                  </button>
                 </div>
               )}
             </div>
