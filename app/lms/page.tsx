@@ -112,6 +112,28 @@ function LibraryIcon3D() {
   );
 }
 
+
+function CurriculumIcon3D() {
+  return (
+    <span className={styles.curriculumIconShell} aria-hidden="true">
+      <svg viewBox="0 0 64 64" className={styles.curriculumIconSvg}>
+        <defs>
+          <linearGradient id="currPaper" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="100%" stopColor="#e3f0ee" />
+          </linearGradient>
+        </defs>
+        <rect x="12" y="9" width="40" height="46" rx="10" fill="url(#currPaper)" />
+        <rect x="18" y="16" width="18" height="5" rx="2.5" fill="#558C89" />
+        <circle cx="21" cy="31" r="3" fill="#D9853B" />
+        <circle cx="21" cy="41" r="3" fill="#74AFAD" />
+        <path d="M28 31h15M28 41h12" stroke="#558C89" strokeWidth="3" strokeLinecap="round" />
+        <path d="M42 11l6 6h-6z" fill="#b9d6d2" />
+      </svg>
+    </span>
+  );
+}
+
 function CourseFamilyIcon({ family }: { family: CourseFamily }) {
   if (family === "math") {
     return (
@@ -372,25 +394,31 @@ export default function LmsPage() {
     <OrbitSidebar email={email} active="lms" />
     <main className={styles.main}>
       <header className={styles.header}>
-        <div className={styles.headerIdentity}>
-          <LibraryIcon3D />
-          <span className={styles.headerIdentityLabel}>
-            {tab === "library" ? "Content Library" : "Curriculum"}
-          </span>
+        <div className={styles.lmsHeaderTitle}>
+          <h1>LMS</h1>
         </div>
 
-        <div className={styles.tabs}>
+        <div className={styles.lmsViewTabs} role="tablist" aria-label="LMS sections">
           <button
-            className={tab==="library"?styles.activeTab:""}
+            type="button"
+            role="tab"
+            aria-selected={tab==="library"}
+            className={`${styles.lmsViewTab} ${tab==="library"?styles.lmsViewTabActive:""}`}
             onClick={()=>setTab("library")}
           >
-            Content Library
+            <LibraryIcon3D />
+            <span>Content Library</span>
           </button>
+
           <button
-            className={tab==="curriculum"?styles.activeTab:""}
+            type="button"
+            role="tab"
+            aria-selected={tab==="curriculum"}
+            className={`${styles.lmsViewTab} ${tab==="curriculum"?styles.lmsViewTabActive:""}`}
             onClick={()=>setTab("curriculum")}
           >
-            Curriculum
+            <CurriculumIcon3D />
+            <span>Curriculum</span>
           </button>
         </div>
       </header>

@@ -219,3 +219,95 @@
   .pageMascot{width:76px;opacity:.78}
 }
 
+
+
+/* ORBIT LMS HEADER FIX FINAL */
+.header{
+  min-height:92px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:20px;
+  margin-bottom:14px;
+}
+.lmsHeaderTitle{
+  padding-top:8px;
+}
+.lmsHeaderTitle h1{
+  margin:0;
+  color:#153536;
+  font-size:32px;
+  font-weight:700;
+  line-height:1;
+}
+.lmsViewTabs{
+  display:flex;
+  gap:10px;
+}
+.lmsViewTab{
+  min-width:104px;
+  min-height:80px;
+  padding:8px 10px;
+  border:1px solid #d3e0dd;
+  border-radius:14px;
+  background:#fff;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  color:#566b69;
+  cursor:pointer;
+}
+.lmsViewTab>span:last-child{
+  font-size:10px;
+  font-weight:650;
+  white-space:nowrap;
+}
+.lmsViewTabActive{
+  border-color:#6faaa5;
+  background:#f3f8f7;
+  color:#0f5e61;
+  box-shadow:0 0 0 2px rgba(85,140,137,.08),0 8px 16px rgba(33,77,75,.09);
+}
+.lmsViewTab .libraryIconShell,
+.curriculumIconShell{
+  width:42px;
+  height:42px;
+  border-radius:12px;
+}
+.lmsViewTab .libraryIconSvg,
+.curriculumIconSvg{
+  width:31px;
+  height:31px;
+}
+.curriculumIconShell{
+  display:grid;
+  place-items:center;
+  border:1px solid #d2e3df;
+  background:linear-gradient(145deg,#ffffff,#e9f3f1);
+  box-shadow:0 6px 12px rgba(33,91,87,.11);
+}
+.curriculumIconSvg{
+  filter:drop-shadow(0 3px 3px rgba(30,77,74,.12));
+}
+.pageMascot{
+  right:28px;
+  bottom:30px;
+  width:72px;
+  opacity:.9;
+  animation:orbitMascotFloat 4.2s ease-in-out infinite;
+}
+@keyframes orbitMascotFloat{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-7px)}
+}
+@media(prefers-reduced-motion:reduce){
+  .pageMascot{animation:none}
+}
+@media(max-width:620px){
+  .header{flex-direction:column}
+  .lmsViewTabs{width:100%}
+  .lmsViewTab{flex:1}
+  .pageMascot{width:56px}
+}
