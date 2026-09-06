@@ -450,6 +450,66 @@ const COURSES: Course[] = [
   },
 ];
 
+
+function CourseIcon3D({ courseId }: { courseId: string }) {
+  if (courseId === "math") {
+    return (
+      <span className={`${styles.courseNameIcon} ${styles.mathCourseIcon}`} aria-hidden="true">
+        <svg viewBox="0 0 56 56">
+          <defs>
+            <linearGradient id="mathIconFace" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#fffaf4" />
+              <stop offset="100%" stopColor="#ffe3c7" />
+            </linearGradient>
+          </defs>
+          <rect x="8" y="6" width="40" height="44" rx="11" fill="url(#mathIconFace)" />
+          <rect x="13" y="11" width="30" height="10" rx="4" fill="#D9853B" />
+          <path d="M17 31h10M22 26v10M33 27h8M33 35h8" stroke="#a65322" strokeWidth="3" strokeLinecap="round" />
+          <circle cx="39" cy="18" r="2" fill="#fff" opacity=".85" />
+        </svg>
+      </span>
+    );
+  }
+
+  if (courseId === "coding4ai") {
+    return (
+      <span className={`${styles.courseNameIcon} ${styles.codingCourseIcon}`} aria-hidden="true">
+        <svg viewBox="0 0 56 56">
+          <defs>
+            <linearGradient id="codeIconFace" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#f5fbff" />
+              <stop offset="100%" stopColor="#d9edf6" />
+            </linearGradient>
+          </defs>
+          <rect x="6" y="9" width="44" height="37" rx="11" fill="url(#codeIconFace)" />
+          <path d="M21 20l-8 8 8 8M35 20l8 8-8 8M32 16l-8 24" fill="none" stroke="#246f8f" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="44" cy="12" r="4" fill="#74AFAD" />
+          <path d="M44 9.8v4.4M41.8 12h4.4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      </span>
+    );
+  }
+
+  return (
+    <span className={`${styles.courseNameIcon} ${styles.aiCourseIcon}`} aria-hidden="true">
+      <svg viewBox="0 0 56 56">
+        <defs>
+          <linearGradient id="aiIconFace" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#f6fffd" />
+            <stop offset="100%" stopColor="#d8efeb" />
+          </linearGradient>
+        </defs>
+        <circle cx="27" cy="29" r="18" fill="url(#aiIconFace)" />
+        <circle cx="20" cy="28" r="5" fill="#558C89" />
+        <circle cx="33" cy="20" r="4" fill="#74AFAD" />
+        <circle cx="35" cy="35" r="5" fill="#3f817d" />
+        <path d="M24 26l6-4M24 31l7 3M33 24l1 6" stroke="#356f6c" strokeWidth="2.6" strokeLinecap="round" />
+        <path d="M43 8l1.8 4.2L49 14l-4.2 1.8L43 20l-1.8-4.2L37 14l4.2-1.8L43 8z" fill="#D9853B" />
+      </svg>
+    </span>
+  );
+}
+
 export default function CoursesPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -645,7 +705,10 @@ export default function CoursesPage() {
             <article className={styles.courseCard} key={course.id}>
               <div className={`${styles.courseTop} ${styles[course.id]}`}>
                 <span className={styles.courseType}>igebra Program</span>
-                <h2>{course.name}</h2>
+                <div className={styles.courseTitleRow}>
+                  <CourseIcon3D courseId={course.id} />
+                  <h2>{course.name}</h2>
+                </div>
                 <p>{course.tagline}</p>
               </div>
 

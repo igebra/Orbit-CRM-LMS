@@ -62,3 +62,139 @@
 .editGrid textarea{resize:vertical}
 .editFull{grid-column:1/-1}
 @media(max-width:800px){.editGrid{grid-template-columns:1fr}.editFull{grid-column:auto}}
+
+/* ORBIT COURSES CARD ALIGNMENT + 3D ICON POLISH */
+.courseGrid{
+  align-items:stretch;
+}
+
+.courseCard{
+  display:flex;
+  flex-direction:column;
+  height:100%;
+}
+
+.courseBody{
+  display:flex;
+  flex:1;
+  flex-direction:column;
+}
+
+.metrics{
+  margin-bottom:15px;
+}
+
+.price{
+  margin-top:auto;
+}
+
+.courseTitleRow{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin:7px 0 5px;
+  min-width:0;
+}
+
+.courseTitleRow h2{
+  margin:0;
+  line-height:1.05;
+}
+
+.courseNameIcon{
+  position:relative;
+  flex:0 0 52px;
+  width:52px;
+  height:52px;
+  display:grid;
+  place-items:center;
+  border-radius:15px;
+  background:rgba(255,255,255,.95);
+  border:1px solid rgba(255,255,255,.72);
+  box-shadow:
+    0 10px 18px rgba(0,0,0,.16),
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -3px 7px rgba(15,69,66,.08);
+}
+
+.courseNameIcon::after{
+  content:"";
+  position:absolute;
+  left:8px;
+  right:8px;
+  bottom:-5px;
+  height:8px;
+  border-radius:50%;
+  background:rgba(0,0,0,.15);
+  filter:blur(4px);
+  z-index:-1;
+}
+
+.courseNameIcon svg{
+  width:43px;
+  height:43px;
+  filter:drop-shadow(0 4px 4px rgba(0,0,0,.10));
+}
+
+.aiCourseIcon{
+  background:linear-gradient(145deg,#ffffff,#dcefeb);
+}
+
+.codingCourseIcon{
+  background:linear-gradient(145deg,#ffffff,#dceef6);
+}
+
+.mathCourseIcon{
+  background:linear-gradient(145deg,#ffffff,#ffe6cf);
+}
+
+.actions{
+  align-items:stretch;
+}
+
+.actions>.primary,
+.actions>.secondary{
+  flex:1 1 0;
+  min-width:0;
+  min-height:48px;
+  text-align:center;
+  line-height:1.2;
+}
+
+@media(max-width:1150px){
+  .courseCard{
+    height:auto;
+  }
+
+  .price{
+    margin-top:15px;
+  }
+}
+
+@media(max-width:520px){
+  .courseTitleRow{
+    gap:9px;
+  }
+
+  .courseNameIcon{
+    flex-basis:45px;
+    width:45px;
+    height:45px;
+    border-radius:13px;
+  }
+
+  .courseNameIcon svg{
+    width:37px;
+    height:37px;
+  }
+
+  .actions{
+    flex-wrap:wrap;
+  }
+
+  .actions>.primary,
+  .actions>.secondary{
+    flex:1 1 130px;
+  }
+}
+
