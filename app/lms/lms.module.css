@@ -414,3 +414,62 @@
   width:56px;
   height:56px;
 }
+
+
+/* ORBIT LMS FILE OR EXTERNAL LINK */
+.sourceChoice{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+}
+
+.sourceChoice button{
+  min-height:68px;
+  border:1px solid #d6e2df;
+  border-radius:11px;
+  padding:10px 12px;
+  background:#fbfdfc;
+  color:#526a68;
+  text-align:left;
+  cursor:pointer;
+  transition:border-color .14s ease,background .14s ease,box-shadow .14s ease;
+}
+
+.sourceChoice button strong,
+.sourceChoice button small{
+  display:block;
+}
+
+.sourceChoice button strong{
+  font-size:11px;
+  color:#183032;
+}
+
+.sourceChoice button small{
+  margin-top:4px;
+  color:#7a8988;
+  font-size:9px;
+  line-height:1.3;
+}
+
+.sourceChoice .sourceChoiceActive{
+  border-color:#558C89;
+  background:#eef7f5;
+  box-shadow:0 0 0 2px rgba(85,140,137,.08);
+}
+
+.uploadHelp{
+  display:block;
+  margin-top:6px;
+  color:#778886;
+  font-size:9px;
+  font-weight:500;
+  line-height:1.35;
+  text-transform:none;
+}
+
+@media(max-width:620px){
+  .sourceChoice{
+    grid-template-columns:1fr;
+  }
+}

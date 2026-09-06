@@ -25,7 +25,7 @@ const RESOURCE_TYPES = [
 const DEFAULT_REQUIRED = ["PPT / Deck", "Worksheet", "Homework"];
 const VIEW_ROLES = ["super_admin","admin","sales","sales_marketing","marketing","viewer_management","trainer"];
 const MANAGE_ROLES = ["super_admin","admin","sales","sales_marketing","trainer"];
-const MAX_FILE = 25 * 1024 * 1024;
+const MAX_FILE = 100 * 1024 * 1024;
 
 type CurriculumSession = {
   id: string;
@@ -43,6 +43,7 @@ type Resource = {
   resource_type: string;
   title: string;
   description: string | null;
+  external_url: string | null;
   is_archived: boolean;
 };
 
@@ -66,6 +67,15 @@ function fmtSize(bytes: number | null) {
 function safeName(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]+/g,"-").replace(/-+/g,"-").replace(/^-|-$/g,"");
 }
+function isValidExternalUrl(value: string) {
+  try {
+    const url = new URL(value.trim());
+    return url.protocol === "https:" || url.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
 
 type CourseFamily = "aiedge" | "math" | "coding4ai";
 
@@ -249,6 +259,8 @@ export default function LmsPage() {
 
   const [uploadOpen,setUploadOpen] = useState(false);
   const [uploadFile,setUploadFile] = useState<File|null>(null);
+  const [uploadMode,setUploadMode] = useState<"file"|"link">("file");
+  const [externalUrl,setExternalUrl] = useState("");
   const [upload,setUpload] = useState({session_number:"1",resource_type:"PPT / Deck",title:"",description:""});
   const [editSession,setEditSession] = useState<CurriculumSession|null>(null);
   const [editTopic,setEditTopic] = useState("");
@@ -258,6 +270,8 @@ export default function LmsPage() {
   const [sessionCount,setSessionCount] = useState("20");
   const [replaceResource,setReplaceResource] = useState<Resource|null>(null);
   const [replaceFile,setReplaceFile] = useState<File|null>(null);
+  const [linkResource,setLinkResource] = useState<Resource|null>(null);
+  const [editExternalUrl,setEditExternalUrl] = useState("");
   const [versionResource,setVersionResource] = useState<Resource|null>(null);
 
   const canManage = MANAGE_ROLES.includes(role);
@@ -313,7 +327,7 @@ export default function LmsPage() {
     setLoading(true);
     const [c,r,v] = await Promise.all([
       supabase.from("lms_curriculum_sessions").select("id,course_name,session_number,topic,learning_objectives,required_resource_types,status").order("course_name").order("session_number"),
-      supabase.from("lms_resources").select("id,curriculum_session_id,resource_type,title,description,is_archived").order("created_at",{ascending:false}),
+      supabase.from("lms_resources").select("id,curriculum_session_id,resource_type,title,description,external_url,is_archived").order("created_at",{ascending:false}),
       supabase.from("lms_resource_versions").select("id,resource_id,version_number,file_name,storage_path,size_bytes,created_at").order("version_number",{ascending:false}),
     ]);
     if(c.error || r.error || v.error){
@@ -386,34 +400,118 @@ export default function LmsPage() {
 
   function openUpload(){
     setUpload({session_number:sessionFilter!=="All"?sessionFilter:String(sessions[0]?.session_number||1),resource_type:"PPT / Deck",title:"",description:""});
-    setUploadFile(null); setUploadOpen(true);
+    setUploadFile(null);
+    setUploadMode("file");
+    setExternalUrl("");
+    setUploadOpen(true);
   }
 
   async function uploadResource(e:FormEvent){
     e.preventDefault();
-    if(!uploadFile){ setMessage("Choose a file."); return; }
-    if(uploadFile.size>MAX_FILE){ setMessage("Maximum file size is 25 MB."); return; }
-    if(!upload.title.trim()){ setMessage("Resource title is required."); return; }
-    setWorking(true); let resourceId=""; let storagePath="";
+
+    if(!upload.title.trim()){
+      setMessage("Resource title is required.");
+      return;
+    }
+
+    if(uploadMode==="file"){
+      if(!uploadFile){
+        setMessage("Choose a file or switch to External Link.");
+        return;
+      }
+      if(uploadFile.size>MAX_FILE){
+        setMessage("This file is over 100 MB. Please use External Link for larger files.");
+        return;
+      }
+    }else{
+      if(!externalUrl.trim()){
+        setMessage("Paste the external file link.");
+        return;
+      }
+      if(!isValidExternalUrl(externalUrl)){
+        setMessage("Enter a valid http:// or https:// link.");
+        return;
+      }
+    }
+
+    setWorking(true);
+    let resourceId="";
+    let storagePath="";
+
     try{
-      const {data:curriculumId,error:currErr} = await supabase.rpc("ensure_lms_curriculum_session",{p_course_name:course,p_session_number:Number(upload.session_number)});
+      const {data:curriculumId,error:currErr} = await supabase.rpc(
+        "ensure_lms_curriculum_session",
+        {p_course_name:course,p_session_number:Number(upload.session_number)}
+      );
       if(currErr) throw currErr;
-      const {data:r,error:rErr} = await supabase.from("lms_resources").insert({curriculum_session_id:String(curriculumId),resource_type:upload.resource_type,title:upload.title.trim(),description:upload.description.trim()||null,created_by:userId||null,updated_by:userId||null}).select("id").single();
+
+      const {data:r,error:rErr} = await supabase
+        .from("lms_resources")
+        .insert({
+          curriculum_session_id:String(curriculumId),
+          resource_type:upload.resource_type,
+          title:upload.title.trim(),
+          description:upload.description.trim()||null,
+          external_url:uploadMode==="link" ? externalUrl.trim() : null,
+          created_by:userId||null,
+          updated_by:userId||null
+        })
+        .select("id")
+        .single();
+
       if(rErr || !r) throw rErr || new Error("Could not create resource.");
       resourceId = r.id;
-      const clean = safeName(uploadFile.name)||"file";
-      const unique = typeof crypto!=="undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      storagePath = `${resourceId}/${unique}-${clean}`;
-      const up = await supabase.storage.from("lms-library").upload(storagePath,uploadFile,{cacheControl:"3600",upsert:false});
-      if(up.error) throw up.error;
-      const {error:vErr} = await supabase.from("lms_resource_versions").insert({resource_id:resourceId,version_number:1,file_name:uploadFile.name,storage_path:storagePath,mime_type:uploadFile.type||null,size_bytes:uploadFile.size,uploaded_by:userId||null});
-      if(vErr) throw vErr;
-      setUploadOpen(false); setMessage(`${upload.title.trim()} uploaded.`); await loadAll();
+
+      if(uploadMode==="file" && uploadFile){
+        const clean = safeName(uploadFile.name)||"file";
+        const unique =
+          typeof crypto!=="undefined" && "randomUUID" in crypto
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+        storagePath = `${resourceId}/${unique}-${clean}`;
+
+        const up = await supabase.storage
+          .from("lms-library")
+          .upload(storagePath,uploadFile,{cacheControl:"3600",upsert:false});
+
+        if(up.error) throw up.error;
+
+        const {error:vErr} = await supabase
+          .from("lms_resource_versions")
+          .insert({
+            resource_id:resourceId,
+            version_number:1,
+            file_name:uploadFile.name,
+            storage_path:storagePath,
+            mime_type:uploadFile.type||null,
+            size_bytes:uploadFile.size,
+            uploaded_by:userId||null
+          });
+
+        if(vErr) throw vErr;
+      }
+
+      setUploadOpen(false);
+      setUploadFile(null);
+      setExternalUrl("");
+      setMessage(
+        uploadMode==="link"
+          ? `${upload.title.trim()} link saved.`
+          : `${upload.title.trim()} uploaded.`
+      );
+      await loadAll();
     }catch(err){
-      if(storagePath) await supabase.storage.from("lms-library").remove([storagePath]);
-      if(resourceId) await supabase.from("lms_resources").delete().eq("id",resourceId);
-      setMessage(err instanceof Error?err.message:"Could not upload resource.");
-    }finally{ setWorking(false); }
+      if(storagePath){
+        await supabase.storage.from("lms-library").remove([storagePath]);
+      }
+      if(resourceId){
+        await supabase.from("lms_resources").delete().eq("id",resourceId);
+      }
+      setMessage(err instanceof Error ? err.message : "Could not save resource.");
+    }finally{
+      setWorking(false);
+    }
   }
 
   async function openVersion(v:Version){
@@ -422,9 +520,47 @@ export default function LmsPage() {
     window.open(data.signedUrl,"_blank","noopener,noreferrer");
   }
 
+  function openExternalLink(resource:Resource){
+    if(!resource.external_url) return;
+    window.open(resource.external_url,"_blank","noopener,noreferrer");
+  }
+
+  async function updateExternalLink(e:FormEvent){
+    e.preventDefault();
+    if(!linkResource) return;
+
+    if(!isValidExternalUrl(editExternalUrl)){
+      setMessage("Enter a valid http:// or https:// link.");
+      return;
+    }
+
+    setWorking(true);
+
+    const {error} = await supabase
+      .from("lms_resources")
+      .update({
+        external_url:editExternalUrl.trim(),
+        updated_by:userId||null,
+        updated_at:new Date().toISOString()
+      })
+      .eq("id",linkResource.id);
+
+    setWorking(false);
+
+    if(error){
+      setMessage(error.message);
+      return;
+    }
+
+    setLinkResource(null);
+    setEditExternalUrl("");
+    setMessage("External link updated.");
+    await loadAll();
+  }
+
   async function replaceFileSubmit(e:FormEvent){
     e.preventDefault(); if(!replaceResource || !replaceFile) return;
-    if(replaceFile.size>MAX_FILE){ setMessage("Maximum file size is 25 MB."); return; }
+    if(replaceFile.size>MAX_FILE){ setMessage("This file is over 100 MB. Use an External Link instead."); return; }
     setWorking(true); let storagePath="";
     try{
       const next = Math.max(0,...versions.filter(v=>v.resource_id===replaceResource.id).map(v=>v.version_number))+1;
@@ -557,7 +693,7 @@ export default function LmsPage() {
         {missingCount>0 && <section className={styles.missingPanel}><div><h2>Missing Resources</h2><p>Required by curriculum but not uploaded yet.</p></div><div className={styles.missingGrid}>{missing.slice(0,8).map(x=><button key={x.session.id} onClick={()=>setSessionFilter(String(x.session.session_number))}><strong>Session {x.session.session_number}</strong><span>{x.session.topic||"Topic not added"}</span><small>{x.missing.join(" · ")}</small></button>)}</div></section>}
         <section className={styles.card}>
           <div className={styles.toolbar}><input type="search" placeholder="Search resources or topics..." value={search} onChange={e=>setSearch(e.target.value)}/><select value={sessionFilter} onChange={e=>setSessionFilter(e.target.value)}><option value="All">All Sessions</option>{sessions.map(s=><option key={s.id} value={s.session_number}>Session {s.session_number}{s.topic?` — ${s.topic}`:""}</option>)}</select><select value={typeFilter} onChange={e=>setTypeFilter(e.target.value)}><option value="All">All Resource Types</option>{RESOURCE_TYPES.map(t=><option key={t}>{t}</option>)}</select>{canManage && <button className={styles.primary} onClick={openUpload}>+ Upload Resource</button>}</div>
-          <div className={styles.tableWrap}><table><thead><tr><th>Session</th><th>Resource</th><th>Type</th><th>Current File</th><th>Version</th><th>Actions</th></tr></thead><tbody>{loading?<tr><td colSpan={6} className={styles.empty}>Loading...</td></tr>:filteredResources.length===0?<tr><td colSpan={6} className={styles.empty}>No resources found.</td></tr>:filteredResources.map(r=>{const s=curriculum.find(x=>x.id===r.curriculum_session_id);const v=latestMap.get(r.id);return <tr key={r.id}><td><strong>Session {s?.session_number||"—"}</strong><small>{s?.topic||"Topic not added"}</small></td><td><strong>{r.title}</strong><small>{r.description||"—"}</small></td><td><span className={styles.badge}>{r.resource_type}</span></td><td>{v?<><strong>{v.file_name}</strong><small>{fmtSize(v.size_bytes)}</small></>:"No file"}</td><td>{v?`v${v.version_number}`:"—"}</td><td><div className={styles.actions}>{v&&<button onClick={()=>openVersion(v)}>Open</button>}<button onClick={()=>setVersionResource(r)}>Versions</button>{canManage&&<><button onClick={()=>{setReplaceResource(r);setReplaceFile(null)}}>Replace</button><button className={styles.danger} onClick={()=>archiveResource(r)}>Archive</button></>}</div></td></tr>})}</tbody></table></div>
+          <div className={styles.tableWrap}><table><thead><tr><th>Session</th><th>Resource</th><th>Type</th><th>Current File</th><th>Version</th><th>Actions</th></tr></thead><tbody>{loading?<tr><td colSpan={6} className={styles.empty}>Loading...</td></tr>:filteredResources.length===0?<tr><td colSpan={6} className={styles.empty}>No resources found.</td></tr>:filteredResources.map(r=>{const s=curriculum.find(x=>x.id===r.curriculum_session_id);const v=latestMap.get(r.id);return <tr key={r.id}><td><strong>Session {s?.session_number||"—"}</strong><small>{s?.topic||"Topic not added"}</small></td><td><strong>{r.title}</strong><small>{r.description||"—"}</small></td><td><span className={styles.badge}>{r.resource_type}</span></td><td>{v?<><strong>{v.file_name}</strong><small>{fmtSize(v.size_bytes)} · Orbit Storage</small></>:r.external_url?<><strong>External Link</strong><small>Drive / OneDrive / Zoom / other</small></>:"No file or link"}</td><td>{v?`v${v.version_number}`:r.external_url?"Link":"—"}</td><td><div className={styles.actions}>{v&&<button onClick={()=>openVersion(v)}>Open</button>}{r.external_url&&<button onClick={()=>openExternalLink(r)}>Open Link</button>}{v&&<button onClick={()=>setVersionResource(r)}>Versions</button>}{canManage&&v&&<button onClick={()=>{setReplaceResource(r);setReplaceFile(null)}}>Replace File</button>}{canManage&&r.external_url&&<button onClick={()=>{setLinkResource(r);setEditExternalUrl(r.external_url||"")}}>Edit Link</button>}{canManage&&<button className={styles.danger} onClick={()=>archiveResource(r)}>Archive</button>}</div></td></tr>})}</tbody></table></div>
         </section>
       </> : <>
         <section className={styles.curriculumTop}>{canManage && <><label><span>Session Count</span><input type="number" min="1" max="200" value={sessionCount} onChange={e=>setSessionCount(e.target.value)}/></label><button className={styles.primary} onClick={generateSessions} disabled={working}>{working?"Working...":"Create Missing Sessions"}</button></>}<span>For AiEdge/Coding4AI use 20. Math remains configurable.</span></section>
@@ -572,11 +708,173 @@ export default function LmsPage() {
       />
     </main>
 
-    {uploadOpen && canManage && <div className={styles.backdrop}><section className={styles.modal}><div className={styles.modalHeader}><div><h2>Upload Course Resource</h2><p>Official master material for {course}.</p></div><button onClick={()=>setUploadOpen(false)}>×</button></div><form onSubmit={uploadResource}><div className={styles.formGrid}><label><span>Session</span><input type="number" min="1" value={upload.session_number} onChange={e=>setUpload({...upload,session_number:e.target.value})}/></label><label><span>Resource Type</span><select value={upload.resource_type} onChange={e=>setUpload({...upload,resource_type:e.target.value})}>{RESOURCE_TYPES.map(t=><option key={t}>{t}</option>)}</select></label><label className={styles.full}><span>Title</span><input value={upload.title} onChange={e=>setUpload({...upload,title:e.target.value})} placeholder="Example: Session 08 — Strings Trainer Deck"/></label><label className={styles.full}><span>Description</span><textarea rows={3} value={upload.description} onChange={e=>setUpload({...upload,description:e.target.value})}/></label><label className={styles.full}><span>File · Max 25 MB</span><input type="file" onChange={e=>setUploadFile(e.target.files?.[0]||null)}/></label></div><div className={styles.modalFooter}><button type="button" className={styles.secondary} onClick={()=>setUploadOpen(false)}>Cancel</button><button className={styles.primary} disabled={working}>{working?"Uploading...":"Upload Resource"}</button></div></form></section></div>}
+    {uploadOpen && canManage && <div className={styles.backdrop}>
+      <section className={styles.modal}>
+        <div className={styles.modalHeader}>
+          <div>
+            <h2>Add Course Resource</h2>
+            <p>Official master material for {course}.</p>
+          </div>
+          <button onClick={()=>setUploadOpen(false)}>×</button>
+        </div>
+
+        <form onSubmit={uploadResource}>
+          <div className={styles.formGrid}>
+            <label>
+              <span>Session</span>
+              <input
+                type="number"
+                min="1"
+                value={upload.session_number}
+                onChange={e=>setUpload({...upload,session_number:e.target.value})}
+              />
+            </label>
+
+            <label>
+              <span>Resource Type</span>
+              <select
+                value={upload.resource_type}
+                onChange={e=>setUpload({...upload,resource_type:e.target.value})}
+              >
+                {RESOURCE_TYPES.map(t=><option key={t}>{t}</option>)}
+              </select>
+            </label>
+
+            <label className={styles.full}>
+              <span>Title</span>
+              <input
+                value={upload.title}
+                onChange={e=>setUpload({...upload,title:e.target.value})}
+                placeholder="Example: Session 08 — Strings Trainer Deck"
+              />
+            </label>
+
+            <label className={styles.full}>
+              <span>Description</span>
+              <textarea
+                rows={3}
+                value={upload.description}
+                onChange={e=>setUpload({...upload,description:e.target.value})}
+              />
+            </label>
+
+            <div className={styles.full}>
+              <span className={styles.fieldLabel}>How do you want to add it?</span>
+
+              <div className={styles.sourceChoice}>
+                <button
+                  type="button"
+                  className={uploadMode==="file"?styles.sourceChoiceActive:""}
+                  onClick={()=>{
+                    setUploadMode("file");
+                    setExternalUrl("");
+                  }}
+                >
+                  <strong>Upload File</strong>
+                  <small>Store directly in Orbit</small>
+                </button>
+
+                <button
+                  type="button"
+                  className={uploadMode==="link"?styles.sourceChoiceActive:""}
+                  onClick={()=>{
+                    setUploadMode("link");
+                    setUploadFile(null);
+                  }}
+                >
+                  <strong>External Link</strong>
+                  <small>Google Drive, OneDrive, Zoom or other</small>
+                </button>
+              </div>
+            </div>
+
+            {uploadMode==="file" ? (
+              <label className={styles.full}>
+                <span>File · Orbit accepts up to 100 MB</span>
+                <input
+                  type="file"
+                  onChange={e=>setUploadFile(e.target.files?.[0]||null)}
+                />
+                <small className={styles.uploadHelp}>
+                  For very large files or recordings, use External Link instead.
+                </small>
+              </label>
+            ) : (
+              <label className={styles.full}>
+                <span>External File Link</span>
+                <input
+                  type="url"
+                  value={externalUrl}
+                  onChange={e=>setExternalUrl(e.target.value)}
+                  placeholder="https://drive.google.com/... or https://..."
+                />
+                <small className={styles.uploadHelp}>
+                  Make sure the link has the sharing permission your team or students need.
+                </small>
+              </label>
+            )}
+          </div>
+
+          <div className={styles.modalFooter}>
+            <button
+              type="button"
+              className={styles.secondary}
+              onClick={()=>setUploadOpen(false)}
+            >
+              Cancel
+            </button>
+            <button className={styles.primary} disabled={working}>
+              {working
+                ? uploadMode==="file" ? "Uploading..." : "Saving..."
+                : uploadMode==="file" ? "Upload Resource" : "Save Resource Link"}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>}
 
     {editSession && canManage && <div className={styles.backdrop}><section className={styles.modal}><div className={styles.modalHeader}><div><h2>Session {editSession.session_number}</h2><p>Define topic, objectives and required materials.</p></div><button onClick={()=>setEditSession(null)}>×</button></div><form onSubmit={saveEdit}><div className={styles.formGrid}><label className={styles.full}><span>Topic</span><input value={editTopic} onChange={e=>setEditTopic(e.target.value)}/></label><label className={styles.full}><span>Learning Objectives</span><textarea rows={5} value={editObjectives} onChange={e=>setEditObjectives(e.target.value)}/></label><div className={styles.full}><span className={styles.fieldLabel}>Required Resources</span><div className={styles.checkGrid}>{RESOURCE_TYPES.map(t=><label key={t}><input type="checkbox" checked={editRequired.includes(t)} onChange={()=>setEditRequired(editRequired.includes(t)?editRequired.filter(x=>x!==t):[...editRequired,t])}/><span>{t}</span></label>)}</div></div><label><span>Status</span><select value={editStatus} onChange={e=>setEditStatus(e.target.value)}><option>Draft</option><option>Ready</option><option>Archived</option></select></label></div><div className={styles.modalFooter}><button type="button" className={styles.secondary} onClick={()=>setEditSession(null)}>Cancel</button><button className={styles.primary} disabled={working}>Save Session</button></div></form></section></div>}
 
-    {replaceResource && canManage && <div className={styles.backdrop}><section className={styles.smallModal}><div className={styles.modalHeader}><div><h2>Replace File</h2><p>{replaceResource.title}. Previous versions are kept.</p></div><button onClick={()=>setReplaceResource(null)}>×</button></div><form onSubmit={replaceFileSubmit}><div className={styles.formGrid}><label className={styles.full}><span>New File · Max 25 MB</span><input type="file" onChange={e=>setReplaceFile(e.target.files?.[0]||null)}/></label></div><div className={styles.modalFooter}><button type="button" className={styles.secondary} onClick={()=>setReplaceResource(null)}>Cancel</button><button className={styles.primary} disabled={working||!replaceFile}>Upload New Version</button></div></form></section></div>}
+    {replaceResource && canManage && <div className={styles.backdrop}><section className={styles.smallModal}><div className={styles.modalHeader}><div><h2>Replace File</h2><p>{replaceResource.title}. Previous versions are kept.</p></div><button onClick={()=>setReplaceResource(null)}>×</button></div><form onSubmit={replaceFileSubmit}><div className={styles.formGrid}><label className={styles.full}><span>New File · Max 100 MB</span><input type="file" onChange={e=>setReplaceFile(e.target.files?.[0]||null)}/></label></div><div className={styles.modalFooter}><button type="button" className={styles.secondary} onClick={()=>setReplaceResource(null)}>Cancel</button><button className={styles.primary} disabled={working||!replaceFile}>Upload New Version</button></div></form></section></div>}
+
+    {linkResource && canManage && <div className={styles.backdrop}>
+      <section className={styles.smallModal}>
+        <div className={styles.modalHeader}>
+          <div>
+            <h2>Edit External Link</h2>
+            <p>{linkResource.title}</p>
+          </div>
+          <button onClick={()=>setLinkResource(null)}>×</button>
+        </div>
+
+        <form onSubmit={updateExternalLink}>
+          <div className={styles.formGrid}>
+            <label className={styles.full}>
+              <span>External Link</span>
+              <input
+                type="url"
+                value={editExternalUrl}
+                onChange={e=>setEditExternalUrl(e.target.value)}
+                placeholder="https://..."
+              />
+            </label>
+          </div>
+
+          <div className={styles.modalFooter}>
+            <button
+              type="button"
+              className={styles.secondary}
+              onClick={()=>setLinkResource(null)}
+            >
+              Cancel
+            </button>
+            <button className={styles.primary} disabled={working}>
+              {working?"Saving...":"Save Link"}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>}
 
     {versionResource && <div className={styles.backdrop}><section className={styles.smallModal}><div className={styles.modalHeader}><div><h2>Version History</h2><p>{versionResource.title}</p></div><button onClick={()=>setVersionResource(null)}>×</button></div><div className={styles.versionList}>{versionRows.length===0?<div className={styles.empty}>No versions.</div>:versionRows.map(v=><div key={v.id}><div><strong>Version {v.version_number}</strong><span>{v.file_name}</span><small>{fmtSize(v.size_bytes)} · {new Date(v.created_at).toLocaleString()}</small></div><button onClick={()=>openVersion(v)}>Open</button></div>)}</div></section></div>}
   </div>;

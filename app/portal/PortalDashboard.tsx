@@ -76,9 +76,10 @@ type Resource = {
   title: string;
   description: string | null;
   visibility: string;
-  file_name: string;
-  storage_path: string;
-  version_number: number;
+  file_name: string | null;
+  storage_path: string | null;
+  version_number: number | null;
+  external_url: string | null;
   class_date: string;
 };
 
@@ -295,6 +296,16 @@ export default function PortalDashboard({ mode }: { mode: Mode }) {
   );
 
   async function openResource(resource: Resource) {
+    if (resource.external_url) {
+      window.open(resource.external_url, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    if (!resource.storage_path) {
+      setMessage("No file or link is available for this resource.");
+      return;
+    }
+
     const { data, error } = await supabase.storage
       .from("lms-library")
       .createSignedUrl(resource.storage_path, 60 * 60);
