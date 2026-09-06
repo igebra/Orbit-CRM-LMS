@@ -67,13 +67,34 @@ function safeName(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]+/g,"-").replace(/-+/g,"-").replace(/^-|-$/g,"");
 }
 
+type CourseFamily = "aiedge" | "math" | "coding4ai";
+
+const COURSE_FAMILY_DEFAULTS: Record<CourseFamily, string> = {
+  aiedge: "AiEdge Elementary - Level 01",
+  math: "Math - Grade 01",
+  coding4ai: "Coding4AI Elementary - Level 01",
+};
+
+function courseFamilyOf(courseName: string): CourseFamily {
+  if (courseName.startsWith("AiEdge ")) return "aiedge";
+  if (courseName.startsWith("Coding4AI ")) return "coding4ai";
+  return "math";
+}
+
+function shortCourseLabel(courseName: string) {
+  if (courseName.startsWith("AiEdge ")) return courseName.replace("AiEdge ", "");
+  if (courseName.startsWith("Coding4AI ")) return courseName.replace("Coding4AI ", "");
+  if (courseName.startsWith("Math - ")) return courseName.replace("Math - ", "");
+  return courseName;
+}
+
 export default function LmsPage() {
   const router = useRouter();
   const [email,setEmail] = useState("");
   const [userId,setUserId] = useState("");
   const [role,setRole] = useState("");
   const [tab,setTab] = useState<"library"|"curriculum">("library");
-  const [course,setCourse] = useState(COURSE_OPTIONS[0] || "");
+  const [course,setCourse] = useState("Math - Grade 01");
   const [sessionFilter,setSessionFilter] = useState("All");
   const [typeFilter,setTypeFilter] = useState("All");
   const [search,setSearch] = useState("");
@@ -98,6 +119,30 @@ export default function LmsPage() {
   const [versionResource,setVersionResource] = useState<Resource|null>(null);
 
   const canManage = MANAGE_ROLES.includes(role);
+
+  const activeFamily = useMemo(() => courseFamilyOf(course), [course]);
+
+  const familyCourses = useMemo(
+    () =>
+      COURSE_OPTIONS.filter((courseName) => {
+        if (activeFamily === "aiedge") return courseName.startsWith("AiEdge ");
+        if (activeFamily === "coding4ai") return courseName.startsWith("Coding4AI ");
+        return !courseName.startsWith("AiEdge ") && !courseName.startsWith("Coding4AI ");
+      }),
+    [activeFamily]
+  );
+
+  function selectCourseName(courseName: string) {
+    setCourse(courseName);
+    setSessionFilter("All");
+    const defaults = courseDefaults(courseName);
+    setSessionCount(String(defaults.plannedSessions || 20));
+  }
+
+  function selectFamily(family: CourseFamily) {
+    selectCourseName(COURSE_FAMILY_DEFAULTS[family]);
+  }
+
 
   useEffect(() => {
     async function init(){
@@ -270,8 +315,67 @@ export default function LmsPage() {
       {message && <div className={styles.message}>{message}</div>}
 
       <section className={styles.courseBar}>
-        <label><span>Course</span><select value={course} onChange={e=>{setCourse(e.target.value);setSessionFilter("All");const d=courseDefaults(e.target.value);setSessionCount(String(d.plannedSessions||20));}}>{COURSE_OPTIONS.map(c=><option key={c}>{c}</option>)}</select></label>
-        <div><strong>{course}</strong><span>{courseDefaults(course).plannedSessions?`${courseDefaults(course).plannedSessions} planned sessions`:"Session count configurable"}</span></div>
+        <div className={styles.familyButtons} role="group" aria-label="Course family">
+          <button
+            type="button"
+            className={`${styles.familyButton} ${styles.greenFamily} ${
+              activeFamily === "aiedge" ? styles.familyActive : ""
+            }`}
+            onClick={() => selectFamily("aiedge")}
+          >
+            AiEdge
+          </button>
+
+          <button
+            type="button"
+            className={`${styles.familyButton} ${styles.mathFamily} ${
+              activeFamily === "math" ? styles.familyActive : ""
+            }`}
+            onClick={() => selectFamily("math")}
+          >
+            Math
+          </button>
+
+          <button
+            type="button"
+            className={`${styles.familyButton} ${styles.greenFamily} ${
+              activeFamily === "coding4ai" ? styles.familyActive : ""
+            }`}
+            onClick={() => selectFamily("coding4ai")}
+          >
+            Coding4AI
+          </button>
+        </div>
+
+        <div className={styles.courseChoices}>
+          <span className={styles.courseChoiceLabel}>
+            {activeFamily === "math" ? "Grade / Course" : "Level"}
+          </span>
+
+          <div className={styles.courseChips}>
+            {familyCourses.map((courseName) => (
+              <button
+                type="button"
+                key={courseName}
+                className={`${styles.courseChip} ${
+                  courseName === course ? styles.courseChipActive : ""
+                }`}
+                onClick={() => selectCourseName(courseName)}
+              >
+                {shortCourseLabel(courseName)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.courseMeta}>
+          <strong>{course}</strong>
+          <span>
+            {courseDefaults(course).plannedSessions
+              ? `${courseDefaults(course).plannedSessions} planned sessions`
+              : "Session count configurable"}
+          </span>
+        </div>
       </section>
 
       <section className={styles.stats}><div><span>Sessions</span><strong>{sessions.length}</strong></div><div><span>Resources</span><strong>{courseResourceCount}</strong></div><div><span>Required</span><strong>{requiredCount}</strong></div><div className={missingCount?styles.warning:""}><span>Missing</span><strong>{missingCount}</strong></div></section>

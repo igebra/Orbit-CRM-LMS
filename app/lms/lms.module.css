@@ -16,3 +16,36 @@
 .versionList{padding:12px;display:grid;gap:8px}.versionList>div{padding:10px;border:1px solid #e2eae8;border-radius:10px;display:flex;justify-content:space-between;gap:10px;align-items:center}.versionList strong,.versionList span,.versionList small{display:block}.versionList span{margin-top:3px;font-size:10px}.versionList small{margin-top:3px;color:#7b8987;font-size:9px}.versionList button{border:1px solid #cbdad7;border-radius:7px;background:#fff;color:#0f5e61;padding:6px 8px;font-weight:800;cursor:pointer}
 @media(max-width:1050px){.missingGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:900px){.shell{grid-template-columns:1fr}.main{padding:18px}.header,.courseBar,.curriculumTop{align-items:stretch;flex-direction:column}.courseBar select{width:100%}.courseBar>div strong,.courseBar>div span{text-align:left}.toolbar{grid-template-columns:1fr}.missingGrid,.stats{grid-template-columns:1fr}.formGrid,.checkGrid{grid-template-columns:1fr}.full{grid-column:auto}.curriculumTop>span{margin-left:0}.tabs{width:100%}}
+
+/* ORBIT LMS COURSE FAMILY BUTTONS */
+.courseBar{
+  margin-bottom:12px;
+  padding:14px;
+  border:1px solid #d9e5e3;
+  border-radius:13px;
+  background:#fff;
+  display:grid;
+  gap:12px;
+  align-items:stretch;
+}
+.familyButtons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.familyButton{min-height:48px;border-radius:11px;padding:10px 14px;font-size:14px;font-weight:900;letter-spacing:.01em;cursor:pointer;transition:transform .12s ease,box-shadow .12s ease,border-color .12s ease,background .12s ease}
+.greenFamily{border:1px solid #a9cbc7;background:#e7f1f0;color:#356c69}
+.mathFamily{border:1px solid #efc79f;background:#fff0e3;color:#a65e27}
+.greenFamily.familyActive{border-color:#467d79;background:#558c89;color:#fff;box-shadow:0 5px 14px rgba(85,140,137,.22);transform:translateY(-1px)}
+.mathFamily.familyActive{border-color:#bd6f2c;background:#d9853b;color:#fff;box-shadow:0 5px 14px rgba(217,133,59,.22);transform:translateY(-1px)}
+.courseChoices{min-width:0}
+.courseChoiceLabel{display:block!important;margin-bottom:7px!important;color:#58706f!important;font-size:9px!important;font-weight:850!important;text-transform:uppercase;text-align:left!important}
+.courseChips{display:flex;flex-wrap:wrap;gap:6px}
+.courseChip{border:1px solid #d3dfdc;border-radius:999px;padding:7px 10px;background:#fff;color:#536967;font-size:9.5px;font-weight:750;cursor:pointer}
+.courseChip:hover{border-color:#9ebdb9;background:#f4f8f7}
+.courseChipActive{border-color:#7ba39f;background:#edf5f4;color:#0f5e61;font-weight:900}
+.courseMeta{padding-top:10px;border-top:1px solid #edf1f0;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.courseMeta strong,.courseMeta span{display:block;text-align:left!important}
+.courseMeta strong{color:#183032;font-size:10.5px}
+.courseMeta span{margin-top:0!important;color:#7a8988!important;font-size:9.5px!important}
+@media(max-width:900px){
+  .familyButtons{grid-template-columns:1fr}
+  .courseMeta{align-items:flex-start;flex-direction:column}
+}
+
