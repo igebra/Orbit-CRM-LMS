@@ -27,6 +27,7 @@ type Props = {
     | "batches"
     | "sessions"
     | "courses"
+    | "lms"
     | "trainers"
     | "reports"
     | "payments"
@@ -42,6 +43,7 @@ const PREFETCH_ROUTES = [
   "/trainers",
   "/payments",
   "/courses",
+  "/lms",
   "/reports",
   "/access",
 ];
@@ -186,6 +188,14 @@ export default function OrbitSidebar({ email, active }: Props) {
     isFinance ||
     isManagement;
 
+  const canSeeLms =
+    isSuperAdmin ||
+    isAdmin ||
+    isSales ||
+    isMarketing ||
+    isManagement ||
+    isTrainer;
+
   const canSeeAccess = isSuperAdmin || isAdmin;
 
   return (
@@ -301,6 +311,15 @@ export default function OrbitSidebar({ email, active }: Props) {
               onClick={() => navigate("/courses")}
             >
               <span>✦</span> Courses
+            </button>
+          )}
+
+          {canSeeLms && (
+            <button
+              className={active === "lms" ? styles.navActive : ""}
+              onClick={() => navigate("/lms")}
+            >
+              <span>▦</span> LMS
             </button>
           )}
 
