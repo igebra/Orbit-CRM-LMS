@@ -48,4 +48,174 @@
   .familyButtons{grid-template-columns:1fr}
   .courseMeta{align-items:flex-start;flex-direction:column}
 }
+/* ORBIT LMS FINAL SLEEK UI */
+.main{
+  position:relative;
+  padding-bottom:145px;
+}
+.header{
+  min-height:82px;
+  align-items:center;
+  margin-bottom:12px;
+}
+.headerIdentity{
+  width:90px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+}
+.headerIdentityLabel{
+  color:#4f6664;
+  font-size:11px;
+  font-weight:500;
+  letter-spacing:.01em;
+  white-space:nowrap;
+}
+.libraryIconShell{
+  position:relative;
+  width:55px;
+  height:55px;
+  display:grid;
+  place-items:center;
+  border:1px solid #d2e3df;
+  border-radius:17px;
+  background:linear-gradient(145deg,#ffffff 8%,#e9f3f1 100%);
+  box-shadow:0 9px 18px rgba(33,91,87,.12),inset 0 1px 0 rgba(255,255,255,.95);
+}
+.libraryIconShell::after{
+  content:"";
+  position:absolute;
+  width:42px;
+  height:9px;
+  left:7px;
+  bottom:-6px;
+  border-radius:50%;
+  background:rgba(49,93,90,.13);
+  filter:blur(5px);
+  z-index:-1;
+}
+.libraryIconSvg{
+  width:42px;
+  height:42px;
+  filter:drop-shadow(0 4px 4px rgba(30,77,74,.16));
+}
+.familyButtons{
+  display:flex;
+  align-items:flex-start;
+  justify-content:flex-start;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.courseFamilyCard{
+  width:auto;
+  min-width:96px;
+  min-height:78px;
+  padding:8px 13px 9px;
+  border-radius:13px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  cursor:pointer;
+  background:#fff;
+  transition:transform .14s ease,box-shadow .14s ease,border-color .14s ease,background .14s ease;
+}
+.courseFamilyCard>span:last-child{
+  font-size:10.5px;
+  font-weight:750;
+  line-height:1;
+  white-space:nowrap;
+}
+.tealCourseCard{
+  border:1px solid #bdd8d4;
+  color:#356c69;
+  background:linear-gradient(145deg,#ffffff,#edf6f4);
+}
+.orangeCourseCard{
+  border:1px solid #efcba7;
+  color:#a65e27;
+  background:linear-gradient(145deg,#ffffff,#fff3e7);
+}
+.courseFamilyCard:hover{
+  transform:translateY(-2px);
+  box-shadow:0 7px 16px rgba(32,78,76,.11);
+}
+.tealCourseCard.courseFamilyCardActive{
+  border-color:#558C89;
+  background:#f1f8f7;
+  box-shadow:0 0 0 2px rgba(85,140,137,.12),0 8px 17px rgba(85,140,137,.13);
+}
+.orangeCourseCard.courseFamilyCardActive{
+  border-color:#D9853B;
+  background:#fff7ef;
+  box-shadow:0 0 0 2px rgba(217,133,59,.12),0 8px 17px rgba(217,133,59,.13);
+}
+.courseIconShell{
+  width:37px;
+  height:37px;
+  position:relative;
+  display:grid;
+  place-items:center;
+  border-radius:11px;
+  box-shadow:0 6px 10px rgba(33,77,75,.13),inset 0 1px 0 rgba(255,255,255,.9);
+}
+.courseIconShell::after{
+  content:"";
+  position:absolute;
+  left:6px;
+  right:6px;
+  bottom:-4px;
+  height:6px;
+  border-radius:50%;
+  background:rgba(37,74,72,.12);
+  filter:blur(3px);
+  z-index:-1;
+}
+.courseIconShell svg{
+  width:31px;
+  height:31px;
+}
+.tealIconShell{
+  border:1px solid #c7dfdb;
+  background:linear-gradient(145deg,#ffffff,#dceeea);
+}
+.mathIconShell{
+  border:1px solid #efd0b1;
+  background:linear-gradient(145deg,#ffffff,#ffe8d1);
+}
+.courseChoices{padding-top:2px}
+.courseChoiceLabel{margin-bottom:8px!important}
+.courseChips{gap:5px}
+.courseChip{padding:6px 9px;font-size:9px}
+.courseMeta{padding-top:9px}
+.pageMascot{
+  position:absolute;
+  right:24px;
+  bottom:14px;
+  width:112px;
+  height:auto;
+  object-fit:contain;
+  pointer-events:none;
+  user-select:none;
+  opacity:.92;
+  filter:drop-shadow(0 10px 13px rgba(38,84,81,.13));
+}
+@media(max-width:900px){
+  .header{min-height:auto;align-items:center;flex-direction:row}
+  .headerIdentity{width:76px}
+  .familyButtons{justify-content:flex-start}
+  .courseFamilyCard{min-width:90px}
+  .pageMascot{width:88px;right:12px}
+}
+@media(max-width:620px){
+  .header{align-items:flex-start;flex-direction:column}
+  .headerIdentity{align-items:flex-start}
+  .tabs{width:100%}
+  .tabs button{flex:1}
+  .courseFamilyCard{min-width:86px;min-height:72px;padding:7px 11px 8px}
+  .pageMascot{width:76px;opacity:.78}
+}
 

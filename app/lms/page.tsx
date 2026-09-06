@@ -88,6 +88,69 @@ function shortCourseLabel(courseName: string) {
   return courseName;
 }
 
+function LibraryIcon3D() {
+  return (
+    <span className={styles.libraryIconShell} aria-hidden="true">
+      <svg viewBox="0 0 64 64" className={styles.libraryIconSvg}>
+        <defs>
+          <linearGradient id="orbitLibraryTeal" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#8fc6c1" />
+            <stop offset="100%" stopColor="#558C89" />
+          </linearGradient>
+          <linearGradient id="orbitLibraryOrange" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#f4b06f" />
+            <stop offset="100%" stopColor="#D9853B" />
+          </linearGradient>
+        </defs>
+        <rect x="9" y="13" width="13" height="38" rx="4" fill="url(#orbitLibraryTeal)" />
+        <rect x="24" y="9" width="14" height="42" rx="4" fill="#74AFAD" />
+        <rect x="40" y="16" width="13" height="35" rx="4" fill="url(#orbitLibraryOrange)" />
+        <path d="M11 20h9M26 18h10M42 24h9" stroke="rgba(255,255,255,.72)" strokeWidth="2.5" strokeLinecap="round" />
+        <path d="M8 52h47" stroke="#355f5d" strokeWidth="3.5" strokeLinecap="round" opacity=".45" />
+      </svg>
+    </span>
+  );
+}
+
+function CourseFamilyIcon({ family }: { family: CourseFamily }) {
+  if (family === "math") {
+    return (
+      <span className={`${styles.courseIconShell} ${styles.mathIconShell}`} aria-hidden="true">
+        <svg viewBox="0 0 48 48">
+          <rect x="8" y="7" width="32" height="34" rx="9" fill="#fff7ef" />
+          <rect x="12" y="11" width="24" height="8" rx="3" fill="#D9853B" opacity=".92" />
+          <path d="M16 26h8M20 22v8M29 23h7M29 29h7" stroke="#a65e27" strokeWidth="2.5" strokeLinecap="round" />
+        </svg>
+      </span>
+    );
+  }
+
+  if (family === "coding4ai") {
+    return (
+      <span className={`${styles.courseIconShell} ${styles.tealIconShell}`} aria-hidden="true">
+        <svg viewBox="0 0 48 48">
+          <rect x="6" y="8" width="36" height="30" rx="8" fill="#eef8f6" />
+          <path d="M18 18l-6 6 6 6M30 18l6 6-6 6M27 15l-6 18" fill="none" stroke="#558C89" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="35.5" cy="11.5" r="3" fill="#74AFAD" />
+        </svg>
+      </span>
+    );
+  }
+
+  return (
+    <span className={`${styles.courseIconShell} ${styles.tealIconShell}`} aria-hidden="true">
+      <svg viewBox="0 0 48 48">
+        <circle cx="24" cy="24" r="15" fill="#eef8f6" />
+        <circle cx="18" cy="22" r="4" fill="#558C89" />
+        <circle cx="29" cy="17" r="3.5" fill="#74AFAD" />
+        <circle cx="30" cy="30" r="4" fill="#558C89" opacity=".88" />
+        <path d="M21 20l5-2M21 24l6 4M29 21v5" stroke="#356f6c" strokeWidth="2.1" strokeLinecap="round" />
+        <path d="M36 9l1.4 3.4L41 14l-3.6 1.4L36 19l-1.4-3.6L31 14l3.6-1.6L36 9z" fill="#D9853B" />
+      </svg>
+    </span>
+  );
+}
+
 export default function LmsPage() {
   const router = useRouter();
   const [email,setEmail] = useState("");
@@ -309,8 +372,27 @@ export default function LmsPage() {
     <OrbitSidebar email={email} active="lms" />
     <main className={styles.main}>
       <header className={styles.header}>
-        <div><p className={styles.kicker}>LMS · CONTENT & CURRICULUM</p><h1>Learning Management</h1><p>Official curriculum, teaching files and missing-resource tracking in one place.</p></div>
-        <div className={styles.tabs}><button className={tab==="library"?styles.activeTab:""} onClick={()=>setTab("library")}>Content Library</button><button className={tab==="curriculum"?styles.activeTab:""} onClick={()=>setTab("curriculum")}>Curriculum</button></div>
+        <div className={styles.headerIdentity}>
+          <LibraryIcon3D />
+          <span className={styles.headerIdentityLabel}>
+            {tab === "library" ? "Content Library" : "Curriculum"}
+          </span>
+        </div>
+
+        <div className={styles.tabs}>
+          <button
+            className={tab==="library"?styles.activeTab:""}
+            onClick={()=>setTab("library")}
+          >
+            Content Library
+          </button>
+          <button
+            className={tab==="curriculum"?styles.activeTab:""}
+            onClick={()=>setTab("curriculum")}
+          >
+            Curriculum
+          </button>
+        </div>
       </header>
       {message && <div className={styles.message}>{message}</div>}
 
@@ -318,32 +400,35 @@ export default function LmsPage() {
         <div className={styles.familyButtons} role="group" aria-label="Course family">
           <button
             type="button"
-            className={`${styles.familyButton} ${styles.greenFamily} ${
-              activeFamily === "aiedge" ? styles.familyActive : ""
+            className={`${styles.courseFamilyCard} ${styles.tealCourseCard} ${
+              activeFamily === "aiedge" ? styles.courseFamilyCardActive : ""
             }`}
             onClick={() => selectFamily("aiedge")}
           >
-            AiEdge
+            <CourseFamilyIcon family="aiedge" />
+            <span>AiEdge</span>
           </button>
 
           <button
             type="button"
-            className={`${styles.familyButton} ${styles.mathFamily} ${
-              activeFamily === "math" ? styles.familyActive : ""
+            className={`${styles.courseFamilyCard} ${styles.orangeCourseCard} ${
+              activeFamily === "math" ? styles.courseFamilyCardActive : ""
             }`}
             onClick={() => selectFamily("math")}
           >
-            Math
+            <CourseFamilyIcon family="math" />
+            <span>Math</span>
           </button>
 
           <button
             type="button"
-            className={`${styles.familyButton} ${styles.greenFamily} ${
-              activeFamily === "coding4ai" ? styles.familyActive : ""
+            className={`${styles.courseFamilyCard} ${styles.tealCourseCard} ${
+              activeFamily === "coding4ai" ? styles.courseFamilyCardActive : ""
             }`}
             onClick={() => selectFamily("coding4ai")}
           >
-            Coding4AI
+            <CourseFamilyIcon family="coding4ai" />
+            <span>Coding4AI</span>
           </button>
         </div>
 
@@ -390,6 +475,13 @@ export default function LmsPage() {
         <section className={styles.curriculumTop}>{canManage && <><label><span>Session Count</span><input type="number" min="1" max="200" value={sessionCount} onChange={e=>setSessionCount(e.target.value)}/></label><button className={styles.primary} onClick={generateSessions} disabled={working}>{working?"Working...":"Create Missing Sessions"}</button></>}<span>For AiEdge/Coding4AI use 20. Math remains configurable.</span></section>
         <section className={styles.card}><div className={styles.tableWrap}><table><thead><tr><th>Session</th><th>Topic</th><th>Learning Objectives</th><th>Required Resources</th><th>Missing</th><th>Status</th>{canManage&&<th>Action</th>}</tr></thead><tbody>{loading?<tr><td colSpan={canManage?7:6} className={styles.empty}>Loading...</td></tr>:sessions.length===0?<tr><td colSpan={canManage?7:6} className={styles.empty}>No curriculum sessions yet.</td></tr>:sessions.map(s=>{const present=new Set((resourcesBySession.get(s.id)||[]).map(r=>r.resource_type));const miss=(s.required_resource_types||[]).filter(t=>!present.has(t));return <tr key={s.id}><td><strong>Session {s.session_number}</strong></td><td>{s.topic||"Not added"}</td><td><span className={styles.clamp}>{s.learning_objectives||"—"}</span></td><td><div className={styles.chips}>{(s.required_resource_types||[]).map(t=><span key={t}>{t}</span>)}</div></td><td>{miss.length?<span className={styles.missingText}>{miss.join(" · ")}</span>:<span className={styles.ready}>Complete</span>}</td><td><span className={styles.status}>{s.status}</span></td>{canManage&&<td><button className={styles.smallButton} onClick={()=>openEdit(s)}>Edit</button></td>}</tr>})}</tbody></table></div></section>
       </>}
+
+      <img
+        src="/orbit-mascot.png"
+        alt=""
+        aria-hidden="true"
+        className={styles.pageMascot}
+      />
     </main>
 
     {uploadOpen && canManage && <div className={styles.backdrop}><section className={styles.modal}><div className={styles.modalHeader}><div><h2>Upload Course Resource</h2><p>Official master material for {course}.</p></div><button onClick={()=>setUploadOpen(false)}>×</button></div><form onSubmit={uploadResource}><div className={styles.formGrid}><label><span>Session</span><input type="number" min="1" value={upload.session_number} onChange={e=>setUpload({...upload,session_number:e.target.value})}/></label><label><span>Resource Type</span><select value={upload.resource_type} onChange={e=>setUpload({...upload,resource_type:e.target.value})}>{RESOURCE_TYPES.map(t=><option key={t}>{t}</option>)}</select></label><label className={styles.full}><span>Title</span><input value={upload.title} onChange={e=>setUpload({...upload,title:e.target.value})} placeholder="Example: Session 08 — Strings Trainer Deck"/></label><label className={styles.full}><span>Description</span><textarea rows={3} value={upload.description} onChange={e=>setUpload({...upload,description:e.target.value})}/></label><label className={styles.full}><span>File · Max 25 MB</span><input type="file" onChange={e=>setUploadFile(e.target.files?.[0]||null)}/></label></div><div className={styles.modalFooter}><button type="button" className={styles.secondary} onClick={()=>setUploadOpen(false)}>Cancel</button><button className={styles.primary} disabled={working}>{working?"Uploading...":"Upload Resource"}</button></div></form></section></div>}
