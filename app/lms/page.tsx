@@ -113,6 +113,43 @@ function LibraryIcon3D() {
 }
 
 
+
+function LmsHeaderIcon3D() {
+  return (
+    <span className={styles.lmsHeaderIcon3D} aria-hidden="true">
+      <svg viewBox="0 0 72 72" className={styles.lmsHeaderIconSvg}>
+        <defs>
+          <linearGradient id="lmsBookTeal" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#9acbc6" />
+            <stop offset="100%" stopColor="#558C89" />
+          </linearGradient>
+          <linearGradient id="lmsBookOrange" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#f1b276" />
+            <stop offset="100%" stopColor="#D9853B" />
+          </linearGradient>
+          <linearGradient id="lmsScreen" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="100%" stopColor="#e7f2f0" />
+          </linearGradient>
+        </defs>
+
+        <rect x="14" y="12" width="44" height="34" rx="10" fill="url(#lmsScreen)" />
+        <rect x="19" y="17" width="34" height="22" rx="6" fill="#eef7f5" />
+        <path d="M27 29h18" stroke="#558C89" strokeWidth="3" strokeLinecap="round" />
+        <path d="M36 21v16" stroke="#74AFAD" strokeWidth="3" strokeLinecap="round" opacity=".75" />
+
+        <path d="M10 48c8-4 17-3 26 2v13c-9-5-18-6-26-2z" fill="url(#lmsBookTeal)" />
+        <path d="M62 48c-8-4-17-3-26 2v13c9-5 18-6 26-2z" fill="url(#lmsBookOrange)" />
+        <path d="M36 50v13" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" opacity=".85" />
+
+        <path d="M27 8l9-5 9 5-9 5z" fill="#D9853B" />
+        <path d="M43 8v7" stroke="#D9853B" strokeWidth="2.5" strokeLinecap="round" />
+        <circle cx="43" cy="17" r="2" fill="#D9853B" />
+      </svg>
+    </span>
+  );
+}
+
 function CurriculumIcon3D() {
   return (
     <span className={styles.curriculumIconShell} aria-hidden="true">
@@ -395,7 +432,10 @@ export default function LmsPage() {
     <main className={styles.main}>
       <header className={styles.header}>
         <div className={styles.lmsHeaderTitle}>
-          <h1>LMS</h1>
+          <LmsHeaderIcon3D />
+          <div className={styles.lmsHeaderText}>
+            <h1>Learning Management System</h1>
+          </div>
         </div>
 
         <div className={styles.lmsViewTabs} role="tablist" aria-label="LMS sections">

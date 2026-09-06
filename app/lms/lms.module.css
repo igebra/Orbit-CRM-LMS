@@ -311,3 +311,90 @@
   .lmsViewTab{flex:1}
   .pageMascot{width:56px}
 }
+
+
+/* ORBIT LMS FULL HEADER + 3D ICON */
+.lmsHeaderTitle{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding-top:2px;
+}
+
+.lmsHeaderText{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.lmsHeaderTitle h1{
+  margin:0;
+  color:#153536;
+  font-size:29px;
+  font-weight:700;
+  line-height:1.08;
+  letter-spacing:-.025em;
+}
+
+.lmsHeaderIcon3D{
+  position:relative;
+  flex:0 0 62px;
+  width:62px;
+  height:62px;
+  display:grid;
+  place-items:center;
+  border:1px solid #d0e2de;
+  border-radius:18px;
+  background:linear-gradient(145deg,#ffffff 7%,#e7f2f0 100%);
+  box-shadow:
+    0 10px 20px rgba(38,84,81,.13),
+    inset 0 1px 0 rgba(255,255,255,.98),
+    inset 0 -4px 9px rgba(52,104,100,.07);
+}
+
+.lmsHeaderIcon3D::after{
+  content:"";
+  position:absolute;
+  left:9px;
+  right:9px;
+  bottom:-7px;
+  height:10px;
+  border-radius:50%;
+  background:rgba(37,76,73,.14);
+  filter:blur(5px);
+  z-index:-1;
+}
+
+.lmsHeaderIconSvg{
+  width:52px;
+  height:52px;
+  filter:drop-shadow(0 4px 4px rgba(38,78,75,.12));
+}
+
+@media(max-width:900px){
+  .lmsHeaderTitle{
+    gap:11px;
+  }
+
+  .lmsHeaderTitle h1{
+    font-size:25px;
+  }
+
+  .lmsHeaderIcon3D{
+    flex-basis:54px;
+    width:54px;
+    height:54px;
+    border-radius:16px;
+  }
+
+  .lmsHeaderIconSvg{
+    width:45px;
+    height:45px;
+  }
+}
+
+@media(max-width:620px){
+  .lmsHeaderTitle h1{
+    font-size:22px;
+  }
+}
