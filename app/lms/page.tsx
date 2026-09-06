@@ -240,6 +240,53 @@ function CourseFamilyIcon({ family }: { family: CourseFamily }) {
   );
 }
 
+
+function UploadResourceIcon3D() {
+  return (
+    <span className={styles.uploadResourceIconShell} aria-hidden="true">
+      <svg viewBox="0 0 56 56" className={styles.uploadResourceIconSvg}>
+        <defs>
+          <linearGradient id="uploadFolderFace" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#fff8f1" />
+            <stop offset="100%" stopColor="#f6d7b8" />
+          </linearGradient>
+          <linearGradient id="uploadOrange" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#f5b578" />
+            <stop offset="100%" stopColor="#D9853B" />
+          </linearGradient>
+          <linearGradient id="uploadTeal" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#8fc9c4" />
+            <stop offset="100%" stopColor="#558C89" />
+          </linearGradient>
+        </defs>
+
+        <path
+          d="M8 18c0-3 2.4-5.5 5.5-5.5h10l4.2 4.2H43c3 0 5.5 2.4 5.5 5.5v18.3c0 3-2.4 5.5-5.5 5.5H13.5C10.4 46 8 43.6 8 40.5V18z"
+          fill="url(#uploadFolderFace)"
+        />
+        <path
+          d="M8 24h40.5v16.5c0 3-2.4 5.5-5.5 5.5H13.5C10.4 46 8 43.6 8 40.5V24z"
+          fill="url(#uploadOrange)"
+          opacity=".92"
+        />
+        <circle cx="28" cy="29" r="10.5" fill="#ffffff" />
+        <path
+          d="M28 35V22M23 27l5-5 5 5"
+          fill="none"
+          stroke="url(#uploadTeal)"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M43 9l1.4 3.5L48 14l-3.6 1.5L43 19l-1.4-3.5L38 14l3.6-1.5L43 9z"
+          fill="#F5B041"
+        />
+      </svg>
+    </span>
+  );
+}
+
 export default function LmsPage() {
   const router = useRouter();
   const [email,setEmail] = useState("");
@@ -692,7 +739,17 @@ export default function LmsPage() {
       {tab==="library" ? <>
         {missingCount>0 && <section className={styles.missingPanel}><div><h2>Missing Resources</h2><p>Required by curriculum but not uploaded yet.</p></div><div className={styles.missingGrid}>{missing.slice(0,8).map(x=><button key={x.session.id} onClick={()=>setSessionFilter(String(x.session.session_number))}><strong>Session {x.session.session_number}</strong><span>{x.session.topic||"Topic not added"}</span><small>{x.missing.join(" · ")}</small></button>)}</div></section>}
         <section className={styles.card}>
-          <div className={styles.toolbar}><input type="search" placeholder="Search resources or topics..." value={search} onChange={e=>setSearch(e.target.value)}/><select value={sessionFilter} onChange={e=>setSessionFilter(e.target.value)}><option value="All">All Sessions</option>{sessions.map(s=><option key={s.id} value={s.session_number}>Session {s.session_number}{s.topic?` — ${s.topic}`:""}</option>)}</select><select value={typeFilter} onChange={e=>setTypeFilter(e.target.value)}><option value="All">All Resource Types</option>{RESOURCE_TYPES.map(t=><option key={t}>{t}</option>)}</select>{canManage && <button className={styles.primary} onClick={openUpload}>+ Upload Resource</button>}</div>
+          <div className={styles.toolbar}><input type="search" placeholder="Search resources or topics..." value={search} onChange={e=>setSearch(e.target.value)}/><select value={sessionFilter} onChange={e=>setSessionFilter(e.target.value)}><option value="All">All Sessions</option>{sessions.map(s=><option key={s.id} value={s.session_number}>Session {s.session_number}{s.topic?` — ${s.topic}`:""}</option>)}</select><select value={typeFilter} onChange={e=>setTypeFilter(e.target.value)}><option value="All">All Resource Types</option>{RESOURCE_TYPES.map(t=><option key={t}>{t}</option>)}</select>{canManage && (
+  <button
+    type="button"
+    className={styles.uploadResourceCard}
+    onClick={openUpload}
+    title="Upload Course Resource"
+  >
+    <UploadResourceIcon3D />
+    <span>Upload Resource</span>
+  </button>
+)}</div>
           <div className={styles.tableWrap}><table><thead><tr><th>Session</th><th>Resource</th><th>Type</th><th>Current File</th><th>Version</th><th>Actions</th></tr></thead><tbody>{loading?<tr><td colSpan={6} className={styles.empty}>Loading...</td></tr>:filteredResources.length===0?<tr><td colSpan={6} className={styles.empty}>No resources found.</td></tr>:filteredResources.map(r=>{const s=curriculum.find(x=>x.id===r.curriculum_session_id);const v=latestMap.get(r.id);return <tr key={r.id}><td><strong>Session {s?.session_number||"—"}</strong><small>{s?.topic||"Topic not added"}</small></td><td><strong>{r.title}</strong><small>{r.description||"—"}</small></td><td><span className={styles.badge}>{r.resource_type}</span></td><td>{v?<><strong>{v.file_name}</strong><small>{fmtSize(v.size_bytes)} · Orbit Storage</small></>:r.external_url?<><strong>External Link</strong><small>Drive / OneDrive / Zoom / other</small></>:"No file or link"}</td><td>{v?`v${v.version_number}`:r.external_url?"Link":"—"}</td><td><div className={styles.actions}>{v&&<button onClick={()=>openVersion(v)}>Open</button>}{r.external_url&&<button onClick={()=>openExternalLink(r)}>Open Link</button>}{v&&<button onClick={()=>setVersionResource(r)}>Versions</button>}{canManage&&v&&<button onClick={()=>{setReplaceResource(r);setReplaceFile(null)}}>Replace File</button>}{canManage&&r.external_url&&<button onClick={()=>{setLinkResource(r);setEditExternalUrl(r.external_url||"")}}>Edit Link</button>}{canManage&&<button className={styles.danger} onClick={()=>archiveResource(r)}>Archive</button>}</div></td></tr>})}</tbody></table></div>
         </section>
       </> : <>
