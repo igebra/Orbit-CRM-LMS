@@ -44,7 +44,21 @@ export default function LoginPage() {
   useEffect(() => {
     async function checkSession() {
       const { data } = await supabase.auth.getSession();
-      if (data.session) router.replace("/dashboard");
+      if (!data.session) return;
+
+      await supabase.rpc("activate_portal_access");
+
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("role,is_active")
+        .eq("id", data.session.user.id)
+        .single();
+
+      if (!profile?.is_active) return;
+
+      if (profile.role === "student") router.replace("/student");
+      else if (profile.role === "parent") router.replace("/parent");
+      else router.replace("/dashboard");
     }
 
     checkSession();
@@ -85,9 +99,11 @@ export default function LoginPage() {
       return;
     }
 
+    await supabase.rpc("activate_portal_access");
+
     const { data: profile } = await supabase
       .from("user_profiles")
-      .select("is_active")
+      .select("role,is_active")
       .eq("id", userId)
       .single();
 
@@ -103,7 +119,9 @@ export default function LoginPage() {
       localStorage.removeItem("orbit_remember_email");
     }
 
-    router.replace("/dashboard");
+    if (profile.role === "student") router.replace("/student");
+    else if (profile.role === "parent") router.replace("/parent");
+    else router.replace("/dashboard");
   }
 
   async function forgotPassword() {
@@ -197,9 +215,20 @@ export default function LoginPage() {
       return;
     }
 
-    if (!approved) {
+    const { data: portalApproved, error: portalApprovalError } =
+      await supabase.rpc("portal_access_grant_exists", {
+        p_email: cleanEmail,
+      });
+
+    if (portalApprovalError) {
       setActivateLoading(false);
-      setActivateMessage("Your access request has not been approved yet.");
+      setActivateMessage(portalApprovalError.message);
+      return;
+    }
+
+    if (!approved && !portalApproved) {
+      setActivateLoading(false);
+      setActivateMessage("Your access has not been approved yet.");
       return;
     }
 
@@ -223,7 +252,13 @@ export default function LoginPage() {
     }
 
     if (data.session) {
-      router.replace("/dashboard");
+      const { data: portalRole } = await supabase.rpc(
+        "activate_portal_access"
+      );
+
+      if (portalRole === "student") router.replace("/student");
+      else if (portalRole === "parent") router.replace("/parent");
+      else router.replace("/dashboard");
       return;
     }
 

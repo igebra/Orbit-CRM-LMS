@@ -95,6 +95,17 @@ export default function DashboardPage() {
       }
 
       const currentRole = profile?.role || "";
+
+      if (currentRole === "student") {
+        router.replace("/student");
+        return;
+      }
+
+      if (currentRole === "parent") {
+        router.replace("/parent");
+        return;
+      }
+
       setRole(currentRole);
 
       await loadDashboard(currentRole);

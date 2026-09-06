@@ -31,7 +31,8 @@ type Props = {
     | "trainers"
     | "reports"
     | "payments"
-    | "access";
+    | "access"
+    | "portal-access";
 };
 
 const PREFETCH_ROUTES = [
@@ -46,6 +47,7 @@ const PREFETCH_ROUTES = [
   "/lms",
   "/reports",
   "/access",
+  "/portal-access",
 ];
 
 export default function OrbitSidebar({ email, active }: Props) {
@@ -362,6 +364,15 @@ export default function OrbitSidebar({ email, active }: Props) {
                   {pendingAccess}
                 </span>
               )}
+            </button>
+          )}
+
+          {canSeeAccess && (
+            <button
+              className={active === "portal-access" ? styles.navActive : ""}
+              onClick={() => navigate("/portal-access")}
+            >
+              <span>◇</span> Portal Access
             </button>
           )}
 
