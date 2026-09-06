@@ -117,34 +117,54 @@ function LibraryIcon3D() {
 function LmsHeaderIcon3D() {
   return (
     <span className={styles.lmsHeaderIcon3D} aria-hidden="true">
-      <svg viewBox="0 0 72 72" className={styles.lmsHeaderIconSvg}>
+      <svg viewBox="0 0 80 80" className={styles.lmsHeaderIconSvg}>
         <defs>
-          <linearGradient id="lmsBookTeal" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#9acbc6" />
+          <linearGradient id="lmsLaptopFace" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="100%" stopColor="#dff2f1" />
+          </linearGradient>
+          <linearGradient id="lmsTeal" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#8fd0c9" />
             <stop offset="100%" stopColor="#558C89" />
           </linearGradient>
-          <linearGradient id="lmsBookOrange" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#f1b276" />
+          <linearGradient id="lmsBlue" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#77bdf4" />
+            <stop offset="100%" stopColor="#2F80ED" />
+          </linearGradient>
+          <linearGradient id="lmsOrange" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#f4b36f" />
             <stop offset="100%" stopColor="#D9853B" />
           </linearGradient>
-          <linearGradient id="lmsScreen" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#ffffff" />
-            <stop offset="100%" stopColor="#e7f2f0" />
+          <linearGradient id="lmsGold" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#ffd889" />
+            <stop offset="100%" stopColor="#F5B041" />
           </linearGradient>
         </defs>
 
-        <rect x="14" y="12" width="44" height="34" rx="10" fill="url(#lmsScreen)" />
-        <rect x="19" y="17" width="34" height="22" rx="6" fill="#eef7f5" />
-        <path d="M27 29h18" stroke="#558C89" strokeWidth="3" strokeLinecap="round" />
-        <path d="M36 21v16" stroke="#74AFAD" strokeWidth="3" strokeLinecap="round" opacity=".75" />
+        <rect x="17" y="13" width="46" height="34" rx="9" fill="url(#lmsLaptopFace)" />
+        <rect x="22" y="18" width="36" height="24" rx="6" fill="#eff9f8" />
+        <path d="M31 25l-6 5 6 5M49 25l6 5-6 5M44 22l-8 16"
+              fill="none"
+              stroke="#2F80ED"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round" />
+        <rect x="12" y="46" width="56" height="7" rx="3.5" fill="#b9d8d4" />
 
-        <path d="M10 48c8-4 17-3 26 2v13c-9-5-18-6-26-2z" fill="url(#lmsBookTeal)" />
-        <path d="M62 48c-8-4-17-3-26 2v13c9-5 18-6 26-2z" fill="url(#lmsBookOrange)" />
-        <path d="M36 50v13" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" opacity=".85" />
+        <rect x="15" y="56" width="28" height="8" rx="4" fill="url(#lmsTeal)" />
+        <rect x="22" y="64" width="31" height="8" rx="4" fill="url(#lmsOrange)" />
+        <rect x="39" y="55" width="25" height="8" rx="4" fill="url(#lmsGold)" />
 
-        <path d="M27 8l9-5 9 5-9 5z" fill="#D9853B" />
-        <path d="M43 8v7" stroke="#D9853B" strokeWidth="2.5" strokeLinecap="round" />
-        <circle cx="43" cy="17" r="2" fill="#D9853B" />
+        <circle cx="66" cy="18" r="6" fill="url(#lmsBlue)" />
+        <circle cx="70" cy="33" r="4.5" fill="url(#lmsOrange)" />
+        <circle cx="60" cy="34" r="4" fill="url(#lmsTeal)" />
+        <path d="M64 23l-3 7M67 24l2 5M63 34h3"
+              stroke="#7aa9a5"
+              strokeWidth="2"
+              strokeLinecap="round" />
+
+        <path d="M11 18l1.8 4.2L17 24l-4.2 1.8L11 30l-1.8-4.2L5 24l4.2-1.8L11 18z"
+              fill="#F5B041" />
       </svg>
     </span>
   );

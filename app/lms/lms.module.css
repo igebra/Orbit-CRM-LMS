@@ -398,3 +398,19 @@
     font-size:22px;
   }
 }
+
+
+/* ORBIT LMS COLORFUL ICON FIX */
+.lmsHeaderIcon3D{
+  background:linear-gradient(145deg,#ffffff 5%,#eef7f5 100%);
+  border-color:#c9dfdb;
+  box-shadow:
+    0 11px 22px rgba(38,84,81,.14),
+    inset 0 1px 0 rgba(255,255,255,.98),
+    inset 0 -4px 10px rgba(52,104,100,.06);
+}
+
+.lmsHeaderIconSvg{
+  width:56px;
+  height:56px;
+}
