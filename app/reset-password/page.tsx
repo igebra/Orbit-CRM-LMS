@@ -19,34 +19,64 @@ export default function ResetPasswordPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
+
+    async function checkSession() {
+      const { data } = await supabase.auth.getSession();
+      if (!mounted) return false;
+      if (data.session) {
+        setReady(true);
+        setMessage("");
+        return true;
+      }
+      return false;
+    }
+
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+      if ((event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") && session) {
+        setReady(true);
+        setMessage("");
+      }
+    });
+
     async function init() {
       try {
-        const params = new URLSearchParams(window.location.search);
-        const code = params.get("code");
+        const url = new URL(window.location.href);
+        const code = url.searchParams.get("code");
+        const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+        const hashError = hash.get("error_description");
+
+        if (hashError) {
+          setMessage(decodeURIComponent(hashError.replaceAll("+", " ")));
+          return;
+        }
 
         if (code) {
           const { error } = await supabase.auth.exchangeCodeForSession(code);
           if (error) {
-            setMessage("This password reset link is invalid or has expired.");
+            setMessage("This password reset link is invalid or has expired. Request a new one from Orbit.");
             return;
           }
         }
 
-        const { data } = await supabase.auth.getSession();
+        if (await checkSession()) return;
 
-        if (!data.session) {
-          setMessage("This password reset link is invalid or has expired.");
-          return;
-        }
+        await new Promise((resolve) => setTimeout(resolve, 350));
+        if (await checkSession()) return;
 
-        setReady(true);
-        setMessage("");
+        setMessage("This password reset link is invalid or has expired. Request a new one from Orbit.");
       } catch {
-        setMessage("This password reset link is invalid or has expired.");
+        setMessage("This password reset link is invalid or has expired. Request a new one from Orbit.");
       }
     }
 
     init();
+
+    return () => {
+      mounted = false;
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
   async function updatePassword(event: FormEvent) {
@@ -64,9 +94,7 @@ export default function ResetPasswordPage() {
     }
 
     setSaving(true);
-
     const { error } = await supabase.auth.updateUser({ password });
-
     setSaving(false);
 
     if (error) {
@@ -75,7 +103,7 @@ export default function ResetPasswordPage() {
     }
 
     await supabase.auth.signOut();
-    router.replace("/");
+    router.replace("/?password-reset=success");
   }
 
   return (
@@ -127,11 +155,7 @@ export default function ResetPasswordPage() {
           </form>
         )}
 
-        <button
-          className={styles.back}
-          type="button"
-          onClick={() => router.replace("/")}
-        >
+        <button className={styles.back} type="button" onClick={() => router.replace("/")}>
           Back to Sign In
         </button>
       </section>

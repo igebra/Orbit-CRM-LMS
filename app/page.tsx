@@ -40,6 +40,7 @@ export default function LoginPage() {
   const [activateConfirm, setActivateConfirm] = useState("");
   const [activateLoading, setActivateLoading] = useState(false);
   const [activateMessage, setActivateMessage] = useState("");
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
 
   useEffect(() => {
     async function checkSession() {
@@ -63,8 +64,21 @@ export default function LoginPage() {
 
     checkSession();
 
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session && ["SIGNED_IN", "TOKEN_REFRESHED"].includes(event)) {
+        setTimeout(() => checkSession(), 0);
+      }
+    });
+
     const saved = localStorage.getItem("orbit_remember_email");
     if (saved) setEmail(saved);
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("confirmed") === "1") {
+      setMessage("Email confirmed. You can now sign in to Orbit.");
+    }
+
+    return () => authListener.subscription.unsubscribe();
   }, [router]);
 
   async function signIn(event: FormEvent) {
@@ -86,9 +100,18 @@ export default function LoginPage() {
     setLoading(false);
 
     if (error) {
-      setMessage("Incorrect email or password.");
+      const lower = error.message.toLowerCase();
+      if (lower.includes("email not confirmed")) {
+        setNeedsConfirmation(true);
+        setMessage("Your email is not confirmed yet. Please resend the confirmation email below.");
+      } else {
+        setNeedsConfirmation(false);
+        setMessage("Incorrect email or password.");
+      }
       return;
     }
+
+    setNeedsConfirmation(false);
 
     const { data: authData } = await supabase.auth.getUser();
     const userId = authData.user?.id;
@@ -147,6 +170,35 @@ export default function LoginPage() {
     }
 
     setMessage("Password reset link sent to your email.");
+  }
+
+  async function resendConfirmation(targetEmail?: string) {
+    const cleanEmail = (targetEmail || email || activateEmail).trim().toLowerCase();
+
+    if (!cleanEmail) {
+      setMessage("Enter the email address first.");
+      return;
+    }
+
+    const emailRedirectTo =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/?confirmed=1`
+        : undefined;
+
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: cleanEmail,
+      options: { emailRedirectTo },
+    });
+
+    const text = error
+      ? error.message
+      : "Confirmation email sent again. Please use the newest email only.";
+
+    if (activateOpen) setActivateMessage(text);
+    else setMessage(text);
+
+    if (!error) setNeedsConfirmation(true);
   }
 
   async function submitAccessRequest(event: FormEvent) {
@@ -232,9 +284,15 @@ export default function LoginPage() {
       return;
     }
 
+    const emailRedirectTo =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/?confirmed=1`
+        : undefined;
+
     const { data, error } = await supabase.auth.signUp({
       email: cleanEmail,
       password: activatePassword,
+      options: { emailRedirectTo },
     });
 
     setActivateLoading(false);
@@ -262,8 +320,9 @@ export default function LoginPage() {
       return;
     }
 
+    setNeedsConfirmation(true);
     setActivateMessage(
-      "Account created. Check your email if confirmation is required, then sign in."
+      "Account created. Confirm your email using the newest confirmation email, then return to Orbit and sign in."
     );
     setActivatePassword("");
     setActivateConfirm("");
@@ -352,6 +411,16 @@ export default function LoginPage() {
                   </div>
 
                   {message && <div className="login-message">{message}</div>}
+
+                  {needsConfirmation && (
+                    <button
+                      type="button"
+                      className="auth-helper-button"
+                      onClick={() => resendConfirmation(email)}
+                    >
+                      Resend confirmation email
+                    </button>
+                  )}
 
                   <button className="signin-button" type="submit" disabled={loading}>
                     <span>{loading ? "Signing in..." : "Sign in"}</span>
@@ -534,6 +603,16 @@ export default function LoginPage() {
 
                   {activateMessage && (
                     <div className="request-message">{activateMessage}</div>
+                  )}
+
+                  {needsConfirmation && activateEmail.trim() && (
+                    <button
+                      type="button"
+                      className="auth-helper-button auth-helper-button-access"
+                      onClick={() => resendConfirmation(activateEmail)}
+                    >
+                      Resend confirmation email
+                    </button>
                   )}
 
                   <button
