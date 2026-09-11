@@ -147,6 +147,7 @@ const ALIASES: Record<Exclude<TargetKey, "">, string[]> = {
 const COUNTRIES = [
   { name: "United States", code: "+1", aliases: ["us","usa","united states","america"] },
   { name: "Canada", code: "+1", aliases: ["canada","ca"] },
+  { name: "Australia", code: "+61", aliases: ["australia","au","aus"] },
   { name: "United Kingdom", code: "+44", aliases: ["uk","united kingdom","britain","great britain","england"] },
   { name: "India", code: "+91", aliases: ["india","in"] },
   { name: "UAE", code: "+971", aliases: ["uae","united arab emirates","dubai","abu dhabi"] },

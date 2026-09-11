@@ -9,13 +9,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
 );
 
-const roles = [
-  "Admin",
-  "Sales Admin",
-  "Marketing",
-  "Trainer",
-  "Finance Admin",
-];
+const PUBLIC_ACCESS_ROLES = ["Student", "Parent"];
 
 export default function LoginPage() {
   const router = useRouter();
@@ -206,7 +200,7 @@ export default function LoginPage() {
     setRequestMessage("");
 
     if (!requestName.trim() || !requestEmail.trim() || !requestRole) {
-      setRequestMessage("Enter your name, email and select a role.");
+      setRequestMessage("Enter your name, email and choose Student or Parent.");
       return;
     }
 
@@ -480,7 +474,7 @@ export default function LoginPage() {
                 <div className="login-copy login-copy-access">
                   <span className="login-view-eyebrow">ORBIT ACCESS</span>
                   <h1>Request access</h1>
-                  <p>Submit your details for review by an Orbit administrator.</p>
+                  <p>Student and parent portal access requests are reviewed by an Orbit administrator.</p>
                 </div>
 
                 <form className="request-access-form access-standalone-form" onSubmit={submitAccessRequest}>
@@ -504,20 +498,37 @@ export default function LoginPage() {
                       />
                     </label>
 
-                    <label className="access-full">
-                      <span>Role</span>
-                      <select
-                        value={requestRole}
-                        onChange={(e) => setRequestRole(e.target.value)}
-                      >
-                        <option value="">Select role</option>
-                        {roles.map((role) => (
-                          <option key={role} value={role}>
-                            {role}
-                          </option>
+                    <div className="access-full public-access-role">
+                      <span className="public-access-role-label">Access for</span>
+                      <div className="public-access-role-options">
+                        {PUBLIC_ACCESS_ROLES.map((role) => (
+                          <button
+                            key={role}
+                            type="button"
+                            className={`public-access-role-card ${
+                              requestRole === role ? "public-access-role-card-active" : ""
+                            }`}
+                            onClick={() => setRequestRole(role)}
+                            aria-pressed={requestRole === role}
+                          >
+                            <span className="public-access-role-icon">
+                              {role === "Student" ? "S" : "P"}
+                            </span>
+                            <span>
+                              <strong>{role}</strong>
+                              <small>
+                                {role === "Student"
+                                  ? "Student portal access"
+                                  : "Parent / guardian portal access"}
+                              </small>
+                            </span>
+                          </button>
                         ))}
-                      </select>
-                    </label>
+                      </div>
+                      <small className="public-access-role-note">
+                        Internal team access is granted directly by an Orbit Admin.
+                      </small>
+                    </div>
                   </div>
 
                   {requestMessage && (

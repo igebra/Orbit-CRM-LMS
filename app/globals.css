@@ -717,3 +717,19 @@ button,input,select{font:inherit}
 .auth-helper-button-access{
   margin:8px 0 0;
 }
+
+
+/* ORBIT PUBLIC ACCESS STUDENT PARENT */
+.public-access-role{display:block}
+.public-access-role-label{display:block;margin-bottom:6px;color:#58706f;font-size:10px;font-weight:850;text-transform:uppercase}
+.public-access-role-options{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.public-access-role-card{min-height:58px;border:1px solid #d7e2df;border-radius:11px;padding:9px 10px;background:linear-gradient(145deg,#fff,#f7faf9);color:#193436;display:flex;align-items:center;gap:9px;text-align:left;cursor:pointer;box-shadow:0 5px 14px rgba(31,78,75,.045);transition:transform .14s ease,border-color .14s ease,box-shadow .14s ease}
+.public-access-role-card:hover{transform:translateY(-1px);border-color:#a8c7c3;box-shadow:0 7px 17px rgba(31,78,75,.075)}
+.public-access-role-card-active{border-color:#558C89;background:linear-gradient(145deg,#fff,#eaf5f3);box-shadow:0 0 0 2px rgba(85,140,137,.10),0 7px 17px rgba(31,78,75,.075)}
+.public-access-role-icon{width:31px;height:31px;flex:0 0 auto;display:grid;place-items:center;border-radius:9px;background:#e9f4f2;color:#0f5e61;font-size:12px;font-weight:900}
+.public-access-role-card-active .public-access-role-icon{background:#558C89;color:#fff}
+.public-access-role-card strong,.public-access-role-card small{display:block}
+.public-access-role-card strong{font-size:11px;line-height:1.1}
+.public-access-role-card small{margin-top:3px;color:#758684;font-size:8.8px;line-height:1.25}
+.public-access-role-note{display:block;margin-top:6px;color:#7b8a88;font-size:9px;line-height:1.35}
+@media(max-width:520px){.public-access-role-options{grid-template-columns:1fr}}
