@@ -12,7 +12,7 @@ const supabase = createClient(
 );
 
 const PAYMENT_PLANS = [
-  "After Every 4 Classes","Monthly","Quarterly","Half-yearly","Yearly","Custom"
+  "After Every 4 Classes","Monthly","Quarterly","Half-yearly","Yearly","Paid in Full","Custom"
 ];
 
 const PAYMENT_MODES = [
@@ -605,8 +605,15 @@ export default function BatchDetailPage() {
           <form className={styles.form} onSubmit={saveFinance}>
             <div className={styles.formGrid}>
               <label><span>Total Course Fee (USD)</span><input type="number" min="0" step="0.01" value={financeForm.total_fee_usd} onChange={e=>setFinanceForm({...financeForm,total_fee_usd:e.target.value})}/></label>
-              <label><span>Installment Amount (USD)</span><input type="number" min="0" step="0.01" value={financeForm.installment_amount_usd} onChange={e=>setFinanceForm({...financeForm,installment_amount_usd:e.target.value})}/></label>
-              <label><span>Payment Plan</span><select value={financeForm.payment_plan} onChange={e=>setFinanceForm({...financeForm,payment_plan:e.target.value})}>{PAYMENT_PLANS.map(x=><option key={x}>{x}</option>)}</select></label>
+              <label><span>{financeForm.payment_plan==="Paid in Full"?"Full Payment Amount (USD)":"Installment Amount (USD)"}</span><input type="number" min="0" step="0.01" value={financeForm.installment_amount_usd} readOnly={financeForm.payment_plan==="Paid in Full"} onChange={e=>setFinanceForm({...financeForm,installment_amount_usd:e.target.value})}/></label>
+              <label><span>Payment Plan</span><select value={financeForm.payment_plan} onChange={e=>{
+              const plan=e.target.value;
+              setFinanceForm({
+                ...financeForm,
+                payment_plan:plan,
+                installment_amount_usd:plan==="Paid in Full"?financeForm.total_fee_usd:financeForm.installment_amount_usd
+              });
+            }}>{PAYMENT_PLANS.map(x=><option key={x}>{x}</option>)}</select></label>
               <label><span>Plan Start Date</span><input type="date" value={financeForm.plan_start_date} onChange={e=>setFinanceForm({...financeForm,plan_start_date:e.target.value})}/></label>
               {financeForm.payment_plan==="Custom"&&<label><span>Next Custom Due Date</span><input type="date" value={financeForm.custom_next_due_date} onChange={e=>setFinanceForm({...financeForm,custom_next_due_date:e.target.value})}/></label>}
             </div>

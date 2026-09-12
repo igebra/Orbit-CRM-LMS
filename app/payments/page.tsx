@@ -1005,10 +1005,19 @@ export default function PaymentsPage() {
                           min="0.01"
                           step="0.01"
                           value={paymentForm.setup_total_fee_usd}
-                          onChange={(event)=>setPaymentForm({
-                            ...paymentForm,
-                            setup_total_fee_usd:event.target.value
-                          })}
+                          onChange={(event)=>{
+                            const value=event.target.value;
+                            setPaymentForm({
+                              ...paymentForm,
+                              setup_total_fee_usd:value,
+                              ...(paymentForm.setup_payment_plan==="Paid in Full"
+                                ? {
+                                    setup_installment_amount_usd:value,
+                                    amount_usd:value,
+                                  }
+                                : {})
+                            });
+                          }}
                           placeholder="0.00"
                         />
                       </label>
@@ -1017,16 +1026,26 @@ export default function PaymentsPage() {
                         <span>Payment Plan *</span>
                         <select
                           value={paymentForm.setup_payment_plan}
-                          onChange={(event)=>setPaymentForm({
-                            ...paymentForm,
-                            setup_payment_plan:event.target.value
-                          })}
+                          onChange={(event)=>{
+                            const plan=event.target.value;
+                            setPaymentForm({
+                              ...paymentForm,
+                              setup_payment_plan:plan,
+                              ...(plan==="Paid in Full"
+                                ? {
+                                    setup_installment_amount_usd:paymentForm.setup_total_fee_usd,
+                                    amount_usd:paymentForm.setup_total_fee_usd,
+                                  }
+                                : {})
+                            });
+                          }}
                         >
                           <option>After Every 4 Classes</option>
                           <option>Monthly</option>
                           <option>Quarterly</option>
                           <option>Half-yearly</option>
                           <option>Yearly</option>
+                          <option>Paid in Full</option>
                           <option>Custom</option>
                         </select>
                       </label>
@@ -1042,6 +1061,7 @@ export default function PaymentsPage() {
                             ...paymentForm,
                             setup_installment_amount_usd:event.target.value
                           })}
+                          readOnly={paymentForm.setup_payment_plan==="Paid in Full"}
                           placeholder="0.00"
                         />
                       </label>
