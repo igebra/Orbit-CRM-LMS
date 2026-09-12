@@ -304,3 +304,32 @@
 .confirmDeleteModal .secondary{
   background:#fff;
 }
+
+
+/* ORBIT DELETE OUTSTANDING PLAN */
+.deletePlanButton{
+  height:29px;
+  padding:0 9px;
+  border:1px solid #efc3bd;
+  border-radius:7px;
+  background:#fff4f2;
+  color:#a74b42;
+  font-size:9.5px;
+  font-weight:850;
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+.deletePlanButton:hover{
+  border-color:#df948b;
+  background:#ffeae7;
+}
+
+.planDeleteNote{
+  display:block;
+  max-width:320px;
+  margin:8px auto 0;
+  color:#8a9695;
+  font-size:9px;
+  line-height:1.4;
+}

@@ -170,6 +170,9 @@ export default function PaymentsPage() {
   const [savingPayment, setSavingPayment] = useState(false);
   const [editPaymentOpen, setEditPaymentOpen] = useState(false);
   const [deletePaymentOpen, setDeletePaymentOpen] = useState(false);
+  const [deletePlanOpen, setDeletePlanOpen] = useState(false);
+  const [selectedOutstanding, setSelectedOutstanding] = useState<Outstanding | null>(null);
+  const [deletingPlan, setDeletingPlan] = useState(false);
   const [deletedPaymentsOpen, setDeletedPaymentsOpen] = useState(false);
   const [deletedPayments, setDeletedPayments] = useState<DeletedPayment[]>([]);
   const [deletedLoading, setDeletedLoading] = useState(false);
@@ -610,6 +613,37 @@ export default function PaymentsPage() {
     await loadReports(from, to);
   }
 
+  function openDeletePlan(row: Outstanding) {
+    setMessage("");
+    setSelectedOutstanding(row);
+    setDeletePlanOpen(true);
+  }
+
+  async function confirmDeletePlan() {
+    if (!selectedOutstanding) return;
+
+    setDeletingPlan(true);
+    setMessage("");
+
+    const { error } = await supabase.rpc("delete_student_payment_plan", {
+      p_finance_id: selectedOutstanding.finance_id,
+    });
+
+    setDeletingPlan(false);
+
+    if (error) {
+      setDeletePlanOpen(false);
+      setSelectedOutstanding(null);
+      setMessage(`Could not delete payment plan: ${error.message}`);
+      return;
+    }
+
+    setDeletePlanOpen(false);
+    setSelectedOutstanding(null);
+    setMessage("Payment plan deleted successfully.");
+    await loadReports(from, to);
+  }
+
   async function openDeletedPayments() {
     if (role !== "super_admin") return;
 
@@ -1019,12 +1053,13 @@ export default function PaymentsPage() {
                   <th>Pending</th>
                   <th>Next Due</th>
                   <th>Status</th>
+                  {canManageFinance && <th>Actions</th>}
                 </tr>
               </thead>
               <tbody>
                 {outstanding.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className={styles.empty}>
+                    <td colSpan={canManageFinance ? 9 : 8} className={styles.empty}>
                       No payment plans configured.
                     </td>
                   </tr>
@@ -1059,6 +1094,17 @@ export default function PaymentsPage() {
                           {row.payment_status}
                         </span>
                       </td>
+                      {canManageFinance && (
+                        <td>
+                          <button
+                            type="button"
+                            className={styles.deletePlanButton}
+                            onClick={() => openDeletePlan(row)}
+                          >
+                            Delete Plan
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))
                 )}
@@ -1474,6 +1520,40 @@ export default function PaymentsPage() {
                 onClick={confirmDeletePayment}
               >
                 {savingCorrection ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deletePlanOpen && selectedOutstanding && (
+        <div className={styles.backdrop}>
+          <div className={`${styles.modal} ${styles.confirmDeleteModal}`}>
+            <div className={styles.simpleConfirmBody}>
+              <h2>Delete this payment plan?</h2>
+              <p>
+                {selectedOutstanding.student_name} · {selectedOutstanding.batch_name} · {money(selectedOutstanding.total_fee_usd)}
+              </p>
+              <span className={styles.planDeleteNote}>
+                This removes the outstanding balance only. The student stays in the batch.
+              </span>
+            </div>
+
+            <div className={styles.modalFooter}>
+              <button
+                type="button"
+                className={styles.secondary}
+                onClick={() => setDeletePlanOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={styles.confirmDeleteButton}
+                onClick={confirmDeletePlan}
+                disabled={deletingPlan}
+              >
+                {deletingPlan ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>
