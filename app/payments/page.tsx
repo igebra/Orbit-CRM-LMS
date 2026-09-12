@@ -566,6 +566,7 @@ export default function PaymentsPage() {
   }
 
   function openDeletePayment(row: Transaction) {
+    setMessage("");
     setSelectedTransaction(row);
     setDeletePaymentOpen(true);
   }
@@ -576,14 +577,30 @@ export default function PaymentsPage() {
     setSavingCorrection(true);
     setMessage("");
 
-    const { error } = await supabase.rpc("delete_payment_transaction", {
+    let { error } = await supabase.rpc("delete_payment_transaction", {
       p_transaction_id: selectedTransaction.transaction_id,
     });
+
+    if (
+      error &&
+      (
+        error.message.toLowerCase().includes("schema cache") ||
+        error.message.toLowerCase().includes("could not find the function")
+      )
+    ) {
+      const fallback = await supabase.rpc("delete_payment_transaction", {
+        p_transaction_id: selectedTransaction.transaction_id,
+        p_reason: "Deleted from Orbit",
+      });
+      error = fallback.error;
+    }
 
     setSavingCorrection(false);
 
     if (error) {
-      setMessage(error.message);
+      setDeletePaymentOpen(false);
+      setSelectedTransaction(null);
+      setMessage(`Could not delete payment: ${error.message}`);
       return;
     }
 
