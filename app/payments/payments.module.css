@@ -109,3 +109,106 @@
   height:38px;border:1px solid #d8deda;border-radius:8px;background:#fff;padding:0 9px
 }
 @media(max-width:700px){.quickPlanGrid{grid-template-columns:1fr}}
+
+
+/* ORBIT PAYMENT EDIT DELETE */
+.transactionActions{
+  display:flex;
+  gap:6px;
+  align-items:center;
+  white-space:nowrap;
+}
+
+.editPaymentButton,
+.deletePaymentButton{
+  height:29px;
+  padding:0 9px;
+  border-radius:7px;
+  font-size:9.5px;
+  font-weight:850;
+  cursor:pointer;
+}
+
+.editPaymentButton{
+  border:1px solid #b8d3cf;
+  background:#eef8f6;
+  color:#176466;
+}
+
+.editPaymentButton:hover{
+  border-color:#74AFAD;
+  background:#e5f4f2;
+}
+
+.deletePaymentButton{
+  border:1px solid #efc3bd;
+  background:#fff4f2;
+  color:#a74b42;
+}
+
+.deletePaymentButton:hover{
+  border-color:#df948b;
+  background:#ffeae7;
+}
+
+.correctionNotice{
+  margin:0 20px 14px;
+  padding:9px 11px;
+  border:1px solid #cfe0dd;
+  border-radius:9px;
+  background:#f4faf9;
+  color:#607775;
+  font-size:10px;
+}
+
+.deleteWarning{
+  margin:18px 20px 0;
+  padding:12px;
+  border:1px solid #efc3bd;
+  border-radius:10px;
+  background:#fff5f3;
+}
+
+.deleteWarning strong,
+.deleteWarning span{
+  display:block;
+}
+
+.deleteWarning strong{
+  color:#97443c;
+  font-size:12px;
+}
+
+.deleteWarning span{
+  margin-top:5px;
+  color:#766662;
+  font-size:10px;
+  line-height:1.5;
+}
+
+.correctionTextarea{
+  width:100%;
+  min-height:92px;
+  resize:vertical;
+  border:1px solid #ccd9d6;
+  border-radius:9px;
+  padding:10px;
+  background:#fff;
+  color:#173637;
+  font:inherit;
+}
+
+.confirmDeleteButton{
+  border:1px solid #b74c43;
+  border-radius:9px;
+  padding:10px 13px;
+  background:#c9584e;
+  color:#fff;
+  font-weight:850;
+  cursor:pointer;
+}
+
+.confirmDeleteButton:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}

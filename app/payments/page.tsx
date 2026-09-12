@@ -152,6 +152,17 @@ export default function PaymentsPage() {
   const [loading, setLoading] = useState(true);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [savingPayment, setSavingPayment] = useState(false);
+  const [editPaymentOpen, setEditPaymentOpen] = useState(false);
+  const [deletePaymentOpen, setDeletePaymentOpen] = useState(false);
+  const [savingCorrection, setSavingCorrection] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [editPaymentForm, setEditPaymentForm] = useState({
+    amount_usd: "",
+    payment_date: "",
+    payment_mode: "Zelle",
+    reference: "",
+  });
+  const [deleteReason, setDeleteReason] = useState("");
   const [paymentForm, setPaymentForm] = useState({
     batch_id: "",
     student_id: "",
@@ -485,6 +496,95 @@ export default function PaymentsPage() {
     await loadReports(from, to);
   }
 
+  function openEditPayment(row: Transaction) {
+    setSelectedTransaction(row);
+    setEditPaymentForm({
+      amount_usd: String(row.amount_usd || ""),
+      payment_date: row.payment_date,
+      payment_mode: row.payment_mode || "Zelle",
+      reference: row.reference || "",
+    });
+    setEditPaymentOpen(true);
+  }
+
+  async function savePaymentEdit(event: React.FormEvent) {
+    event.preventDefault();
+
+    if (!selectedTransaction) return;
+
+    const amount = Number(editPaymentForm.amount_usd);
+    if (!amount || amount <= 0) {
+      setMessage("Enter a valid payment amount.");
+      return;
+    }
+
+    if (!editPaymentForm.payment_date) {
+      setMessage("Payment Date is required.");
+      return;
+    }
+
+    setSavingCorrection(true);
+    setMessage("");
+
+    const { error } = await supabase.rpc("update_payment_transaction", {
+      p_transaction_id: selectedTransaction.transaction_id,
+      p_amount_usd: amount,
+      p_payment_date: editPaymentForm.payment_date,
+      p_payment_mode: editPaymentForm.payment_mode,
+      p_reference: editPaymentForm.reference.trim() || null,
+    });
+
+    setSavingCorrection(false);
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    setEditPaymentOpen(false);
+    setSelectedTransaction(null);
+    setMessage("Payment updated successfully.");
+    await loadReports(from, to);
+  }
+
+  function openDeletePayment(row: Transaction) {
+    setSelectedTransaction(row);
+    setDeleteReason("");
+    setDeletePaymentOpen(true);
+  }
+
+  async function confirmDeletePayment(event: React.FormEvent) {
+    event.preventDefault();
+
+    if (!selectedTransaction) return;
+
+    if (!deleteReason.trim()) {
+      setMessage("Enter a reason for deleting this payment.");
+      return;
+    }
+
+    setSavingCorrection(true);
+    setMessage("");
+
+    const { error } = await supabase.rpc("delete_payment_transaction", {
+      p_transaction_id: selectedTransaction.transaction_id,
+      p_reason: deleteReason.trim(),
+    });
+
+    setSavingCorrection(false);
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    setDeletePaymentOpen(false);
+    setSelectedTransaction(null);
+    setDeleteReason("");
+    setMessage("Payment deleted. The correction has been logged.");
+    await loadReports(from, to);
+  }
+
   function exportCsv() {
     const headers = [
       "Date",
@@ -791,12 +891,13 @@ export default function PaymentsPage() {
                   <th>Amount</th>
                   <th>Mode</th>
                   <th>Reference</th>
+                  {canManageFinance && <th>Actions</th>}
                 </tr>
               </thead>
               <tbody>
                 {filteredTransactions.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className={styles.empty}>
+                    <td colSpan={canManageFinance ? 9 : 8} className={styles.empty}>
                       No transactions found.
                     </td>
                   </tr>
@@ -815,6 +916,26 @@ export default function PaymentsPage() {
                       <td><strong>{money(row.amount_usd)}</strong></td>
                       <td>{row.payment_mode}</td>
                       <td>{row.reference || "—"}</td>
+                      {canManageFinance && (
+                        <td>
+                          <div className={styles.transactionActions}>
+                            <button
+                              type="button"
+                              className={styles.editPaymentButton}
+                              onClick={() => openEditPayment(row)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.deletePaymentButton}
+                              onClick={() => openDeletePayment(row)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))
                 )}
@@ -1159,6 +1280,175 @@ export default function PaymentsPage() {
                   disabled={savingPayment}
                 >
                   {savingPayment ? "Saving..." : "Save Payment"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {editPaymentOpen && selectedTransaction && (
+        <div className={styles.backdrop}>
+          <div className={styles.modal}>
+            <div className={styles.modalHeader}>
+              <div>
+                <h2>Edit Payment</h2>
+                <p>
+                  {selectedTransaction.student_name} · {selectedTransaction.batch_name}
+                </p>
+              </div>
+              <button
+                type="button"
+                className={styles.close}
+                onClick={() => setEditPaymentOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={savePaymentEdit}>
+              <div className={styles.formGrid}>
+                <label>
+                  <span>Amount USD *</span>
+                  <input
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    value={editPaymentForm.amount_usd}
+                    onChange={(event) =>
+                      setEditPaymentForm({
+                        ...editPaymentForm,
+                        amount_usd: event.target.value,
+                      })
+                    }
+                  />
+                </label>
+
+                <label>
+                  <span>Payment Date *</span>
+                  <input
+                    type="date"
+                    value={editPaymentForm.payment_date}
+                    onChange={(event) =>
+                      setEditPaymentForm({
+                        ...editPaymentForm,
+                        payment_date: event.target.value,
+                      })
+                    }
+                  />
+                </label>
+
+                <label>
+                  <span>Payment Mode *</span>
+                  <select
+                    value={editPaymentForm.payment_mode}
+                    onChange={(event) =>
+                      setEditPaymentForm({
+                        ...editPaymentForm,
+                        payment_mode: event.target.value,
+                      })
+                    }
+                  >
+                    {PAYMENT_MODES.map((mode) => (
+                      <option key={mode}>{mode}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  <span>Reference / Transaction ID</span>
+                  <input
+                    value={editPaymentForm.reference}
+                    onChange={(event) =>
+                      setEditPaymentForm({
+                        ...editPaymentForm,
+                        reference: event.target.value,
+                      })
+                    }
+                    placeholder="Optional"
+                  />
+                </label>
+              </div>
+
+              <div className={styles.correctionNotice}>
+                Orbit keeps the previous transaction values in the payment correction log.
+              </div>
+
+              <div className={styles.modalFooter}>
+                <button
+                  type="button"
+                  className={styles.secondary}
+                  onClick={() => setEditPaymentOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className={styles.primary}
+                  disabled={savingCorrection}
+                >
+                  {savingCorrection ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {deletePaymentOpen && selectedTransaction && (
+        <div className={styles.backdrop}>
+          <div className={styles.modal}>
+            <div className={styles.modalHeader}>
+              <div>
+                <h2>Delete Payment</h2>
+                <p>
+                  {selectedTransaction.student_name} · {money(selectedTransaction.amount_usd)}
+                </p>
+              </div>
+              <button
+                type="button"
+                className={styles.close}
+                onClick={() => setDeletePaymentOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={confirmDeletePayment}>
+              <div className={styles.deleteWarning}>
+                <strong>Delete this payment transaction?</strong>
+                <span>
+                  It will be removed from collection totals and pending balance will
+                  recalculate. A correction record will be kept for audit purposes.
+                </span>
+              </div>
+
+              <div className={styles.formGrid}>
+                <label className={styles.full}>
+                  <span>Reason for deletion *</span>
+                  <textarea
+                    className={styles.correctionTextarea}
+                    value={deleteReason}
+                    onChange={(event) => setDeleteReason(event.target.value)}
+                    placeholder="Example: Duplicate payment / wrong student / entered by mistake"
+                  />
+                </label>
+              </div>
+
+              <div className={styles.modalFooter}>
+                <button
+                  type="button"
+                  className={styles.secondary}
+                  onClick={() => setDeletePaymentOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className={styles.confirmDeleteButton}
+                  disabled={savingCorrection}
+                >
+                  {savingCorrection ? "Deleting..." : "Delete Payment"}
                 </button>
               </div>
             </form>
