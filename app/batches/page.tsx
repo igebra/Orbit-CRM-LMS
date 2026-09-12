@@ -32,6 +32,7 @@ type Batch = {
   source_timezone: string | null;
   end_date: string | null;
   planned_sessions: number | null;
+  classes_per_week: number | null;
   default_duration_minutes: number | null;
   recurring_zoom_url: string | null;
   status: string;
@@ -53,6 +54,7 @@ type FormState = {
   source_timezone: string;
   end_date: string;
   planned_sessions: string;
+  classes_per_week: string;
   duration_minutes: string;
   recurring_zoom_url: string;
   status: string;
@@ -66,6 +68,7 @@ const EMPTY_FORM: FormState = {
   source_timezone: "America/New_York",
   end_date: "",
   planned_sessions: "",
+  classes_per_week: "1",
   duration_minutes: "90",
   recurring_zoom_url: "",
   status: "Active",
@@ -214,6 +217,7 @@ export default function BatchesPage() {
       start_date: form.local_datetime.slice(0,10),
       end_date: form.end_date || null,
       planned_sessions: form.planned_sessions ? Number(form.planned_sessions) : null,
+      classes_per_week: Number(form.classes_per_week || 1),
       default_duration_minutes: Number(form.duration_minutes || 90),
       recurring_zoom_url: form.recurring_zoom_url.trim() || null,
       status: form.status,
@@ -287,6 +291,7 @@ export default function BatchesPage() {
                   <th>Selected Time</th>
                   <th>India Time</th>
                   <th>End Date</th>
+                  <th>Classes / Week</th>
                   <th>Students</th>
                   <th>Status</th>
                   <th></th>
@@ -294,9 +299,9 @@ export default function BatchesPage() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={9} className={styles.empty}>Loading batches...</td></tr>
+                  <tr><td colSpan={10} className={styles.empty}>Loading batches...</td></tr>
                 ) : batches.length === 0 ? (
-                  <tr><td colSpan={9} className={styles.empty}>No batches found.</td></tr>
+                  <tr><td colSpan={10} className={styles.empty}>No batches found.</td></tr>
                 ) : batches.map((b) => (
                   <tr key={b.id}>
                     <td>{b.batch_name}</td>
@@ -305,6 +310,7 @@ export default function BatchesPage() {
                     <td>{fmt(b.start_at, b.source_timezone || "America/New_York")}</td>
                     <td>{fmt(b.start_at, "Asia/Kolkata")}</td>
                     <td>{b.end_date || "—"}</td>
+                    <td>{b.classes_per_week || 1}×</td>
                     <td>{counts.get(b.id) || 0} / {b.max_students}</td>
                     <td><span className={styles.badge}>{b.status}</span></td>
                     <td>
@@ -391,6 +397,25 @@ export default function BatchesPage() {
                   <span>Planned Sessions</span>
                   <input type="number" min="1" value={form.planned_sessions} onChange={(e) => setForm({...form,planned_sessions:e.target.value})}/>
                 </label>
+
+                <label>
+                  <span>Classes Per Week *</span>
+                  <select value={form.classes_per_week} onChange={(e) => setForm({...form,classes_per_week:e.target.value})}>
+                    <option value="1">1 class / week</option>
+                    <option value="2">2 classes / week</option>
+                    <option value="3">3 classes / week</option>
+                    <option value="4">4 classes / week</option>
+                    <option value="5">5 classes / week</option>
+                    <option value="6">6 classes / week</option>
+                    <option value="7">7 classes / week</option>
+                  </select>
+                  {form.course_name.startsWith("Math") && (
+                    <small style={{marginTop:4,color:"#6B7280"}}>
+                      Math batches can run multiple classes each week.
+                    </small>
+                  )}
+                </label>
+
                 <label>
                   <span>Class Duration</span>
                   <select value={form.duration_minutes} onChange={(e) => setForm({...form,duration_minutes:e.target.value})}>

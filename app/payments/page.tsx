@@ -39,6 +39,20 @@ type Outstanding = {
   payment_status: string;
 };
 
+type PaymentEntryOption = {
+  batch_id: string;
+  batch_name: string;
+  course_name: string;
+  student_id: string;
+  student_name: string;
+  finance_id: string | null;
+  total_fee_usd: number | null;
+  payment_plan: string | null;
+  installment_amount_usd: number | null;
+  total_paid_usd: number;
+  pending_usd: number | null;
+};
+
 const PAYMENT_MODES = [
   "Zelle",
   "Stripe",
@@ -132,17 +146,24 @@ export default function PaymentsPage() {
   const [to, setTo] = useState(defaultRange.to);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [outstanding, setOutstanding] = useState<Outstanding[]>([]);
+  const [paymentOptions, setPaymentOptions] = useState<PaymentEntryOption[]>([]);
   const [search, setSearch] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [savingPayment, setSavingPayment] = useState(false);
   const [paymentForm, setPaymentForm] = useState({
+    batch_id: "",
+    student_id: "",
     finance_id: "",
     amount_usd: "",
     payment_date: localIso(new Date()),
     payment_mode: "Zelle",
     reference: "",
+    setup_total_fee_usd: "",
+    setup_payment_plan: "Monthly",
+    setup_installment_amount_usd: "",
+    setup_plan_start_date: localIso(new Date()),
   });
 
   const allowedRoles = [
@@ -212,13 +233,20 @@ export default function PaymentsPage() {
       setTo(marketingRange.to);
     }
 
-    const [transactionResult, outstandingResult] = await Promise.all([
+    const [transactionResult, outstandingResult, paymentOptionResult] = await Promise.all([
       supabase.rpc("payment_report_transactions", {
         p_from: effectiveFrom,
         p_to: effectiveTo,
       }),
       supabase.rpc("payment_outstanding_report"),
+      supabase.rpc("payment_entry_options"),
     ]);
+
+    if (paymentOptionResult.error) {
+      setPaymentOptions([]);
+    } else {
+      setPaymentOptions((paymentOptionResult.data || []) as PaymentEntryOption[]);
+    }
 
     if (transactionResult.error || outstandingResult.error) {
       setMessage(
@@ -336,26 +364,89 @@ export default function PaymentsPage() {
   }, [outstanding]);
 
 
-  function openManualPayment() {
-    const firstOutstanding = outstanding.find((row) => Number(row.pending_usd || 0) > 0);
+  const paymentBatchOptions = useMemo(() => {
+    const map = new Map<string,{id:string;name:string;course:string}>();
+    paymentOptions.forEach((row) => {
+      if (!map.has(row.batch_id)) {
+        map.set(row.batch_id,{id:row.batch_id,name:row.batch_name,course:row.course_name});
+      }
+    });
+    return Array.from(map.values()).sort((a,b)=>a.name.localeCompare(b.name));
+  },[paymentOptions]);
 
+  const paymentStudentOptions = useMemo(
+    () => paymentOptions
+      .filter((row)=>row.batch_id===paymentForm.batch_id)
+      .sort((a,b)=>a.student_name.localeCompare(b.student_name)),
+    [paymentOptions,paymentForm.batch_id]
+  );
+
+  const selectedPaymentOption = useMemo(
+    () => paymentOptions.find(
+      (row)=>row.batch_id===paymentForm.batch_id && row.student_id===paymentForm.student_id
+    ) || null,
+    [paymentOptions,paymentForm.batch_id,paymentForm.student_id]
+  );
+
+  function openManualPayment() {
     setPaymentForm({
-      finance_id: firstOutstanding?.finance_id || "",
+      batch_id: "",
+      student_id: "",
+      finance_id: "",
       amount_usd: "",
       payment_date: localIso(new Date()),
       payment_mode: "Zelle",
       reference: "",
+      setup_total_fee_usd: "",
+      setup_payment_plan: "Monthly",
+      setup_installment_amount_usd: "",
+      setup_plan_start_date: localIso(new Date()),
     });
-
     setPaymentOpen(true);
   }
 
   async function saveManualPayment(event: React.FormEvent) {
     event.preventDefault();
 
-    if (!paymentForm.finance_id) {
-      setMessage("Select a student / batch.");
+    if (!paymentForm.batch_id || !paymentForm.student_id) {
+      setMessage("Select a batch and student.");
       return;
+    }
+
+    let financeId = paymentForm.finance_id;
+
+    if (!financeId) {
+      const totalFee = Number(paymentForm.setup_total_fee_usd);
+      const installment = Number(paymentForm.setup_installment_amount_usd);
+
+      if (!totalFee || totalFee <= 0) {
+        setMessage("This student has no payment plan yet. Enter the total fee.");
+        return;
+      }
+
+      if (!installment || installment <= 0) {
+        setMessage("Enter a valid installment amount.");
+        return;
+      }
+
+      const { data: createdFinanceId, error: setupError } = await supabase.rpc(
+        "ensure_payment_plan_for_entry",
+        {
+          p_batch_id: paymentForm.batch_id,
+          p_student_id: paymentForm.student_id,
+          p_total_fee_usd: totalFee,
+          p_payment_plan: paymentForm.setup_payment_plan,
+          p_installment_amount_usd: installment,
+          p_plan_start_date: paymentForm.setup_plan_start_date,
+        }
+      );
+
+      if (setupError || !createdFinanceId) {
+        setMessage(setupError?.message || "Could not create the payment plan.");
+        return;
+      }
+
+      financeId = String(createdFinanceId);
     }
 
     const amount = Number(paymentForm.amount_usd);
@@ -374,7 +465,7 @@ export default function PaymentsPage() {
     setMessage("");
 
     const { error } = await supabase.from("payment_transactions").insert({
-      finance_id: paymentForm.finance_id,
+      finance_id: financeId,
       amount_usd: amount,
       payment_date: paymentForm.payment_date,
       payment_mode: paymentForm.payment_mode,
@@ -822,25 +913,153 @@ export default function PaymentsPage() {
 
             <form onSubmit={saveManualPayment}>
               <div className={styles.formGrid}>
-                <label className={styles.full}>
-                  <span>Student / Batch *</span>
+                <label>
+                  <span>Batch *</span>
                   <select
-                    value={paymentForm.finance_id}
+                    value={paymentForm.batch_id}
                     onChange={(event) =>
                       setPaymentForm({
                         ...paymentForm,
-                        finance_id: event.target.value,
+                        batch_id: event.target.value,
+                        student_id: "",
+                        finance_id: "",
+                        amount_usd: "",
+                        setup_total_fee_usd: "",
+                        setup_installment_amount_usd: "",
                       })
                     }
                   >
-                    <option value="">Select student / batch</option>
-                    {outstanding.map((row) => (
-                      <option key={row.finance_id} value={row.finance_id}>
-                        {row.student_name} — {row.batch_name} — Pending {money(row.pending_usd)}
+                    <option value="">Select batch</option>
+                    {paymentBatchOptions.map((batch) => (
+                      <option key={batch.id} value={batch.id}>
+                        {batch.name} — {batch.course}
                       </option>
                     ))}
                   </select>
                 </label>
+
+                <label>
+                  <span>Student *</span>
+                  <select
+                    value={paymentForm.student_id}
+                    disabled={!paymentForm.batch_id}
+                    onChange={(event) => {
+                      const studentId = event.target.value;
+                      const option = paymentOptions.find(
+                        (row) =>
+                          row.batch_id === paymentForm.batch_id &&
+                          row.student_id === studentId
+                      );
+
+                      setPaymentForm({
+                        ...paymentForm,
+                        student_id: studentId,
+                        finance_id: option?.finance_id || "",
+                        amount_usd: option?.installment_amount_usd
+                          ? String(
+                              Math.min(
+                                Number(option.installment_amount_usd || 0),
+                                Number(option.pending_usd || option.total_fee_usd || 0)
+                              ) || ""
+                            )
+                          : "",
+                        setup_total_fee_usd: option?.total_fee_usd
+                          ? String(option.total_fee_usd)
+                          : "",
+                        setup_payment_plan: option?.payment_plan || "Monthly",
+                        setup_installment_amount_usd: option?.installment_amount_usd
+                          ? String(option.installment_amount_usd)
+                          : "",
+                      });
+                    }}
+                  >
+                    <option value="">
+                      {paymentForm.batch_id ? "Select student" : "Select batch first"}
+                    </option>
+                    {paymentStudentOptions.map((row) => (
+                      <option
+                        key={`${row.batch_id}-${row.student_id}`}
+                        value={row.student_id}
+                      >
+                        {row.student_name}
+                        {row.finance_id
+                          ? ` — ${row.payment_plan || "Plan"} — Pending ${money(row.pending_usd)}`
+                          : " — Payment plan not set"}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                {selectedPaymentOption && !selectedPaymentOption.finance_id && (
+                  <div className={`${styles.quickPlan} ${styles.full}`}>
+                    <div className={styles.quickPlanHead}>
+                      <strong>Payment plan not configured</strong>
+                      <span>Set it here once, then record this payment.</span>
+                    </div>
+
+                    <div className={styles.quickPlanGrid}>
+                      <label>
+                        <span>Total Fee USD *</span>
+                        <input
+                          type="number"
+                          min="0.01"
+                          step="0.01"
+                          value={paymentForm.setup_total_fee_usd}
+                          onChange={(event)=>setPaymentForm({
+                            ...paymentForm,
+                            setup_total_fee_usd:event.target.value
+                          })}
+                          placeholder="0.00"
+                        />
+                      </label>
+
+                      <label>
+                        <span>Payment Plan *</span>
+                        <select
+                          value={paymentForm.setup_payment_plan}
+                          onChange={(event)=>setPaymentForm({
+                            ...paymentForm,
+                            setup_payment_plan:event.target.value
+                          })}
+                        >
+                          <option>After Every 4 Classes</option>
+                          <option>Monthly</option>
+                          <option>Quarterly</option>
+                          <option>Half-yearly</option>
+                          <option>Yearly</option>
+                          <option>Custom</option>
+                        </select>
+                      </label>
+
+                      <label>
+                        <span>Installment Amount USD *</span>
+                        <input
+                          type="number"
+                          min="0.01"
+                          step="0.01"
+                          value={paymentForm.setup_installment_amount_usd}
+                          onChange={(event)=>setPaymentForm({
+                            ...paymentForm,
+                            setup_installment_amount_usd:event.target.value
+                          })}
+                          placeholder="0.00"
+                        />
+                      </label>
+
+                      <label>
+                        <span>Plan Start Date *</span>
+                        <input
+                          type="date"
+                          value={paymentForm.setup_plan_start_date}
+                          onChange={(event)=>setPaymentForm({
+                            ...paymentForm,
+                            setup_plan_start_date:event.target.value
+                          })}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                )}
 
                 <label>
                   <span>Amount USD *</span>

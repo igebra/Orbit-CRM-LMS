@@ -89,3 +89,23 @@
   .formGrid{grid-template-columns:1fr}
   .full{grid-column:auto}
 }
+
+
+/* ORBIT PAYMENT SELECTOR FIX */
+.quickPlan{
+  padding:12px;
+  border:1px solid #efcfaa;
+  border-radius:10px;
+  background:#fff8ef;
+}
+.quickPlanHead{margin-bottom:10px}
+.quickPlanHead strong,.quickPlanHead span{display:block}
+.quickPlanHead strong{color:#8e572a;font-size:11px}
+.quickPlanHead span{margin-top:3px;color:#7d7065;font-size:9.5px}
+.quickPlanGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.quickPlanGrid label{display:grid;gap:5px}
+.quickPlanGrid label span{font-size:9px;font-weight:800}
+.quickPlanGrid input,.quickPlanGrid select{
+  height:38px;border:1px solid #d8deda;border-radius:8px;background:#fff;padding:0 9px
+}
+@media(max-width:700px){.quickPlanGrid{grid-template-columns:1fr}}
