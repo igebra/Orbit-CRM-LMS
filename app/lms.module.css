@@ -519,3 +519,16 @@
     grid-template-columns:1fr;
   }
 }
+
+
+/* ORBIT BATCHES CLEAN TABLE V8 */
+.batchClassTime{
+  white-space:nowrap;
+  font-weight:650;
+}
+
+.batchClassDaysText{
+  white-space:nowrap;
+  color:#315b5a;
+  font-weight:650;
+}
