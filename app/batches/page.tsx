@@ -63,7 +63,8 @@ type FormState = {
   batch_name: string;
   course_name: string;
   trainer_id: string;
-  local_datetime: string;
+  batch_start_date: string;
+  class_time: string;
   source_timezone: string;
   end_date: string;
   planned_sessions: string;
@@ -78,7 +79,8 @@ const EMPTY_FORM: FormState = {
   batch_name: "",
   course_name: "",
   trainer_id: "",
-  local_datetime: "",
+  batch_start_date: "",
+  class_time: "",
   source_timezone: "America/New_York",
   end_date: "",
   planned_sessions: "",
@@ -202,9 +204,17 @@ export default function BatchesPage() {
     return batchMap;
   }, [roster, students]);
 
+  const scheduleLocal = useMemo(
+    () =>
+      form.batch_start_date && form.class_time
+        ? `${form.batch_start_date}T${form.class_time}`
+        : "",
+    [form.batch_start_date, form.class_time]
+  );
+
   const preview = useMemo(
-    () => localToUtc(form.local_datetime, form.source_timezone),
-    [form.local_datetime, form.source_timezone]
+    () => localToUtc(scheduleLocal, form.source_timezone),
+    [scheduleLocal, form.source_timezone]
   );
 
   function chooseCourse(course: string) {
@@ -235,12 +245,17 @@ export default function BatchesPage() {
 
   async function save(event: FormEvent) {
     event.preventDefault();
-    if (!form.batch_name.trim() || !form.course_name || !form.local_datetime) {
-      setMessage("Batch Name, Course and Start Date & Time are required.");
+    if (
+      !form.batch_name.trim() ||
+      !form.course_name ||
+      !form.batch_start_date ||
+      !form.class_time
+    ) {
+      setMessage("Batch Name, Course, Batch Start Date and Class Time are required.");
       return;
     }
 
-    const startAt = localToUtc(form.local_datetime, form.source_timezone);
+    const startAt = localToUtc(scheduleLocal, form.source_timezone);
     if (!startAt) {
       setMessage("Please select a valid date and time.");
       return;
@@ -255,7 +270,7 @@ export default function BatchesPage() {
       trainer_name: trainers.find((x) => x.id === form.trainer_id)?.trainer_name || null,
       start_at: startAt,
       source_timezone: form.source_timezone,
-      start_date: form.local_datetime.slice(0,10),
+      start_date: form.batch_start_date,
       end_date: form.end_date || null,
       planned_sessions: form.planned_sessions ? Number(form.planned_sessions) : null,
       classes_per_month: Number(form.classes_per_month || 4),
@@ -407,6 +422,11 @@ export default function BatchesPage() {
 
             <form className={styles.form} onSubmit={save}>
               <div className={styles.formGrid}>
+                <div className={`${styles.formSectionTitle} ${styles.full}`}>
+                  <strong>Batch Details</strong>
+                  <span>Basic batch information</span>
+                </div>
+
                 <label>
                   <span>Batch Name *</span>
                   <input value={form.batch_name} onChange={(e) => setForm({...form,batch_name:e.target.value})}/>
@@ -420,7 +440,7 @@ export default function BatchesPage() {
                   </select>
                 </label>
 
-                <label>
+                <label className={styles.full}>
                   <span>Trainer</span>
                   <select value={form.trainer_id} onChange={(e) => chooseTrainer(e.target.value)}>
                     <option value="">Select trainer</option>
@@ -428,9 +448,32 @@ export default function BatchesPage() {
                   </select>
                 </label>
 
+                <div className={`${styles.formSectionTitle} ${styles.full}`}>
+                  <strong>Schedule</strong>
+                  <span>Dates, class time and recurring days</span>
+                </div>
+
                 <label>
-                  <span>Start Date & Time *</span>
-                  <input type="datetime-local" value={form.local_datetime} onChange={(e) => setForm({...form,local_datetime:e.target.value})}/>
+                  <span>Batch Start Date *</span>
+                  <input
+                    type="date"
+                    value={form.batch_start_date}
+                    onChange={(e) => setForm({...form,batch_start_date:e.target.value})}
+                  />
+                </label>
+
+                <label>
+                  <span>Batch End Date</span>
+                  <input type="date" value={form.end_date} onChange={(e) => setForm({...form,end_date:e.target.value})}/>
+                </label>
+
+                <label>
+                  <span>Class Time *</span>
+                  <input
+                    type="time"
+                    value={form.class_time}
+                    onChange={(e) => setForm({...form,class_time:e.target.value})}
+                  />
                 </label>
 
                 <label>
@@ -440,37 +483,7 @@ export default function BatchesPage() {
                   </select>
                 </label>
 
-                <div className={`${styles.timePreview} ${styles.full}`}>
-                  <div><span>Selected Time</span><strong>{preview ? fmt(preview,form.source_timezone) : "Select date & time"}</strong></div>
-                  <div className={styles.timeArrow}>→</div>
-                  <div><span>India Time</span><strong>{preview ? fmt(preview,"Asia/Kolkata") : "Select date & time"}</strong></div>
-                </div>
-
-                <label>
-                  <span>Batch End Date</span>
-                  <input type="date" value={form.end_date} onChange={(e) => setForm({...form,end_date:e.target.value})}/>
-                </label>
-
-                <label>
-                  <span>Planned Sessions</span>
-                  <input type="number" min="1" value={form.planned_sessions} onChange={(e) => setForm({...form,planned_sessions:e.target.value})}/>
-                </label>
-
-                <label>
-                  <span>Classes Per Month *</span>
-                  <input
-                    type="number"
-                    min="1"
-                    max="31"
-                    value={form.classes_per_month}
-                    onChange={(e) => setForm({...form,classes_per_month:e.target.value})}
-                  />
-                  <small style={{marginTop:4,color:"#6B7280"}}>
-                    Example: enter 8 for eight classes in a month.
-                  </small>
-                </label>
-
-                <div className={`${styles.classDaysField} ${styles.full}`}>
+                <div className={styles.classDaysField}>
                   <span className={styles.classDaysLabel}>Class Days</span>
                   <div className={styles.classDaysGrid}>
                     {CLASS_DAYS.map((day) => {
@@ -488,7 +501,7 @@ export default function BatchesPage() {
                       );
                     })}
                   </div>
-                  <small>Select all regular class days. Example: Mon + Wed for 8 classes/month.</small>
+                  <small>Select regular class days.</small>
                 </div>
 
                 <label>
@@ -500,10 +513,41 @@ export default function BatchesPage() {
                   </select>
                 </label>
 
-                <label className={styles.full}>
-                  <span>Recurring Zoom Link</span>
-                  <input type="url" value={form.recurring_zoom_url} onChange={(e) => setForm({...form,recurring_zoom_url:e.target.value})} placeholder="https://zoom.us/j/..."/>
+                <label>
+                  <span>Classes Per Month *</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max="31"
+                    value={form.classes_per_month}
+                    onChange={(e) => setForm({...form,classes_per_month:e.target.value})}
+                  />
+                  <small style={{marginTop:4,color:"#6B7280"}}>
+                    Example: 8 classes per month.
+                  </small>
                 </label>
+
+                <label>
+                  <span>Recurring Zoom Link</span>
+                  <input
+                    type="url"
+                    value={form.recurring_zoom_url}
+                    onChange={(e) => setForm({...form,recurring_zoom_url:e.target.value})}
+                    placeholder="https://zoom.us/j/..."
+                  />
+                </label>
+
+                <div className={`${styles.timePreview} ${styles.full} ${styles.timePreviewEnd}`}>
+                  <div>
+                    <span>Selected Time</span>
+                    <strong>{preview ? fmt(preview,form.source_timezone) : "Select start date & class time"}</strong>
+                  </div>
+                  <div className={styles.timeArrow}>→</div>
+                  <div>
+                    <span>India Time</span>
+                    <strong>{preview ? fmt(preview,"Asia/Kolkata") : "Select start date & class time"}</strong>
+                  </div>
+                </div>
               </div>
 
               <div className={styles.modalFooter}>

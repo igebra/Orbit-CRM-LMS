@@ -235,3 +235,54 @@
 .classDayButton:hover{border-color:#9bbfba;background:#f5faf9}
 .classDayButtonActive{border-color:#558C89;background:#e7f3f1;color:#0e6264;box-shadow:0 0 0 2px rgba(85,140,137,.08)}
 .classDaysField small{color:#6B7280;font-size:9.5px}
+
+
+/* ORBIT ADD BATCH CLEAN SCHEDULE V3 */
+.formSectionTitle{
+  margin-top:4px;
+  padding:2px 0 8px;
+  border-bottom:1px solid #edf1f0;
+}
+
+.formSectionTitle strong,
+.formSectionTitle span{
+  display:block;
+}
+
+.formSectionTitle strong{
+  color:#173637;
+  font-size:12px;
+  font-weight:850;
+}
+
+.formSectionTitle span{
+  margin-top:2px;
+  color:#879493;
+  font-size:9.5px;
+}
+
+.timePreviewEnd{
+  margin-top:5px;
+}
+
+.classDaysField{
+  align-self:start;
+}
+
+.classDaysField .classDaysGrid{
+  gap:5px;
+}
+
+.classDaysField .classDayButton{
+  min-width:43px;
+  height:36px;
+  padding:0 8px;
+  border-radius:8px;
+  font-size:9.5px;
+}
+
+@media(max-width:900px){
+  .classDaysField .classDaysGrid{
+    flex-wrap:wrap;
+  }
+}
