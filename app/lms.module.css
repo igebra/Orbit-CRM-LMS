@@ -532,3 +532,76 @@
   color:#315b5a;
   font-weight:650;
 }
+
+
+/* ORBIT HEADER BUTTON CONSISTENCY V9 */
+.headerActions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  margin-left:auto;
+  align-self:flex-start;
+  flex-wrap:wrap;
+}
+
+.headerActions .primary,
+.headerActions .secondary{
+  height:38px;
+  min-height:38px;
+  min-width:108px;
+  padding:0 13px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:9px;
+  font-family:inherit;
+  font-size:11px;
+  font-weight:800;
+  line-height:1;
+  letter-spacing:0;
+  white-space:nowrap;
+  box-shadow:none;
+  margin:0;
+}
+
+.headerActions .primary{
+  border:1px solid #cf7c34;
+  background:#df8a3c;
+  color:#fff;
+}
+
+.headerActions .primary:hover{
+  background:#d98032;
+}
+
+.headerActions .secondary{
+  border:1px solid #cfddda;
+  background:#fff;
+  color:#0f5e61;
+}
+
+.headerActions .secondary:hover{
+  background:#f5f9f8;
+  border-color:#aec8c4;
+}
+
+@media(max-width:1050px){
+  .headerActions{
+    width:100%;
+    justify-content:flex-start;
+    margin-left:0;
+  }
+}
+
+@media(max-width:620px){
+  .headerActions{
+    gap:6px;
+  }
+
+  .headerActions .primary,
+  .headerActions .secondary{
+    min-width:0;
+    flex:1 1 auto;
+  }
+}

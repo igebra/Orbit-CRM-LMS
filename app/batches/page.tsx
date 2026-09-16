@@ -358,9 +358,11 @@ export default function BatchesPage() {
           </div>
 
           {canAdmin && (
-            <button className={styles.primary} onClick={() => setModalOpen(true)}>
-              + Add Batch
-            </button>
+            <div className={styles.headerActions}>
+              <button className={styles.primary} onClick={() => setModalOpen(true)}>
+                + Add Batch
+              </button>
+            </div>
           )}
         </header>
 
