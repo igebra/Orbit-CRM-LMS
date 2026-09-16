@@ -15,6 +15,16 @@ const PAYMENT_PLANS = [
   "After Every 4 Classes","Monthly","Quarterly","Half-yearly","Yearly","Paid in Full","Custom"
 ];
 
+const CLASS_DAYS = [
+  { value: "Mon", label: "Mon" },
+  { value: "Tue", label: "Tue" },
+  { value: "Wed", label: "Wed" },
+  { value: "Thu", label: "Thu" },
+  { value: "Fri", label: "Fri" },
+  { value: "Sat", label: "Sat" },
+  { value: "Sun", label: "Sun" },
+];
+
 const PAYMENT_MODES = [
   "Zelle","Stripe","Razorpay","UPI","Bank Transfer","Credit/Debit Card","PayPal","Cash","Cheque","Other"
 ];
@@ -22,7 +32,7 @@ const PAYMENT_MODES = [
 type Batch = {
   id:string; batch_name:string; course_name:string; trainer_name:string|null; trainer_user_id:string|null; trainer_id:string|null;
   start_at:string|null; source_timezone:string|null; end_date:string|null; recurring_zoom_url:string|null;
-  planned_sessions:number|null; classes_per_week:number|null; classes_per_month:number|null; default_duration_minutes:number|null; status:string; max_students:number;
+  planned_sessions:number|null; classes_per_week:number|null; classes_per_month:number|null; class_days:string[]|null; default_duration_minutes:number|null; status:string; max_students:number;
 };
 
 type Student = { id:string; student_name:string; grade:string|null; email:string|null; phone:string|null; status:string };
@@ -104,7 +114,7 @@ export default function BatchDetailPage() {
   const [financeOpen,setFinanceOpen] = useState(false);
   const [paymentOpen,setPaymentOpen] = useState(false);
 
-  const [edit,setEdit] = useState({trainer_id:"",trainer_name:"",end_date:"",recurring_zoom_url:"",planned_sessions:"",classes_per_month:"4",duration_minutes:"90",status:"Active"});
+  const [edit,setEdit] = useState({trainer_id:"",trainer_name:"",end_date:"",recurring_zoom_url:"",planned_sessions:"",classes_per_month:"4",class_days:[] as string[],duration_minutes:"90",status:"Active"});
   const [sessionForm,setSessionForm] = useState({session_number:"",scheduled_at:"",topic_planned:"",status:"Scheduled"});
   const [attendanceRows,setAttendanceRows] = useState<{session_id:string;attendance_status:string}[]>([]);
   const [financeForm,setFinanceForm] = useState({student_id:"",total_fee_usd:"",payment_plan:"Monthly",installment_amount_usd:"",plan_start_date:new Date().toISOString().slice(0,10),custom_next_due_date:""});
@@ -238,6 +248,7 @@ export default function BatchDetailPage() {
       recurring_zoom_url:batch.recurring_zoom_url||"",
       planned_sessions:batch.planned_sessions?String(batch.planned_sessions):"",
       classes_per_month:String(batch.classes_per_month || ((batch.classes_per_week||1)*4)),
+      class_days:batch.class_days || [],
       duration_minutes:String(batch.default_duration_minutes||90),
       status:batch.status,
     });
@@ -247,6 +258,15 @@ export default function BatchDetailPage() {
   function chooseTrainer(id:string) {
     const t = trainers.find(x=>x.id===id);
     setEdit(e=>({...e,trainer_id:id,trainer_name:t?.trainer_name||""}));
+  }
+
+  function toggleEditClassDay(day:string) {
+    setEdit(current=>({
+      ...current,
+      class_days:current.class_days.includes(day)
+        ? current.class_days.filter(item=>item!==day)
+        : [...current.class_days,day]
+    }));
   }
 
   async function saveEdit(e:FormEvent) {
@@ -259,6 +279,7 @@ export default function BatchDetailPage() {
       planned_sessions:edit.planned_sessions?Number(edit.planned_sessions):null,
       classes_per_month:Number(edit.classes_per_month||4),
       classes_per_week:Math.max(1,Math.ceil(Number(edit.classes_per_month||4)/4)),
+      class_days:edit.class_days,
       default_duration_minutes:Number(edit.duration_minutes||90),
       status:edit.status,
       updated_by:userId||null,
@@ -410,6 +431,7 @@ export default function BatchDetailPage() {
               <span>India: {fmt(batch.start_at,"Asia/Kolkata")}</span>
               {batch.end_date && <span>Ends: {batch.end_date}</span>}
               <span>{batch.classes_per_month || ((batch.classes_per_week||1)*4)} classes / month</span>
+              {batch.class_days && batch.class_days.length > 0 && <span>{batch.class_days.join(" · ")}</span>}
             </div>
           </div>
 
@@ -467,6 +489,7 @@ export default function BatchDetailPage() {
                 <div><span>End Date</span><strong>{batch.end_date||"—"}</strong></div>
                 <div><span>Planned Sessions</span><strong>{batch.planned_sessions||"—"}</strong></div>
                 <div><span>Classes / Month</span><strong>{batch.classes_per_month || ((batch.classes_per_week||1)*4)}</strong></div>
+                <div><span>Class Days</span><strong>{batch.class_days && batch.class_days.length > 0 ? batch.class_days.join(", ") : "—"}</strong></div>
                 <div><span>Status</span><strong>{batch.status}</strong></div>
                 <div><span>Recurring Zoom</span><strong>{batch.recurring_zoom_url?"Added":"Not added"}</strong></div>
               </div>
@@ -597,6 +620,27 @@ export default function BatchDetailPage() {
                 <input type="number" min="1" max="31" value={edit.classes_per_month} onChange={e=>setEdit({...edit,classes_per_month:e.target.value})}/>
                 <small style={{marginTop:4,color:"#6B7280"}}>Example: 8 means eight classes in a month.</small>
               </label>
+
+              <div className={`${styles.classDaysField} ${styles.full}`}>
+                <span className={styles.classDaysLabel}>Class Days</span>
+                <div className={styles.classDaysGrid}>
+                  {CLASS_DAYS.map(day=>{
+                    const selected=edit.class_days.includes(day.value);
+                    return (
+                      <button
+                        key={day.value}
+                        type="button"
+                        className={`${styles.classDayButton} ${selected?styles.classDayButtonActive:""}`}
+                        onClick={()=>toggleEditClassDay(day.value)}
+                        aria-pressed={selected}
+                      >
+                        {day.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <small>Select all regular class days.</small>
+              </div>
               <label><span>Class Duration</span><select value={edit.duration_minutes} onChange={e=>setEdit({...edit,duration_minutes:e.target.value})}><option value="60">60 Minutes</option><option value="90">90 Minutes</option><option value="120">120 Minutes</option></select></label>
               <label className={styles.full}><span>Recurring Zoom Link</span><input type="url" value={edit.recurring_zoom_url} onChange={e=>setEdit({...edit,recurring_zoom_url:e.target.value})}/></label>
               <label><span>Status</span><select value={edit.status} onChange={e=>setEdit({...edit,status:e.target.value})}><option>Active</option><option>Upcoming</option><option>Paused</option><option>Completed</option></select></label>

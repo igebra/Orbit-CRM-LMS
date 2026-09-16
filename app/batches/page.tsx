@@ -12,6 +12,16 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
 );
 
+const CLASS_DAYS = [
+  { value: "Mon", label: "Mon" },
+  { value: "Tue", label: "Tue" },
+  { value: "Wed", label: "Wed" },
+  { value: "Thu", label: "Thu" },
+  { value: "Fri", label: "Fri" },
+  { value: "Sat", label: "Sat" },
+  { value: "Sun", label: "Sun" },
+];
+
 const TIMEZONES = [
   { value: "America/New_York", label: "US Eastern" },
   { value: "America/Chicago", label: "US Central" },
@@ -34,6 +44,7 @@ type Batch = {
   planned_sessions: number | null;
   classes_per_week: number | null;
   classes_per_month: number | null;
+  class_days: string[] | null;
   default_duration_minutes: number | null;
   recurring_zoom_url: string | null;
   status: string;
@@ -57,6 +68,7 @@ type FormState = {
   end_date: string;
   planned_sessions: string;
   classes_per_month: string;
+  class_days: string[];
   duration_minutes: string;
   recurring_zoom_url: string;
   status: string;
@@ -71,6 +83,7 @@ const EMPTY_FORM: FormState = {
   end_date: "",
   planned_sessions: "",
   classes_per_month: "4",
+  class_days: [],
   duration_minutes: "90",
   recurring_zoom_url: "",
   status: "Active",
@@ -211,6 +224,15 @@ export default function BatchesPage() {
     setForm((f) => ({ ...f, trainer_id: id }));
   }
 
+  function toggleClassDay(day: string) {
+    setForm((current) => ({
+      ...current,
+      class_days: current.class_days.includes(day)
+        ? current.class_days.filter((item) => item !== day)
+        : [...current.class_days, day],
+    }));
+  }
+
   async function save(event: FormEvent) {
     event.preventDefault();
     if (!form.batch_name.trim() || !form.course_name || !form.local_datetime) {
@@ -238,6 +260,7 @@ export default function BatchesPage() {
       planned_sessions: form.planned_sessions ? Number(form.planned_sessions) : null,
       classes_per_month: Number(form.classes_per_month || 4),
       classes_per_week: Math.max(1, Math.ceil(Number(form.classes_per_month || 4) / 4)),
+      class_days: form.class_days,
       default_duration_minutes: Number(form.duration_minutes || 90),
       recurring_zoom_url: form.recurring_zoom_url.trim() || null,
       status: form.status,
@@ -446,6 +469,27 @@ export default function BatchesPage() {
                     Example: enter 8 for eight classes in a month.
                   </small>
                 </label>
+
+                <div className={`${styles.classDaysField} ${styles.full}`}>
+                  <span className={styles.classDaysLabel}>Class Days</span>
+                  <div className={styles.classDaysGrid}>
+                    {CLASS_DAYS.map((day) => {
+                      const selected = form.class_days.includes(day.value);
+                      return (
+                        <button
+                          key={day.value}
+                          type="button"
+                          className={`${styles.classDayButton} ${selected ? styles.classDayButtonActive : ""}`}
+                          onClick={() => toggleClassDay(day.value)}
+                          aria-pressed={selected}
+                        >
+                          {day.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <small>Select all regular class days. Example: Mon + Wed for 8 classes/month.</small>
+                </div>
 
                 <label>
                   <span>Class Duration</span>

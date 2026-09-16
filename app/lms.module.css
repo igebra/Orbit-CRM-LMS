@@ -225,3 +225,13 @@
   white-space:nowrap;
   box-shadow:none;
 }
+
+
+/* ORBIT CLASS DAYS SELECTOR */
+.classDaysField{display:grid;gap:7px}
+.classDaysLabel{color:#183536;font-size:11px;font-weight:800}
+.classDaysGrid{display:flex;flex-wrap:wrap;gap:7px}
+.classDayButton{min-width:52px;height:36px;padding:0 12px;border:1px solid #d4e0dd;border-radius:9px;background:#fff;color:#345654;font-size:10.5px;font-weight:800;cursor:pointer;box-shadow:none}
+.classDayButton:hover{border-color:#9bbfba;background:#f5faf9}
+.classDayButtonActive{border-color:#558C89;background:#e7f3f1;color:#0e6264;box-shadow:0 0 0 2px rgba(85,140,137,.08)}
+.classDaysField small{color:#6B7280;font-size:9.5px}
