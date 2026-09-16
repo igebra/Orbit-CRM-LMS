@@ -310,7 +310,7 @@ export default function BatchesPage() {
                   <th>Trainer</th>
                   <th>Selected Time</th>
                   <th>India Time</th>
-                  <th>Classes / Month</th>
+                  <th className={styles.batchClassesMonth}>Classes / Month</th>
                   <th>Students</th>
                   <th>Status</th>
                   <th></th>
@@ -328,7 +328,7 @@ export default function BatchesPage() {
                     <td>{b.trainer_name || "—"}</td>
                     <td>{fmt(b.start_at, b.source_timezone || "America/New_York")}</td>
                     <td>{fmt(b.start_at, "Asia/Kolkata")}</td>
-                    <td>{b.classes_per_month || ((b.classes_per_week || 1) * 4)}</td>
+                    <td className={styles.batchClassesMonth}>{b.classes_per_month || ((b.classes_per_week || 1) * 4)}</td>
                     <td>
                       <div className={styles.batchStudentList}>
                         {(studentNamesByBatch.get(b.id) || []).length === 0 ? (
@@ -340,7 +340,7 @@ export default function BatchesPage() {
                         )}
                       </div>
                     </td>
-                    <td><span className={styles.badge}>{b.status}</span></td>
+                    <td><span className={styles.batchStatusNeutral}>{b.status}</span></td>
                     <td>
                       <div className={styles.compactTableActions}>
                         <button
