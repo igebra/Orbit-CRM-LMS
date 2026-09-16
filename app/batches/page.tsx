@@ -40,6 +40,7 @@ type Batch = {
 };
 
 type Roster = { batch_id: string; student_id: string };
+type StudentOption = { id: string; student_name: string };
 
 type Trainer = {
   id: string;
@@ -122,6 +123,7 @@ export default function BatchesPage() {
   const [role, setRole] = useState("");
   const [batches, setBatches] = useState<Batch[]>([]);
   const [roster, setRoster] = useState<Roster[]>([]);
+  const [students, setStudents] = useState<StudentOption[]>([]);
   const [trainers, setTrainers] = useState<Trainer[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -151,24 +153,40 @@ export default function BatchesPage() {
   async function load() {
     setLoading(true);
 
-    const [b, r, t] = await Promise.all([
+    const [b, r, s, t] = await Promise.all([
       supabase.from("batches").select("*").order("created_at", { ascending: false }),
       supabase.from("batch_students").select("batch_id,student_id"),
+      supabase.from("students").select("id,student_name").order("student_name"),
       supabase.rpc("active_trainer_options"),
     ]);
 
     if (b.error) setMessage(b.error.message);
     setBatches((b.data || []) as Batch[]);
     setRoster((r.data || []) as Roster[]);
+    setStudents((s.data || []) as StudentOption[]);
     setTrainers((t.data || []) as Trainer[]);
     setLoading(false);
   }
 
-  const counts = useMemo(() => {
-    const m = new Map<string, number>();
-    roster.forEach((x) => m.set(x.batch_id, (m.get(x.batch_id) || 0) + 1));
-    return m;
-  }, [roster]);
+  const studentNamesByBatch = useMemo(() => {
+    const studentMap = new Map(students.map((student) => [student.id, student.student_name]));
+    const batchMap = new Map<string, string[]>();
+
+    roster.forEach((item) => {
+      const name = studentMap.get(item.student_id);
+      if (!name) return;
+
+      const current = batchMap.get(item.batch_id) || [];
+      current.push(name);
+      batchMap.set(item.batch_id, current);
+    });
+
+    batchMap.forEach((names, batchId) => {
+      batchMap.set(batchId, [...names].sort((a, b) => a.localeCompare(b)));
+    });
+
+    return batchMap;
+  }, [roster, students]);
 
   const preview = useMemo(
     () => localToUtc(form.local_datetime, form.source_timezone),
@@ -311,22 +329,39 @@ export default function BatchesPage() {
                     <td>{fmt(b.start_at, "Asia/Kolkata")}</td>
                     <td>{b.end_date || "—"}</td>
                     <td>{b.classes_per_week || 1}×</td>
-                    <td>{counts.get(b.id) || 0} / {b.max_students}</td>
+                    <td>
+                      <div className={styles.batchStudentList}>
+                        {(studentNamesByBatch.get(b.id) || []).length === 0 ? (
+                          <span className={styles.batchStudentEmpty}>—</span>
+                        ) : (
+                          (studentNamesByBatch.get(b.id) || []).map((name) => (
+                            <span key={name} className={styles.batchStudentChip}>{name}</span>
+                          ))
+                        )}
+                      </div>
+                    </td>
                     <td><span className={styles.badge}>{b.status}</span></td>
                     <td>
-                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                      <div className={styles.compactTableActions}>
                         <button
-                          className={styles.smallButton}
+                          className={styles.compactOpenButton}
                           onClick={() => router.push(`/batches/${b.id}`)}
+                          title={`Open ${b.batch_name}`}
                         >
                           Open
                         </button>
+
                         {canDelete && (
                           <button
-                            className={styles.danger}
+                            type="button"
+                            className={styles.iconDeleteButton}
                             onClick={() => deleteBatch(b)}
+                            title={`Delete ${b.batch_name}`}
+                            aria-label={`Delete ${b.batch_name}`}
                           >
-                            Delete
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                              <path d="M8 8v9m4-9v9m4-9v9M5 6h14M9 6V4h6v2m3 0-1 14H7L6 6" />
+                            </svg>
                           </button>
                         )}
                       </div>
