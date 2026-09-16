@@ -629,13 +629,11 @@ export default function BatchDetailPage() {
               <label>
                 <span>Classes Per Month</span>
                 <input
-                  type="number"
-                  value={edit.classes_per_month}
+                  type="text"
+                  value={edit.classes_per_month || "—"}
                   readOnly
                   className={styles.autoCalculatedInput}
-                  placeholder="Select class days"
                 />
-                <small style={{marginTop:4,color:"#6B7280"}}>Auto-calculated from selected class days × 4 weeks.</small>
               </label>
 
               <div className={`${styles.classDaysField} ${styles.full}`}>

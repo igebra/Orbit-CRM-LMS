@@ -497,49 +497,46 @@ export default function BatchesPage() {
                   </label>
                 </div>
 
-                <div className={styles.classDaysField}>
-                  <span className={styles.classDaysLabel}>Class Days</span>
-                  <div className={styles.classDaysGrid}>
-                    {CLASS_DAYS.map((day) => {
-                      const selected = form.class_days.includes(day.value);
-                      return (
-                        <button
-                          key={day.value}
-                          type="button"
-                          className={`${styles.classDayButton} ${selected ? styles.classDayButtonActive : ""}`}
-                          onClick={() => toggleClassDay(day.value)}
-                          aria-pressed={selected}
-                        >
-                          {day.label}
-                        </button>
-                      );
-                    })}
+                <div className={`${styles.batchClassSetupRow} ${styles.full}`}>
+                  <div className={styles.classDaysField}>
+                    <span className={styles.classDaysLabel}>Class Days</span>
+                    <div className={styles.classDaysGrid}>
+                      {CLASS_DAYS.map((day) => {
+                        const selected = form.class_days.includes(day.value);
+                        return (
+                          <button
+                            key={day.value}
+                            type="button"
+                            className={`${styles.classDayButton} ${selected ? styles.classDayButtonActive : ""}`}
+                            onClick={() => toggleClassDay(day.value)}
+                            aria-pressed={selected}
+                          >
+                            {day.label}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <small>Select regular class days.</small>
+
+                  <label>
+                    <span>Class Duration</span>
+                    <select value={form.duration_minutes} onChange={(e) => setForm({...form,duration_minutes:e.target.value})}>
+                      <option value="60">60 Minutes</option>
+                      <option value="90">90 Minutes</option>
+                      <option value="120">120 Minutes</option>
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>Classes Per Month</span>
+                    <input
+                      type="text"
+                      value={form.classes_per_month || "—"}
+                      readOnly
+                      className={styles.autoCalculatedInput}
+                    />
+                  </label>
                 </div>
-
-                <label>
-                  <span>Class Duration</span>
-                  <select value={form.duration_minutes} onChange={(e) => setForm({...form,duration_minutes:e.target.value})}>
-                    <option value="60">60 Minutes</option>
-                    <option value="90">90 Minutes</option>
-                    <option value="120">120 Minutes</option>
-                  </select>
-                </label>
-
-                <label>
-                  <span>Classes Per Month</span>
-                  <input
-                    type="number"
-                    value={form.classes_per_month}
-                    readOnly
-                    className={styles.autoCalculatedInput}
-                    placeholder="Select class days"
-                  />
-                  <small style={{marginTop:4,color:"#6B7280"}}>
-                    Auto-calculated from selected class days × 4 weeks.
-                  </small>
-                </label>
 
                 <label>
                   <span>Recurring Zoom Link</span>
