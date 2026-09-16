@@ -33,6 +33,7 @@ type Batch = {
   end_date: string | null;
   planned_sessions: number | null;
   classes_per_week: number | null;
+  classes_per_month: number | null;
   default_duration_minutes: number | null;
   recurring_zoom_url: string | null;
   status: string;
@@ -55,7 +56,7 @@ type FormState = {
   source_timezone: string;
   end_date: string;
   planned_sessions: string;
-  classes_per_week: string;
+  classes_per_month: string;
   duration_minutes: string;
   recurring_zoom_url: string;
   status: string;
@@ -69,7 +70,7 @@ const EMPTY_FORM: FormState = {
   source_timezone: "America/New_York",
   end_date: "",
   planned_sessions: "",
-  classes_per_week: "1",
+  classes_per_month: "4",
   duration_minutes: "90",
   recurring_zoom_url: "",
   status: "Active",
@@ -235,7 +236,8 @@ export default function BatchesPage() {
       start_date: form.local_datetime.slice(0,10),
       end_date: form.end_date || null,
       planned_sessions: form.planned_sessions ? Number(form.planned_sessions) : null,
-      classes_per_week: Number(form.classes_per_week || 1),
+      classes_per_month: Number(form.classes_per_month || 4),
+      classes_per_week: Math.max(1, Math.ceil(Number(form.classes_per_month || 4) / 4)),
       default_duration_minutes: Number(form.duration_minutes || 90),
       recurring_zoom_url: form.recurring_zoom_url.trim() || null,
       status: form.status,
@@ -326,7 +328,7 @@ export default function BatchesPage() {
                     <td>{b.trainer_name || "—"}</td>
                     <td>{fmt(b.start_at, b.source_timezone || "America/New_York")}</td>
                     <td>{fmt(b.start_at, "Asia/Kolkata")}</td>
-                    <td>{(b.classes_per_week || 1) * 4}</td>
+                    <td>{b.classes_per_month || ((b.classes_per_week || 1) * 4)}</td>
                     <td>
                       <div className={styles.batchStudentList}>
                         {(studentNamesByBatch.get(b.id) || []).length === 0 ? (
@@ -432,21 +434,17 @@ export default function BatchesPage() {
                 </label>
 
                 <label>
-                  <span>Classes Per Week *</span>
-                  <select value={form.classes_per_week} onChange={(e) => setForm({...form,classes_per_week:e.target.value})}>
-                    <option value="1">1 class / week</option>
-                    <option value="2">2 classes / week</option>
-                    <option value="3">3 classes / week</option>
-                    <option value="4">4 classes / week</option>
-                    <option value="5">5 classes / week</option>
-                    <option value="6">6 classes / week</option>
-                    <option value="7">7 classes / week</option>
-                  </select>
-                  {form.course_name.startsWith("Math") && (
-                    <small style={{marginTop:4,color:"#6B7280"}}>
-                      Math batches can run multiple classes each week.
-                    </small>
-                  )}
+                  <span>Classes Per Month *</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max="31"
+                    value={form.classes_per_month}
+                    onChange={(e) => setForm({...form,classes_per_month:e.target.value})}
+                  />
+                  <small style={{marginTop:4,color:"#6B7280"}}>
+                    Example: enter 8 for eight classes in a month.
+                  </small>
                 </label>
 
                 <label>

@@ -22,7 +22,7 @@ const PAYMENT_MODES = [
 type Batch = {
   id:string; batch_name:string; course_name:string; trainer_name:string|null; trainer_user_id:string|null; trainer_id:string|null;
   start_at:string|null; source_timezone:string|null; end_date:string|null; recurring_zoom_url:string|null;
-  planned_sessions:number|null; classes_per_week:number|null; default_duration_minutes:number|null; status:string; max_students:number;
+  planned_sessions:number|null; classes_per_week:number|null; classes_per_month:number|null; default_duration_minutes:number|null; status:string; max_students:number;
 };
 
 type Student = { id:string; student_name:string; grade:string|null; email:string|null; phone:string|null; status:string };
@@ -104,7 +104,7 @@ export default function BatchDetailPage() {
   const [financeOpen,setFinanceOpen] = useState(false);
   const [paymentOpen,setPaymentOpen] = useState(false);
 
-  const [edit,setEdit] = useState({trainer_id:"",trainer_name:"",end_date:"",recurring_zoom_url:"",planned_sessions:"",classes_per_week:"1",duration_minutes:"90",status:"Active"});
+  const [edit,setEdit] = useState({trainer_id:"",trainer_name:"",end_date:"",recurring_zoom_url:"",planned_sessions:"",classes_per_month:"4",duration_minutes:"90",status:"Active"});
   const [sessionForm,setSessionForm] = useState({session_number:"",scheduled_at:"",topic_planned:"",status:"Scheduled"});
   const [attendanceRows,setAttendanceRows] = useState<{session_id:string;attendance_status:string}[]>([]);
   const [financeForm,setFinanceForm] = useState({student_id:"",total_fee_usd:"",payment_plan:"Monthly",installment_amount_usd:"",plan_start_date:new Date().toISOString().slice(0,10),custom_next_due_date:""});
@@ -237,7 +237,7 @@ export default function BatchDetailPage() {
       end_date:batch.end_date||"",
       recurring_zoom_url:batch.recurring_zoom_url||"",
       planned_sessions:batch.planned_sessions?String(batch.planned_sessions):"",
-      classes_per_week:String(batch.classes_per_week||1),
+      classes_per_month:String(batch.classes_per_month || ((batch.classes_per_week||1)*4)),
       duration_minutes:String(batch.default_duration_minutes||90),
       status:batch.status,
     });
@@ -257,7 +257,8 @@ export default function BatchDetailPage() {
       end_date:edit.end_date||null,
       recurring_zoom_url:edit.recurring_zoom_url.trim()||null,
       planned_sessions:edit.planned_sessions?Number(edit.planned_sessions):null,
-      classes_per_week:Number(edit.classes_per_week||1),
+      classes_per_month:Number(edit.classes_per_month||4),
+      classes_per_week:Math.max(1,Math.ceil(Number(edit.classes_per_month||4)/4)),
       default_duration_minutes:Number(edit.duration_minutes||90),
       status:edit.status,
       updated_by:userId||null,
@@ -353,8 +354,8 @@ export default function BatchDetailPage() {
 
 
   async function generateSchedule() {
-    if ((batch?.classes_per_week||1) > 1) {
-      setMessage("This batch has multiple classes per week. Use + Add Session to choose the exact class days/times; Orbit will not guess the weekly days.");
+    if ((batch?.classes_per_month || ((batch?.classes_per_week||1)*4)) > 4) {
+      setMessage("This batch has multiple classes each month. Use + Add Session to choose the exact class days/times; Orbit will not guess the schedule.");
       return;
     }
 
@@ -408,7 +409,7 @@ export default function BatchDetailPage() {
               <span>{fmt(batch.start_at,batch.source_timezone||"America/New_York")}</span>
               <span>India: {fmt(batch.start_at,"Asia/Kolkata")}</span>
               {batch.end_date && <span>Ends: {batch.end_date}</span>}
-              <span>{batch.classes_per_week||1} class{(batch.classes_per_week||1)===1?"":"es"} / week</span>
+              <span>{batch.classes_per_month || ((batch.classes_per_week||1)*4)} classes / month</span>
             </div>
           </div>
 
@@ -465,7 +466,7 @@ export default function BatchDetailPage() {
               <div className={styles.infoList}>
                 <div><span>End Date</span><strong>{batch.end_date||"—"}</strong></div>
                 <div><span>Planned Sessions</span><strong>{batch.planned_sessions||"—"}</strong></div>
-                <div><span>Classes / Week</span><strong>{batch.classes_per_week||1}</strong></div>
+                <div><span>Classes / Month</span><strong>{batch.classes_per_month || ((batch.classes_per_week||1)*4)}</strong></div>
                 <div><span>Status</span><strong>{batch.status}</strong></div>
                 <div><span>Recurring Zoom</span><strong>{batch.recurring_zoom_url?"Added":"Not added"}</strong></div>
               </div>
@@ -590,7 +591,13 @@ export default function BatchDetailPage() {
                 </select>
               </label>
               <label><span>Batch End Date</span><input type="date" value={edit.end_date} onChange={e=>setEdit({...edit,end_date:e.target.value})}/></label>
-              <label><span>Planned Sessions</span><input type="number" min="1" value={edit.planned_sessions} onChange={e=>setEdit({...edit,planned_sessions:e.target.value})}/></label><label><span>Class Duration</span><select value={edit.duration_minutes} onChange={e=>setEdit({...edit,duration_minutes:e.target.value})}><option value="60">60 Minutes</option><option value="90">90 Minutes</option><option value="120">120 Minutes</option></select></label>
+              <label><span>Planned Sessions</span><input type="number" min="1" value={edit.planned_sessions} onChange={e=>setEdit({...edit,planned_sessions:e.target.value})}/></label>
+              <label>
+                <span>Classes Per Month</span>
+                <input type="number" min="1" max="31" value={edit.classes_per_month} onChange={e=>setEdit({...edit,classes_per_month:e.target.value})}/>
+                <small style={{marginTop:4,color:"#6B7280"}}>Example: 8 means eight classes in a month.</small>
+              </label>
+              <label><span>Class Duration</span><select value={edit.duration_minutes} onChange={e=>setEdit({...edit,duration_minutes:e.target.value})}><option value="60">60 Minutes</option><option value="90">90 Minutes</option><option value="120">120 Minutes</option></select></label>
               <label className={styles.full}><span>Recurring Zoom Link</span><input type="url" value={edit.recurring_zoom_url} onChange={e=>setEdit({...edit,recurring_zoom_url:e.target.value})}/></label>
               <label><span>Status</span><select value={edit.status} onChange={e=>setEdit({...edit,status:e.target.value})}><option>Active</option><option>Upcoming</option><option>Paused</option><option>Completed</option></select></label>
             </div>
