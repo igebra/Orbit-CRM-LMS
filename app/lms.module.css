@@ -175,3 +175,29 @@
   stroke-linecap:round;
   stroke-linejoin:round;
 }
+
+
+/* ORBIT BATCHES SIMPLE STUDENT LIST + MONTHLY CLASSES */
+.batchStudentList{
+  display:grid;
+  gap:3px;
+  max-width:220px;
+}
+
+.batchStudentName{
+  display:block;
+  padding:0;
+  margin:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  color:#183032;
+  font-size:11px;
+  font-weight:600;
+  line-height:1.35;
+}
+
+.batchStudentEmpty{
+  color:#93a09f;
+  font-size:11px;
+}

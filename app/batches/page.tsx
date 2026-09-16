@@ -308,8 +308,7 @@ export default function BatchesPage() {
                   <th>Trainer</th>
                   <th>Selected Time</th>
                   <th>India Time</th>
-                  <th>End Date</th>
-                  <th>Classes / Week</th>
+                  <th>Classes / Month</th>
                   <th>Students</th>
                   <th>Status</th>
                   <th></th>
@@ -317,9 +316,9 @@ export default function BatchesPage() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={10} className={styles.empty}>Loading batches...</td></tr>
+                  <tr><td colSpan={9} className={styles.empty}>Loading batches...</td></tr>
                 ) : batches.length === 0 ? (
-                  <tr><td colSpan={10} className={styles.empty}>No batches found.</td></tr>
+                  <tr><td colSpan={9} className={styles.empty}>No batches found.</td></tr>
                 ) : batches.map((b) => (
                   <tr key={b.id}>
                     <td>{b.batch_name}</td>
@@ -327,15 +326,14 @@ export default function BatchesPage() {
                     <td>{b.trainer_name || "—"}</td>
                     <td>{fmt(b.start_at, b.source_timezone || "America/New_York")}</td>
                     <td>{fmt(b.start_at, "Asia/Kolkata")}</td>
-                    <td>{b.end_date || "—"}</td>
-                    <td>{b.classes_per_week || 1}×</td>
+                    <td>{(b.classes_per_week || 1) * 4}</td>
                     <td>
                       <div className={styles.batchStudentList}>
                         {(studentNamesByBatch.get(b.id) || []).length === 0 ? (
                           <span className={styles.batchStudentEmpty}>—</span>
                         ) : (
                           (studentNamesByBatch.get(b.id) || []).map((name) => (
-                            <span key={name} className={styles.batchStudentChip}>{name}</span>
+                            <span key={name} className={styles.batchStudentName}>{name}</span>
                           ))
                         )}
                       </div>
