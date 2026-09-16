@@ -84,7 +84,7 @@ const EMPTY_FORM: FormState = {
   source_timezone: "America/New_York",
   end_date: "",
   planned_sessions: "",
-  classes_per_month: "4",
+  classes_per_month: "",
   class_days: [],
   duration_minutes: "90",
   recurring_zoom_url: "",
@@ -235,12 +235,17 @@ export default function BatchesPage() {
   }
 
   function toggleClassDay(day: string) {
-    setForm((current) => ({
-      ...current,
-      class_days: current.class_days.includes(day)
+    setForm((current) => {
+      const nextDays = current.class_days.includes(day)
         ? current.class_days.filter((item) => item !== day)
-        : [...current.class_days, day],
-    }));
+        : [...current.class_days, day];
+
+      return {
+        ...current,
+        class_days: nextDays,
+        classes_per_month: nextDays.length ? String(nextDays.length * 4) : "",
+      };
+    });
   }
 
   async function save(event: FormEvent) {
@@ -252,6 +257,11 @@ export default function BatchesPage() {
       !form.class_time
     ) {
       setMessage("Batch Name, Course, Batch Start Date and Class Time are required.");
+      return;
+    }
+
+    if (form.class_days.length === 0) {
+      setMessage("Select at least one Class Day.");
       return;
     }
 
@@ -427,26 +437,28 @@ export default function BatchesPage() {
                   <span>Basic batch information</span>
                 </div>
 
-                <label>
-                  <span>Batch Name *</span>
-                  <input value={form.batch_name} onChange={(e) => setForm({...form,batch_name:e.target.value})}/>
-                </label>
+                <div className={`${styles.batchTopRow} ${styles.full}`}>
+                  <label>
+                    <span>Batch Name *</span>
+                    <input value={form.batch_name} onChange={(e) => setForm({...form,batch_name:e.target.value})}/>
+                  </label>
 
-                <label>
-                  <span>Course *</span>
-                  <select value={form.course_name} onChange={(e) => chooseCourse(e.target.value)}>
-                    <option value="">Select course</option>
-                    {COURSE_OPTIONS.map((x) => <option key={x}>{x}</option>)}
-                  </select>
-                </label>
+                  <label>
+                    <span>Course *</span>
+                    <select value={form.course_name} onChange={(e) => chooseCourse(e.target.value)}>
+                      <option value="">Select course</option>
+                      {COURSE_OPTIONS.map((x) => <option key={x}>{x}</option>)}
+                    </select>
+                  </label>
 
-                <label className={styles.full}>
-                  <span>Trainer</span>
-                  <select value={form.trainer_id} onChange={(e) => chooseTrainer(e.target.value)}>
-                    <option value="">Select trainer</option>
-                    {trainers.map((x) => <option key={x.id} value={x.id}>{x.trainer_name}</option>)}
-                  </select>
-                </label>
+                  <label>
+                    <span>Trainer</span>
+                    <select value={form.trainer_id} onChange={(e) => chooseTrainer(e.target.value)}>
+                      <option value="">Select trainer</option>
+                      {trainers.map((x) => <option key={x.id} value={x.id}>{x.trainer_name}</option>)}
+                    </select>
+                  </label>
+                </div>
 
                 <div className={`${styles.formSectionTitle} ${styles.full}`}>
                   <strong>Schedule</strong>
@@ -514,16 +526,16 @@ export default function BatchesPage() {
                 </label>
 
                 <label>
-                  <span>Classes Per Month *</span>
+                  <span>Classes Per Month</span>
                   <input
                     type="number"
-                    min="1"
-                    max="31"
                     value={form.classes_per_month}
-                    onChange={(e) => setForm({...form,classes_per_month:e.target.value})}
+                    readOnly
+                    className={styles.autoCalculatedInput}
+                    placeholder="Select class days"
                   />
                   <small style={{marginTop:4,color:"#6B7280"}}>
-                    Example: 8 classes per month.
+                    Auto-calculated from selected class days × 4 weeks.
                   </small>
                 </label>
 

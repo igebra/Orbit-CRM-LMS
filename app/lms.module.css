@@ -286,3 +286,55 @@
     flex-wrap:wrap;
   }
 }
+
+
+/* ORBIT AUTO MONTHLY CLASSES V5 */
+.batchTopRow{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:16px;
+  align-items:end;
+}
+
+.batchTopRow label{
+  min-width:0;
+}
+
+.batchTopRow label>span{
+  display:block;
+  margin-bottom:7px;
+  color:#263f40;
+  font-size:12px;
+  font-weight:800;
+}
+
+.batchTopRow input,
+.batchTopRow select{
+  width:100%;
+  height:44px;
+  border:1px solid #d4dfdc;
+  border-radius:10px;
+  background:#fff;
+  color:#183032;
+  padding:0 11px;
+  outline:none;
+}
+
+.batchTopRow input:focus,
+.batchTopRow select:focus{
+  border-color:#74afad;
+  box-shadow:0 0 0 3px rgba(116,175,173,.12);
+}
+
+.autoCalculatedInput{
+  background:#f6f9f8!important;
+  color:#315b5a!important;
+  font-weight:800;
+  cursor:default;
+}
+
+@media(max-width:900px){
+  .batchTopRow{
+    grid-template-columns:1fr;
+  }
+}

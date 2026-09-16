@@ -261,16 +261,27 @@ export default function BatchDetailPage() {
   }
 
   function toggleEditClassDay(day:string) {
-    setEdit(current=>({
-      ...current,
-      class_days:current.class_days.includes(day)
+    setEdit(current=>{
+      const nextDays=current.class_days.includes(day)
         ? current.class_days.filter(item=>item!==day)
-        : [...current.class_days,day]
-    }));
+        : [...current.class_days,day];
+
+      return {
+        ...current,
+        class_days:nextDays,
+        classes_per_month:nextDays.length ? String(nextDays.length*4) : ""
+      };
+    });
   }
 
   async function saveEdit(e:FormEvent) {
     e.preventDefault();
+
+    if (edit.class_days.length === 0) {
+      setMessage("Select at least one Class Day.");
+      return;
+    }
+
     const {error} = await supabase.from("batches").update({
       trainer_id:edit.trainer_id||null,
       trainer_name:edit.trainer_name.trim()||null,
@@ -617,8 +628,14 @@ export default function BatchDetailPage() {
               <label><span>Planned Sessions</span><input type="number" min="1" value={edit.planned_sessions} onChange={e=>setEdit({...edit,planned_sessions:e.target.value})}/></label>
               <label>
                 <span>Classes Per Month</span>
-                <input type="number" min="1" max="31" value={edit.classes_per_month} onChange={e=>setEdit({...edit,classes_per_month:e.target.value})}/>
-                <small style={{marginTop:4,color:"#6B7280"}}>Example: 8 means eight classes in a month.</small>
+                <input
+                  type="number"
+                  value={edit.classes_per_month}
+                  readOnly
+                  className={styles.autoCalculatedInput}
+                  placeholder="Select class days"
+                />
+                <small style={{marginTop:4,color:"#6B7280"}}>Auto-calculated from selected class days × 4 weeks.</small>
               </label>
 
               <div className={`${styles.classDaysField} ${styles.full}`}>
