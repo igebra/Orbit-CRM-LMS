@@ -465,35 +465,37 @@ export default function BatchesPage() {
                   <span>Dates, class time and recurring days</span>
                 </div>
 
-                <label>
-                  <span>Batch Start Date *</span>
-                  <input
-                    type="date"
-                    value={form.batch_start_date}
-                    onChange={(e) => setForm({...form,batch_start_date:e.target.value})}
-                  />
-                </label>
+                <div className={`${styles.batchScheduleTopRow} ${styles.full}`}>
+                  <label>
+                    <span>Batch Start Date *</span>
+                    <input
+                      type="date"
+                      value={form.batch_start_date}
+                      onChange={(e) => setForm({...form,batch_start_date:e.target.value})}
+                    />
+                  </label>
 
-                <label>
-                  <span>Batch End Date</span>
-                  <input type="date" value={form.end_date} onChange={(e) => setForm({...form,end_date:e.target.value})}/>
-                </label>
+                  <label>
+                    <span>Batch End Date</span>
+                    <input type="date" value={form.end_date} onChange={(e) => setForm({...form,end_date:e.target.value})}/>
+                  </label>
 
-                <label>
-                  <span>Class Time *</span>
-                  <input
-                    type="time"
-                    value={form.class_time}
-                    onChange={(e) => setForm({...form,class_time:e.target.value})}
-                  />
-                </label>
+                  <label>
+                    <span>Class Time *</span>
+                    <input
+                      type="time"
+                      value={form.class_time}
+                      onChange={(e) => setForm({...form,class_time:e.target.value})}
+                    />
+                  </label>
 
-                <label>
-                  <span>Primary Time Zone</span>
-                  <select value={form.source_timezone} onChange={(e) => setForm({...form,source_timezone:e.target.value})}>
-                    {TIMEZONES.map((z) => <option key={z.value} value={z.value}>{z.label}</option>)}
-                  </select>
-                </label>
+                  <label>
+                    <span>Primary Time Zone</span>
+                    <select value={form.source_timezone} onChange={(e) => setForm({...form,source_timezone:e.target.value})}>
+                      {TIMEZONES.map((z) => <option key={z.value} value={z.value}>{z.label}</option>)}
+                    </select>
+                  </label>
+                </div>
 
                 <div className={styles.classDaysField}>
                   <span className={styles.classDaysLabel}>Class Days</span>
