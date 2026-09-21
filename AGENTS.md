@@ -1,4 +1,4 @@
-<img width="1587" height="833" alt="image" src="https://github.com/user-attachments/assets/693321df-ce43-40c8-8a53-18d2717f296f" /><!-- BEGIN:nextjs-agent-rules -->
+<!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know
 
