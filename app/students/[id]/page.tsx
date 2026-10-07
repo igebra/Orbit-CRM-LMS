@@ -98,6 +98,8 @@ export default function StudentDetailPage() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [enrollOpen, setEnrollOpen] = useState(false);
+  const [studentNotes, setStudentNotes] = useState("");
+const [savingNotes, setSavingNotes] = useState(false);
 
   const [edit, setEdit] = useState({
     student_name: "",
@@ -179,6 +181,13 @@ export default function StudentDetailPage() {
     setBatchIds((membershipResult.data || []).map((x) => x.batch_id));
     setBatches((batchResult.data || []) as Batch[]);
     setProgress((progressResult.data || []) as Progress[]);
+    const enrollmentRows = (enrollmentResult.data || []) as Enrollment[];
+
+setStudentNotes(
+  enrollmentRows.length > 0
+    ? enrollmentRows[0].notes || ""
+    : ""
+);
 
     if (FINANCE.includes(currentRole)) {
       const { data } = await supabase
@@ -305,7 +314,34 @@ export default function StudentDetailPage() {
     });
     await load();
   }
+async function saveStudentNotes() {
+  if (!canManage) return;
 
+  if (enrollments.length === 0) {
+    setMessage("Student must have an enrollment before notes can be saved.");
+    return;
+  }
+
+  setSavingNotes(true);
+  setMessage("");
+
+  const { error } = await supabase
+    .from("student_enrollments")
+    .update({
+      notes: studentNotes.trim() || null,
+      updated_by: userId || null,
+    })
+    .eq("id", enrollments[0].id);
+
+  setSavingNotes(false);
+
+  if (error) {
+    setMessage(error.message);
+    return;
+  }
+
+  setMessage("Notes saved.");
+}
   async function updateEnrollmentStatus(row: Enrollment, status: string) {
     const { error } = await supabase
       .from("student_enrollments")
@@ -467,6 +503,70 @@ export default function StudentDetailPage() {
                 ))
               )}
             </div>
+            <div
+  style={{
+    marginTop: 16,
+    padding: 16,
+    border: "1px solid #efc99f",
+    borderRadius: 14,
+    background: "#fffaf5",
+  }}
+>
+  <div style={{ marginBottom: 10 }}>
+    <strong style={{ fontSize: 15 }}>
+      Notes
+    </strong>
+
+    <div
+      style={{
+        marginTop: 3,
+        fontSize: 12,
+        color: "#748381",
+      }}
+    >
+      Internal notes for this student
+    </div>
+  </div>
+
+  <textarea
+    value={studentNotes}
+    onChange={(e) => setStudentNotes(e.target.value)}
+    readOnly={!canManage}
+    placeholder="Add notes about learning goals, progress, preferences or important follow-up..."
+    style={{
+      width: "100%",
+      minHeight: 110,
+      resize: "vertical",
+      padding: 12,
+      borderRadius: 10,
+      border: "1px solid #d6e0de",
+      background: "#ffffff",
+      font: "inherit",
+      fontSize: 13,
+      lineHeight: 1.5,
+      boxSizing: "border-box",
+    }}
+  />
+
+  {canManage && (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "flex-end",
+        marginTop: 10,
+      }}
+    >
+      <button
+        type="button"
+        className={styles.primary}
+        onClick={saveStudentNotes}
+        disabled={savingNotes}
+      >
+        {savingNotes ? "Saving..." : "Save Notes"}
+      </button>
+    </div>
+  )}
+</div>
           </div>
         </section>
 
