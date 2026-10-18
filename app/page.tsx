@@ -10,7 +10,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
 );
 
-const PUBLIC_ACCESS_ROLES = ["Admin", "Sales", "Marketing", "Accounts / Finance", "Management"];
+const PUBLIC_ACCESS_ROLES = ["Admin", "Sales Admin", "Marketing", "Finance Admin"];
 
 export default function LoginPage() {
   const router = useRouter();
