@@ -9,7 +9,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
 );
 
-const PUBLIC_ACCESS_ROLES = ["Student", "Parent"];
+const PUBLIC_ACCESS_ROLES = ["Admin", "Sales", "Marketing", "Accounts / Finance", "Management"];
 
 export default function LoginPage() {
   const router = useRouter();
@@ -41,8 +41,7 @@ export default function LoginPage() {
       const { data } = await supabase.auth.getSession();
       if (!data.session) return;
 
-      await supabase.rpc("activate_portal_access");
-
+  
       const { data: profile } = await supabase
         .from("user_profiles")
         .select("role,is_active")
@@ -51,9 +50,12 @@ export default function LoginPage() {
 
       if (!profile?.is_active) return;
 
-      if (profile.role === "student") router.replace("/student");
-      else if (profile.role === "parent") router.replace("/parent");
-      else router.replace("/dashboard");
+      if (["student", "parent", "trainer"].includes(profile.role || "")) {
+        await supabase.auth.signOut();
+        setMessage("This account belongs to Orbit LMS, not the internal CRM.");
+        return;
+      }
+      router.replace("/dashboard");
     }
 
     checkSession();
@@ -116,7 +118,6 @@ export default function LoginPage() {
       return;
     }
 
-    await supabase.rpc("activate_portal_access");
 
     const { data: profile } = await supabase
       .from("user_profiles")
@@ -136,9 +137,12 @@ export default function LoginPage() {
       localStorage.removeItem("orbit_remember_email");
     }
 
-    if (profile.role === "student") router.replace("/student");
-    else if (profile.role === "parent") router.replace("/parent");
-    else router.replace("/dashboard");
+    if (["student", "parent", "trainer"].includes(profile.role || "")) {
+      await supabase.auth.signOut();
+      setMessage("This account belongs to Orbit LMS, not the internal CRM.");
+      return;
+    }
+    router.replace("/dashboard");
   }
 
   async function forgotPassword() {
@@ -200,7 +204,7 @@ export default function LoginPage() {
     setRequestMessage("");
 
     if (!requestName.trim() || !requestEmail.trim() || !requestRole) {
-      setRequestMessage("Enter your name, email and choose Student or Parent.");
+      setRequestMessage("Enter your name, email and select an internal role to request.");
       return;
     }
 
@@ -512,21 +516,19 @@ export default function LoginPage() {
                             aria-pressed={requestRole === role}
                           >
                             <span className="public-access-role-icon">
-                              {role === "Student" ? "S" : "P"}
+                              {role.charAt(0)}
                             </span>
                             <span>
                               <strong>{role}</strong>
                               <small>
-                                {role === "Student"
-                                  ? "Student portal access"
-                                  : "Parent / guardian portal access"}
+                                {"Requires administrator approval"}
                               </small>
                             </span>
                           </button>
                         ))}
                       </div>
                       <small className="public-access-role-note">
-                        Internal team access is granted directly by an Orbit Admin.
+                        The requested role is informational. Only an authorised administrator may grant access.
                       </small>
                     </div>
                   </div>
