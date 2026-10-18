@@ -12,7 +12,8 @@ export function isAllowedCrmRoute(path, role) {
   // are not part of the CRM boundary after the split.
   if (path === "/student" || path === "/parent" || path === "/portal-access") return false;
   if (path === "/lms" || path.startsWith("/lms/")) return false;
-  return path === "/dashboard" || path === "/access" ||
+  if (path === "/access") return role === "super_admin";
+  return path === "/dashboard" ||
     path === "/students" || path.startsWith("/students/") ||
     path === "/batches" || path.startsWith("/batches/") ||
     path === "/trainers" || path === "/courses" ||
