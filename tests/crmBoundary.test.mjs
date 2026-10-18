@@ -19,5 +19,6 @@ test("internal roles can enter CRM shell; module RLS remains separate",()=>{
     assert.equal(isAllowedCrmRoute("/portal-access",role),false);
     assert.equal(isAllowedCrmRoute("/lms",role),false);
     assert.equal(isAllowedCrmRoute("/not-a-route",role),false);
+    assert.equal(isAllowedCrmRoute("/access",role),role==="super_admin");
   }
 });
