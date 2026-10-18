@@ -106,7 +106,7 @@ export default function AccessPage() {
 
   const [saving, setSaving] = useState(false);
 
-  const canManage = role === "super_admin" || role === "admin";
+  const canManage = role === "super_admin";
   const isSuperAdmin = role === "super_admin";
 
   useEffect(() => {
