@@ -65,11 +65,11 @@ export default function LoginPage() {
     });
 
     const saved = localStorage.getItem("orbit_remember_email");
-    if (saved) setEmail(saved);
+    if (saved) queueMicrotask(() => setEmail(saved));
 
     const params = new URLSearchParams(window.location.search);
     if (params.get("confirmed") === "1") {
-      setMessage("Email confirmed. You can now sign in to Orbit.");
+      queueMicrotask(() => setMessage("Email confirmed. You can now sign in to Orbit."));
     }
 
     return () => authListener.subscription.unsubscribe();
