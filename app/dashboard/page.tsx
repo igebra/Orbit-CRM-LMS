@@ -71,49 +71,7 @@ export default function DashboardPage() {
   const [overduePayments, setOverduePayments] = useState<number | null>(null);
   const [pendingAccess, setPendingAccess] = useState<number | null>(null);
 
-  useEffect(() => {
-    async function init() {
-      const { data } = await supabase.auth.getUser();
 
-      if (!data.user) {
-        router.replace("/");
-        return;
-      }
-
-      setEmail(data.user.email || "");
-
-      const { data: profile } = await supabase
-        .from("user_profiles")
-        .select("role,is_active")
-        .eq("id", data.user.id)
-        .single();
-
-      if (!profile?.is_active) {
-        await supabase.auth.signOut();
-        router.replace("/");
-        return;
-      }
-
-      const currentRole = profile?.role || "";
-
-      if (currentRole === "student") {
-        router.replace("/student");
-        return;
-      }
-
-      if (currentRole === "parent") {
-        router.replace("/parent");
-        return;
-      }
-
-      setRole(currentRole);
-
-      await loadDashboard(currentRole);
-      setLoading(false);
-    }
-
-    init();
-  }, [router]);
 
   async function loadDashboard(currentRole: string) {
     const isSuperAdmin = currentRole === "super_admin";
@@ -283,6 +241,50 @@ export default function DashboardPage() {
 
     await Promise.all(tasks);
   }
+
+  useEffect(() => {
+    async function init() {
+      const { data } = await supabase.auth.getUser();
+
+      if (!data.user) {
+        router.replace("/");
+        return;
+      }
+
+      setEmail(data.user.email || "");
+
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("role,is_active")
+        .eq("id", data.user.id)
+        .single();
+
+      if (!profile?.is_active) {
+        await supabase.auth.signOut();
+        router.replace("/");
+        return;
+      }
+
+      const currentRole = profile?.role || "";
+
+      if (currentRole === "student") {
+        router.replace("/student");
+        return;
+      }
+
+      if (currentRole === "parent") {
+        router.replace("/parent");
+        return;
+      }
+
+      setRole(currentRole);
+
+      await loadDashboard(currentRole);
+      setLoading(false);
+    }
+
+    init();
+  }, [router]);
 
   const metrics = useMemo<Metric[]>(() => {
     const items: Metric[] = [];
@@ -484,7 +486,7 @@ export default function DashboardPage() {
               <div className={styles.panel}>
                 <div className={styles.panelHeader}>
                   <div>
-                    <h2>Today's Focus</h2>
+                    <h2>Today&apos;s Focus</h2>
                     <p>Items that may need attention</p>
                   </div>
                 </div>
