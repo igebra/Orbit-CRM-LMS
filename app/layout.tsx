@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import CrmBoundaryGuard from "./components/CrmBoundaryGuard";
 
 export const metadata: Metadata = {
   title: "Orbit by igebra.ai",
@@ -13,7 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body><CrmBoundaryGuard>{children}</CrmBoundaryGuard></body>
     </html>
   );
 }
