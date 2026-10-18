@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
+import { isCrmStaffRole } from "./lib/crmBoundary.mjs";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -308,13 +309,15 @@ export default function LoginPage() {
     }
 
     if (data.session) {
-      const { data: portalRole } = await supabase.rpc(
-        "activate_portal_access"
-      );
-
-      if (portalRole === "student") router.replace("/student");
-      else if (portalRole === "parent") router.replace("/parent");
-      else router.replace("/dashboard");
+      const { data: profile } = await supabase
+        .from("user_profiles").select("role,is_active")
+        .eq("id", data.session.user.id).single();
+      if (profile?.is_active && isCrmStaffRole(profile.role)) {
+        router.replace("/dashboard");
+      } else {
+        await supabase.auth.signOut();
+        setActivateMessage("Your CRM access is awaiting administrator approval.");
+      }
       return;
     }
 
