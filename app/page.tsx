@@ -3,13 +3,14 @@
 import { FormEvent, useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
+import { isCrmStaffRole } from "./lib/crmBoundary.mjs";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
 );
 
-const PUBLIC_ACCESS_ROLES = ["Student", "Parent"];
+const PUBLIC_ACCESS_ROLES = ["Admin", "Sales Admin", "Marketing", "Finance Admin"];
 
 export default function LoginPage() {
   const router = useRouter();
@@ -41,8 +42,7 @@ export default function LoginPage() {
       const { data } = await supabase.auth.getSession();
       if (!data.session) return;
 
-      await supabase.rpc("activate_portal_access");
-
+  
       const { data: profile } = await supabase
         .from("user_profiles")
         .select("role,is_active")
@@ -51,9 +51,12 @@ export default function LoginPage() {
 
       if (!profile?.is_active) return;
 
-      if (profile.role === "student") router.replace("/student");
-      else if (profile.role === "parent") router.replace("/parent");
-      else router.replace("/dashboard");
+      if (["student", "parent", "trainer"].includes(profile.role || "")) {
+        await supabase.auth.signOut();
+        setMessage("This account belongs to Orbit LMS, not the internal CRM.");
+        return;
+      }
+      router.replace("/dashboard");
     }
 
     checkSession();
@@ -65,11 +68,11 @@ export default function LoginPage() {
     });
 
     const saved = localStorage.getItem("orbit_remember_email");
-    if (saved) setEmail(saved);
+    if (saved) queueMicrotask(() => setEmail(saved));
 
     const params = new URLSearchParams(window.location.search);
     if (params.get("confirmed") === "1") {
-      setMessage("Email confirmed. You can now sign in to Orbit.");
+      queueMicrotask(() => setMessage("Email confirmed. You can now sign in to Orbit."));
     }
 
     return () => authListener.subscription.unsubscribe();
@@ -116,7 +119,6 @@ export default function LoginPage() {
       return;
     }
 
-    await supabase.rpc("activate_portal_access");
 
     const { data: profile } = await supabase
       .from("user_profiles")
@@ -136,9 +138,12 @@ export default function LoginPage() {
       localStorage.removeItem("orbit_remember_email");
     }
 
-    if (profile.role === "student") router.replace("/student");
-    else if (profile.role === "parent") router.replace("/parent");
-    else router.replace("/dashboard");
+    if (["student", "parent", "trainer"].includes(profile.role || "")) {
+      await supabase.auth.signOut();
+      setMessage("This account belongs to Orbit LMS, not the internal CRM.");
+      return;
+    }
+    router.replace("/dashboard");
   }
 
   async function forgotPassword() {
@@ -200,7 +205,7 @@ export default function LoginPage() {
     setRequestMessage("");
 
     if (!requestName.trim() || !requestEmail.trim() || !requestRole) {
-      setRequestMessage("Enter your name, email and choose Student or Parent.");
+      setRequestMessage("Enter your name, email and select an internal role to request.");
       return;
     }
 
@@ -304,13 +309,15 @@ export default function LoginPage() {
     }
 
     if (data.session) {
-      const { data: portalRole } = await supabase.rpc(
-        "activate_portal_access"
-      );
-
-      if (portalRole === "student") router.replace("/student");
-      else if (portalRole === "parent") router.replace("/parent");
-      else router.replace("/dashboard");
+      const { data: profile } = await supabase
+        .from("user_profiles").select("role,is_active")
+        .eq("id", data.session.user.id).single();
+      if (profile?.is_active && isCrmStaffRole(profile.role)) {
+        router.replace("/dashboard");
+      } else {
+        await supabase.auth.signOut();
+        setActivateMessage("Your CRM access is awaiting administrator approval.");
+      }
       return;
     }
 
@@ -512,21 +519,19 @@ export default function LoginPage() {
                             aria-pressed={requestRole === role}
                           >
                             <span className="public-access-role-icon">
-                              {role === "Student" ? "S" : "P"}
+                              {role.charAt(0)}
                             </span>
                             <span>
                               <strong>{role}</strong>
                               <small>
-                                {role === "Student"
-                                  ? "Student portal access"
-                                  : "Parent / guardian portal access"}
+                                {"Requires administrator approval"}
                               </small>
                             </span>
                           </button>
                         ))}
                       </div>
                       <small className="public-access-role-note">
-                        Internal team access is granted directly by an Orbit Admin.
+                        The requested role is informational. Only an authorised administrator may grant access.
                       </small>
                     </div>
                   </div>

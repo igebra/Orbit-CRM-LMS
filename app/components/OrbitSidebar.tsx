@@ -14,6 +14,7 @@ const supabase = createClient(
 // Each Orbit page currently remounts the Sidebar. Without this cache,
 // role-based menu items briefly disappear while Supabase is queried again.
 let cachedRole = "";
+let cachedUserId = "";
 let cachedPendingAccess = 0;
 let cachedEmail = "";
 
@@ -57,8 +58,8 @@ export default function OrbitSidebar({ email, active }: Props) {
     active === "crm-leads" || active === "crm-demos"
   );
 
-  const [role, setRole] = useState(cachedRole);
-  const [pendingAccess, setPendingAccess] = useState(cachedPendingAccess);
+  const [role, setRole] = useState("");
+  const [pendingAccess, setPendingAccess] = useState(0);
 
   const displayEmail = email || cachedEmail;
 
@@ -79,7 +80,23 @@ export default function OrbitSidebar({ email, active }: Props) {
       const { data: sessionData } = await supabase.auth.getSession();
       const user = sessionData.session?.user;
 
-      if (!user || cancelled) return;
+      if (!user || cancelled) {
+        cachedUserId = "";
+        cachedRole = "";
+        cachedEmail = "";
+        cachedPendingAccess = 0;
+        if (!cancelled) { setRole(""); setPendingAccess(0); }
+        return;
+      }
+
+      if (cachedUserId !== user.id) {
+        cachedUserId = user.id;
+        cachedRole = "";
+        cachedPendingAccess = 0;
+        cachedEmail = user.email || "";
+        setRole("");
+        setPendingAccess(0);
+      }
 
       if (!cachedEmail && user.email) {
         cachedEmail = user.email;
@@ -87,18 +104,16 @@ export default function OrbitSidebar({ email, active }: Props) {
 
       const { data: profile } = await supabase
         .from("user_profiles")
-        .select("role")
+        .select("role,is_active")
         .eq("id", user.id)
         .single();
 
       if (cancelled) return;
 
-      const currentRole = profile?.role || cachedRole || "";
+      const currentRole = profile?.is_active ? (profile.role || "") : "";
 
-      if (currentRole) {
-        cachedRole = currentRole;
-        setRole(currentRole);
-      }
+      cachedRole = currentRole;
+      setRole(currentRole);
 
       if (currentRole === "super_admin" || currentRole === "admin") {
         const { data: count } = await supabase.rpc(
@@ -124,6 +139,7 @@ export default function OrbitSidebar({ email, active }: Props) {
 
   async function signOut() {
     cachedRole = "";
+    cachedUserId = "";
     cachedPendingAccess = 0;
     cachedEmail = "";
 
@@ -198,7 +214,7 @@ export default function OrbitSidebar({ email, active }: Props) {
     isManagement ||
     isTrainer;
 
-  const canSeeAccess = isSuperAdmin || isAdmin;
+  const canSeeAccess = isSuperAdmin;
 
   return (
     <aside className={styles.sidebar}>

@@ -15,7 +15,7 @@ const STANDARD_ROLES = [
   { value: "admin", label: "Admin" },
   { value: "sales", label: "Sales Admin" },
   { value: "marketing", label: "Marketing" },
-  { value: "trainer", label: "Trainer" },
+  { value: "viewer_management", label: "Management" },
   { value: "accounts_finance", label: "Finance Admin" },
 ];
 
@@ -71,13 +71,13 @@ function roleFromRequest(requested: string) {
     value === "sales / marketing"
   ) return "sales";
   if (value === "marketing") return "marketing";
-  if (value === "trainer") return "trainer";
+  if (value === "management") return "viewer_management";
   if (
     value === "finance admin" ||
     value === "accounts / finance"
   ) return "accounts_finance";
 
-  return "trainer";
+  return "";
 }
 
 export default function AccessPage() {
@@ -106,7 +106,7 @@ export default function AccessPage() {
 
   const [saving, setSaving] = useState(false);
 
-  const canManage = role === "super_admin" || role === "admin";
+  const canManage = role === "super_admin";
   const isSuperAdmin = role === "super_admin";
 
   useEffect(() => {
@@ -227,6 +227,11 @@ export default function AccessPage() {
   async function approve(request: RequestRow) {
     const selectedRole =
       roleSelections[request.request_id] || roleFromRequest(request.requested_role);
+
+    if (!selectedRole || !roleOptions.some(item => item.value === selectedRole)) {
+      setMessage("Select an approved CRM staff role first.");
+      return;
+    }
 
     if (!confirm(`Approve ${request.email} as ${displayRole(selectedRole)}?`)) {
       return;

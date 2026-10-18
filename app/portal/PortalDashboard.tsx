@@ -198,7 +198,7 @@ export default function PortalDashboard({ mode }: { mode: Mode }) {
     const [progressResult, classResult, enrollmentResult, resourceResult] =
       await Promise.all(requests);
 
-    let paymentResult: any = null;
+    let paymentResult: { data: unknown; error: { message: string } | null } | null = null;
 
     if (mode === "parent") {
       paymentResult = await supabase.rpc("portal_parent_payments", {

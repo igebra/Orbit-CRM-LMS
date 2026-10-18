@@ -142,7 +142,7 @@ export default function SessionDetailPage() {
     const { data: trainerOptions } = await supabase.rpc("active_trainer_options");
     setTrainers((trainerOptions || []) as TrainerOption[]);
 
-    const markedTimes = (a.data || []).map((row:any) => row.marked_at).filter(Boolean);
+    const markedTimes = (a.data || []).map((row: { marked_at: string | null }) => row.marked_at).filter(Boolean);
     setAttendanceMarkedAt(markedTimes.length ? markedTimes.sort().slice(-1)[0] : null);
 
     const ids=(r.data||[]).map(x=>x.student_id as string);
