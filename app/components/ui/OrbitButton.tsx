@@ -15,6 +15,7 @@ export default function OrbitButton({
   return (
     <button
       {...rest}
+      data-orbit-button="true"
       type={type}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
