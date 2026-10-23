@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import OrbitSidebar from "../components/OrbitSidebar";
 import CRMInsights from "./CRMInsights";
+import ProgrammeOverview from "./ProgrammeOverview";
 import styles from "./dashboard.module.css";
 
 const supabase = createClient(
@@ -326,7 +327,7 @@ export default function DashboardPage() {
 
     if (monthCollections !== null) {
       items.push({
-        label: "This Month Collections",
+        label: "Collections",
         value: money(monthCollections),
         note: "Payments received",
         href: "/payments",
@@ -481,6 +482,7 @@ export default function DashboardPage() {
               ))}
             </section>
 
+            <ProgrammeOverview role={role} />
             <CRMInsights role={role} />
 
             <section className={styles.contentGrid}>
