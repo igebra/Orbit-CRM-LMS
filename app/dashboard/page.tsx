@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import OrbitSidebar from "../components/OrbitSidebar";
+import CRMInsights from "./CRMInsights";
 import styles from "./dashboard.module.css";
 
 const supabase = createClient(
@@ -479,6 +480,8 @@ export default function DashboardPage() {
                 </button>
               ))}
             </section>
+
+            <CRMInsights role={role} />
 
             <section className={styles.contentGrid}>
               <div className={styles.panel}>
