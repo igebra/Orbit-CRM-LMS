@@ -126,3 +126,5 @@ Accent colors are not authorization indicators: access is controlled in backend 
 - Engineering/design governance: shared tokens, versioning, owner, review and release criteria.
 
 **Change request:** propose revisions via a PR against `develop`; typography changes require explicit product-owner exception.
+## BRAND-008 — Shared UI component standards (FROZEN, 23 October 2026)
+For **CRM, LMS and ByteXL**, consult [`../ui/COMPONENT_STANDARDS_BRAND_008.md`](../ui/COMPONENT_STANDARDS_BRAND_008.md) and [`../ui/component-tokens.json`](../ui/component-tokens.json) before implementing/refactoring buttons, inputs, icons, tables, panels, dialogs or navigation. **Default buttons and inputs: 40px; button variants: 32/40/44px; spacing uses a 4px grid; controls radius 10px, panels 16px, modals 20px; icons one Lucide-style outline family; all interaction states required.** No intentional font beyond Plus Jakarta Sans and Inter. The unrelated KPI card-height/columns adjustment is **ON HOLD** and is not frozen by BRAND-008. BRAND-003 color approval status is unchanged.
