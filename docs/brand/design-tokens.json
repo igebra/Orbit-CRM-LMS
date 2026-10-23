@@ -1,0 +1,167 @@
+{
+  "version": "1.0",
+  "date": "2026-10-23",
+  "scope": [
+    "orbit-crm",
+    "orbit-lms",
+    "bytexl"
+  ],
+  "status": {
+    "typography": "frozen",
+    "originalPalette": "reference",
+    "softPastel": "proposed",
+    "logo": "approved"
+  },
+  "fontFamilies": {
+    "heading": "Plus Jakarta Sans",
+    "body": "Inter",
+    "allowed": [
+      "Plus Jakarta Sans",
+      "Inter"
+    ],
+    "noProgrammeExceptions": true
+  },
+  "typography": {
+    "pageTitle": {
+      "family": "heading",
+      "sizePx": 28,
+      "weight": 700
+    },
+    "sectionHeading": {
+      "family": "heading",
+      "sizePx": 20,
+      "weight": 600
+    },
+    "cardHeading": {
+      "family": "heading",
+      "sizePx": 16,
+      "weight": 600
+    },
+    "kpi": {
+      "family": "heading",
+      "sizePx": [
+        28,
+        32
+      ],
+      "weight": 700
+    },
+    "sidebar": {
+      "family": "body",
+      "sizePx": 14,
+      "weight": 500
+    },
+    "body": {
+      "family": "body",
+      "sizePx": [
+        14,
+        15
+      ],
+      "weight": 400
+    },
+    "table": {
+      "family": "body",
+      "sizePx": 14,
+      "weight": [
+        400,
+        500
+      ]
+    },
+    "button": {
+      "family": "body",
+      "sizePx": 14,
+      "weight": 600
+    },
+    "label": {
+      "family": "body",
+      "sizePx": [
+        13,
+        14
+      ],
+      "weight": 500
+    },
+    "secondary": {
+      "family": "body",
+      "sizePx": 13,
+      "weight": 400
+    }
+  },
+  "originalBrand": {
+    "cyan": "#00AEEF",
+    "magenta": "#EC008C",
+    "yellow": "#FFCA07",
+    "red": "#EC1D29",
+    "purple": "#A24886",
+    "grey": "#5A595C",
+    "greyLight": "#D3D3D3",
+    "white": "#FFFFFF",
+    "note": "Cyan, magenta, grey, light grey sampled directly from provided logo; red and purple estimated, verify vector source."
+  },
+  "appPalette": {
+    "primary": {
+      "dustyCyan": "#B6DEE5",
+      "mutedTeal": "#286F7A",
+      "deepSlate": "#263D46"
+    },
+    "pastel": {
+      "blush": "#E8C4D9",
+      "lavender": "#DDD0E7",
+      "butter": "#F5E8B8",
+      "powderBlue": "#D9EBF1",
+      "sage": "#CDE4D7",
+      "apricot": "#F3D7C5"
+    },
+    "neutral": {
+      "page": "#F8FAFB",
+      "card": "#FFFFFF",
+      "section": "#F0F4F5",
+      "border": "#DCE5E8",
+      "secondaryText": "#52656F",
+      "primaryText": "#263D46"
+    }
+  },
+  "roles": {
+    "superadmin": {
+      "accent": "#D8E2E7",
+      "status": "proposed"
+    },
+    "sales": {
+      "accent": "#B6DEE5",
+      "status": "proposed"
+    },
+    "marketing": {
+      "accent": "#E8C4D9",
+      "status": "proposed"
+    },
+    "cx": {
+      "accent": "#DDD0E7",
+      "status": "proposed"
+    },
+    "trainer": {
+      "accent": "#CDE4D7",
+      "status": "proposed"
+    },
+    "student": {
+      "accent": "#B49AB2",
+      "text": "#493A50",
+      "support": [
+        "#DCB7C9",
+        "#B8D5DD",
+        "#E8D9AF"
+      ],
+      "status": "approved"
+    },
+    "parent": {
+      "accent": "#E5BA98",
+      "text": "#294E50",
+      "support": [
+        "#DCE9E5",
+        "#FBF6F0"
+      ],
+      "status": "approved"
+    },
+    "bytexl": {
+      "accent": null,
+      "notes": "Read approved ByteXL partner palette from source before populating; same frozen fonts apply."
+    }
+  }
+}
