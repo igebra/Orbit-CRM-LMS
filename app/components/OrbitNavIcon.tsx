@@ -13,7 +13,10 @@ const paths = {
   reports: "M4 20V9 M10 20V4 M16 20v-9 M22 20V7",
   access: "M4 11h16v10H4z M8 11V7a4 4 0 0 1 8 0v4 M12 15v2",
   portal: "M5 3h14v18H5z M10 12h8 M15 9l3 3-3 3",
-  aqmatics: "M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2L12 2z"
+  aqmatics: "M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2L12 2z",
+  refresh: "M20 11a8 8 0 0 0-14.9-4 M4 4v4h4 M4 13a8 8 0 0 0 14.9 4 M20 20v-4h-4",
+  plus: "M12 5v14 M5 12h14",
+  close: "M18 6 6 18 M6 6l12 12"
 } as const;
 
 export type OrbitNavIconName = keyof typeof paths;
