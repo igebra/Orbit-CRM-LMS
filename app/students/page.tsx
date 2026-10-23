@@ -5,6 +5,9 @@ import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import OrbitSidebar from "../components/OrbitSidebar";
 import styles from "../lms.module.css";
+import visual from "./students-visual.module.css";
+import OrbitButton from "../components/ui/OrbitButton";
+import OrbitNavIcon from "../components/OrbitNavIcon";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -298,45 +301,49 @@ export default function StudentsPage() {
   }
 
   return (
-    <div className={styles.shell}>
+    <div className={`${styles.shell} ${visual.shell}`}>
       <OrbitSidebar email={email} active="students" />
 
-      <main className={styles.main}>
-        <header className={styles.header}>
+      <main className={`${styles.main} ${visual.main}`}>
+        <header className={`${styles.header} ${visual.header}`}>
           <div>
-            <p className={styles.kicker}>LMS · STUDENTS</p>
+            <p className={styles.kicker}>CRM · STUDENTS</p>
             <h1>Students</h1>
             <p className={styles.subtitle}>Student profiles, course enrollments and CRM conversions.</p>
           </div>
           <div className={styles.headerActions}>
-            <button className={styles.primary} onClick={() => { setForm(EMPTY_FORM); setModalOpen(true); }}>
-              + Add Student
-            </button>
+            <OrbitButton variant="primary" icon={<OrbitNavIcon name="plus" />} onClick={() => { setForm(EMPTY_FORM); setModalOpen(true); }}>
+              Add Student
+            </OrbitButton>
           </div>
         </header>
 
-        <section className={styles.stats}>
+        <section className={`${styles.stats} ${visual.stats}`}>
           <div className={styles.stat}><span>Total Students</span><strong>{stats.total}</strong></div>
           <div className={styles.stat}><span>Active Students</span><strong>{stats.active}</strong></div>
           <div className={styles.stat}><span>Active Enrollments</span><strong>{stats.enrollments}</strong></div>
           <div className={styles.stat}><span>Math Enrollments</span><strong>{stats.math}</strong></div>
         </section>
 
-        {message && <div className={styles.message}>{message}</div>}
+        {message && <div className={styles.message} role="status">{message}</div>}
 
-        <section className={styles.card}>
+        <section className={`${styles.card} ${visual.card}`}>
           <div className={styles.toolbar}>
             <input
+              aria-label="Search students"
               type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search student, parent, course, email..."
             />
-            <button className={styles.smallButton} onClick={loadStudents}>↻</button>
+            <button type="button" className={visual.iconButton} onClick={loadStudents}
+              aria-label="Refresh students" title="Refresh students" disabled={loading}>
+              <OrbitNavIcon name="refresh" />
+            </button>
           </div>
 
-          <div className={styles.tableWrap}>
-            <table>
+          <div className={`${styles.tableWrap} ${visual.tableWrap}`}>
+            <table aria-label="Student directory">
               <thead>
                 <tr>
                   <th>Student</th>
@@ -364,29 +371,14 @@ export default function StudentsPage() {
                     {canDelete && (
                       <td>
                         <div className={styles.rowActions}>
-                          <button
-                            className={styles.smallButton}
-                            onClick={() => router.push(`/students/${student.id}`)}
-                          >
-                            Open
-                          </button>
-                          <button
-                            className={styles.danger}
-                            onClick={() => deleteStudent(student)}
-                          >
-                            Delete
-                          </button>
+                          <OrbitButton size="sm" variant="secondary" onClick={() => router.push(`/students/${student.id}`)}>Open</OrbitButton>
+                          <OrbitButton size="sm" variant="danger" onClick={() => deleteStudent(student)}>Delete</OrbitButton>
                         </div>
                       </td>
                     )}
                     {!canDelete && (
                       <td>
-                        <button
-                          className={styles.smallButton}
-                          onClick={() => router.push(`/students/${student.id}`)}
-                        >
-                          Open
-                        </button>
+                        <OrbitButton size="sm" variant="secondary" onClick={() => router.push(`/students/${student.id}`)}>Open</OrbitButton>
                       </td>
                     )}
                   </tr>
@@ -399,10 +391,12 @@ export default function StudentsPage() {
 
       {modalOpen && (
         <div className={styles.modalBackdrop}>
-          <div className={styles.modal}>
+          <div className={`${styles.modal} ${visual.modal}`} role="dialog" aria-modal="true" aria-labelledby="student-modal-title">
             <div className={styles.modalHeader}>
-              <div><h2>Add Student</h2><p>Create a student directly or convert an existing CRM lead.</p></div>
-              <button className={styles.close} onClick={() => setModalOpen(false)}>×</button>
+              <div><h2 id="student-modal-title">Add Student</h2><p>Create a student directly or convert an existing CRM lead.</p></div>
+              <button type="button" className={visual.iconButton} aria-label="Close Add Student" title="Close" onClick={() => setModalOpen(false)}>
+                <OrbitNavIcon name="close" />
+              </button>
             </div>
             <form className={styles.form} onSubmit={saveStudent}>
               <div className={styles.formGrid}>
@@ -415,7 +409,7 @@ export default function StudentsPage() {
                     ))}
                   </select>
                 </label>
-                <label><span>Student Name *</span><input value={form.student_name} onChange={(event) => setForm({ ...form, student_name: event.target.value })} /></label>
+                <label><span>Student Name *</span><input required autoFocus value={form.student_name} onChange={(event) => setForm({ ...form, student_name: event.target.value })} /></label>
                 <label><span>Grade</span><select value={form.grade} onChange={(event) => setForm({ ...form, grade: event.target.value })}><option value="">Select grade</option>{GRADES.map((grade) => <option key={grade}>{grade}</option>)}</select></label>
                 <label><span>Parent First Name</span><input value={form.parent_first_name} onChange={(event) => setForm({ ...form, parent_first_name: event.target.value })} /></label>
                 <label><span>Parent Last Name</span><input value={form.parent_last_name} onChange={(event) => setForm({ ...form, parent_last_name: event.target.value })} /></label>
@@ -424,8 +418,8 @@ export default function StudentsPage() {
                 <label className={styles.full}><span>Initial Course Enrollment</span><select value={form.course_name} onChange={(event) => setForm({ ...form, course_name: event.target.value })}><option value="">Select course</option>{COURSES.map((course) => <option key={course}>{course}</option>)}</select></label>
               </div>
               <div className={styles.modalFooter}>
-                <button type="button" className={styles.secondary} onClick={() => setModalOpen(false)}>Cancel</button>
-                <button type="submit" className={styles.primary} disabled={saving}>{saving ? "Saving..." : "Add Student"}</button>
+                <OrbitButton variant="secondary" onClick={() => setModalOpen(false)} disabled={saving}>Cancel</OrbitButton>
+                <OrbitButton type="submit" variant="primary" loading={saving}>{saving ? "Saving..." : "Add Student"}</OrbitButton>
               </div>
             </form>
           </div>

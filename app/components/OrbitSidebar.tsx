@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import styles from "../lms.module.css";
+import OrbitNavIcon from "./OrbitNavIcon";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -57,7 +58,7 @@ export default function OrbitSidebar({ email, active }: Props) {
     active === "crm-leads" || active === "crm-demos"
   );
 
-  const [role, setRole] = useState(cachedRole);
+  const [role, setRole] = useState("");
   const [pendingAccess, setPendingAccess] = useState(cachedPendingAccess);
 
   const displayEmail = email || cachedEmail;
@@ -93,7 +94,7 @@ export default function OrbitSidebar({ email, active }: Props) {
 
       if (cancelled) return;
 
-      const currentRole = profile?.role || cachedRole || "";
+      const currentRole = profile?.role || "";
 
       if (currentRole) {
         cachedRole = currentRole;
@@ -204,27 +205,23 @@ export default function OrbitSidebar({ email, active }: Props) {
     <aside className={styles.sidebar}>
       <div>
         <button
+          type="button"
           className={styles.brand}
           onClick={() => navigate("/dashboard")}
+          aria-label="Orbit CRM home"
         >
-          <img
-            src="/orbit-mascot.png"
-            alt="Orbit mascot"
-            className={styles.brandMascot}
-          />
-
+          <img src="/orbit-logo.svg" alt="Orbit" className={styles.brandMascot} />
           <span className={styles.brandCopy}>
-            <strong>Orbit</strong>
-            <small>by igebra.ai</small>
+            <small>CRM · by igebra.ai</small>
           </span>
         </button>
 
-        <nav className={styles.nav}>
+        <nav className={styles.nav} aria-label="CRM navigation">
           <button
             className={active === "overview" ? styles.navActive : ""}
             onClick={() => navigate("/dashboard")}
           >
-            <span>⌂</span> Overview
+            <span className={styles.navIcon}><OrbitNavIcon name="home" /></span> Overview
           </button>
 
           {canSeeCrm && (
@@ -237,7 +234,7 @@ export default function OrbitSidebar({ email, active }: Props) {
                 }
                 onClick={() => setCrmOpen((value) => !value)}
               >
-                <span>◎</span> CRM
+                <span className={styles.navIcon}><OrbitNavIcon name="crm" /></span> CRM
                 <span className={styles.chevron}>
                   {crmOpen ? "▾" : "▸"}
                 </span>
@@ -272,7 +269,7 @@ export default function OrbitSidebar({ email, active }: Props) {
               className={active === "students" ? styles.navActive : ""}
               onClick={() => navigate("/students")}
             >
-              <span>◉</span> Students
+              <span className={styles.navIcon}><OrbitNavIcon name="students" /></span> Students
             </button>
           )}
 
@@ -285,7 +282,7 @@ export default function OrbitSidebar({ email, active }: Props) {
               }
               onClick={() => navigate("/batches")}
             >
-              <span>▣</span> Batches
+              <span className={styles.navIcon}><OrbitNavIcon name="batches" /></span> Batches
             </button>
           )}
 
@@ -294,7 +291,7 @@ export default function OrbitSidebar({ email, active }: Props) {
               className={active === "trainers" ? styles.navActive : ""}
               onClick={() => navigate("/trainers")}
             >
-              <span>♙</span> Trainers
+              <span className={styles.navIcon}><OrbitNavIcon name="trainers" /></span> Trainers
             </button>
           )}
 
@@ -303,7 +300,7 @@ export default function OrbitSidebar({ email, active }: Props) {
               className={active === "payments" ? styles.navActive : ""}
               onClick={() => navigate("/payments")}
             >
-              <span>$</span> Payments
+              <span className={styles.navIcon}><OrbitNavIcon name="payments" /></span> Payments
             </button>
           )}
 
@@ -312,7 +309,7 @@ export default function OrbitSidebar({ email, active }: Props) {
               className={active === "courses" ? styles.navActive : ""}
               onClick={() => navigate("/courses")}
             >
-              <span>✦</span> Courses
+              <span className={styles.navIcon}><OrbitNavIcon name="courses" /></span> Courses
             </button>
           )}
 
@@ -321,7 +318,7 @@ export default function OrbitSidebar({ email, active }: Props) {
               className={active === "lms" ? styles.navActive : ""}
               onClick={() => navigate("/lms")}
             >
-              <span>▦</span> LMS
+              <span className={styles.navIcon}><OrbitNavIcon name="lms" /></span> LMS
             </button>
           )}
 
@@ -330,56 +327,61 @@ export default function OrbitSidebar({ email, active }: Props) {
               className={active === "reports" ? styles.navActive : ""}
               onClick={() => navigate("/reports")}
             >
-              <span>▤</span> Reports
+              <span className={styles.navIcon}><OrbitNavIcon name="reports" /></span> Reports
             </button>
           )}
 
-          {canSeeAccess && (
-            <button
-              className={active === "access" ? styles.navActive : ""}
-              onClick={() => navigate("/access")}
-            >
-              <span>⚙</span> Access
-
-              {pendingAccess > 0 && (
-                <span
-                  title={`${pendingAccess} pending access request${
-                    pendingAccess === 1 ? "" : "s"
-                  }`}
-                  style={{
-                    marginLeft: "auto",
-                    minWidth: 20,
-                    height: 20,
-                    padding: "0 6px",
-                    borderRadius: 999,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: "#D9853B",
-                    color: "#fff",
-                    fontSize: 10,
-                    fontWeight: 900,
-                  }}
-                >
-                  {pendingAccess}
-                </span>
-              )}
-            </button>
-          )}
-
-          {canSeeAccess && (
-            <button
-              className={active === "portal-access" ? styles.navActive : ""}
-              onClick={() => navigate("/portal-access")}
-            >
-              <span>◇</span> Portal Access
-            </button>
-          )}
-
-          <button type="button">
-            <span>◌</span> AQMATICS
+          <div aria-disabled="true" className={styles.comingSoon}>
+            <span className={styles.navIcon}><OrbitNavIcon name="aqmatics" /></span> AQMATICS
             <small className={styles.soon}>Soon</small>
-          </button>
+          </div>
+
+          {canSeeAccess && (
+            <div className={styles.adminGroup} aria-label="Administration">
+              <div className={styles.adminLabel}>Administration</div>
+              {canSeeAccess && (
+                <button
+                  className={active === "access" ? styles.navActive : ""}
+                  onClick={() => navigate("/access")}
+                >
+                  <span className={styles.navIcon}><OrbitNavIcon name="access" /></span> Access
+    
+                  {pendingAccess > 0 && (
+                    <span
+                      title={`${pendingAccess} pending access request${
+                        pendingAccess === 1 ? "" : "s"
+                      }`}
+                      style={{
+                        marginLeft: "auto",
+                        minWidth: 20,
+                        height: 20,
+                        padding: "0 6px",
+                        borderRadius: 999,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "#D9853B",
+                        color: "#fff",
+                        fontSize: 10,
+                        fontWeight: 900,
+                      }}
+                    >
+                      {pendingAccess}
+                    </span>
+                  )}
+                </button>
+              )}
+    
+              {canSeeAccess && (
+                <button
+                  className={active === "portal-access" ? styles.navActive : ""}
+                  onClick={() => navigate("/portal-access")}
+                >
+                  <span className={styles.navIcon}><OrbitNavIcon name="portal" /></span> Portal Access
+                </button>
+              )}
+            </div>
+          )}
         </nav>
       </div>
 

@@ -733,3 +733,31 @@ button,input,select{font:inherit}
 .public-access-role-card small{margin-top:3px;color:#758684;font-size:8.8px;line-height:1.25}
 .public-access-role-note{display:block;margin-top:6px;color:#7b8a88;font-size:9px;line-height:1.35}
 @media(max-width:520px){.public-access-role-options{grid-template-columns:1fr}}
+
+
+/* BRAND-006 / BRAND-003 - immutable Orbit typography, semantic UI tokens.
+   Shared visual foundations for CRM (LMS/ByteXL retain their own deployments). */
+:root{
+  --orbit-font-heading:var(--font-orbit-heading),sans-serif;
+  --orbit-font-body:var(--font-orbit-body),sans-serif;
+  --orbit-bg:#F8FAFB;
+  --orbit-surface:#FFFFFF;
+  --orbit-border:#DCE5E8;
+  --orbit-text:#263D46;
+  --orbit-subtext:#52656F;
+  --orbit-teal:#286F7A;
+  --orbit-teal-dark:#286F7A;
+  --orbit-teal-deep:#263D46;
+  --orbit-teal-soft:#D9EBF1;
+  --orbit-aqua:#B6DEE5;
+  --orbit-pastel-blush:#E8C4D9;
+  --orbit-pastel-lavender:#DDD0E7;
+  --orbit-pastel-mint:#CDE4D7;
+  --orbit-pastel-butter:#F5E8B8;
+}
+html,body{font-family:var(--orbit-font-body)!important;color:var(--orbit-text);}
+body,button,input,select,textarea,label,table,td,th,nav,aside{font-family:var(--orbit-font-body)!important;}
+h1,h2,h3,h4,h5,h6{font-family:var(--orbit-font-heading)!important;}
+button,input,select,textarea{font-size:inherit;}
+:focus-visible{outline:2px solid #286F7A;outline-offset:2px;}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important;}}
