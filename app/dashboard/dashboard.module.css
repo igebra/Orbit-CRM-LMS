@@ -340,3 +340,16 @@
 @media(max-width:1300px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:1050px){.contentGrid{grid-template-columns:1fr}}
 @media(max-width:800px){.shell{grid-template-columns:248px minmax(0,1fr)}.main{padding:24px}}
+
+
+/* Approved compact Overview: information visible at first glance, neutral canvas. */
+.shell{background:#F8FAFB;}
+.main{background:#F8FAFB;}
+.metrics{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin:18px 0 16px;}
+.metricCard{min-width:0;min-height:100px;padding:13px 14px;border-radius:14px;box-shadow:0 2px 12px rgba(38,61,70,.03);}
+.metricCard span{font-size:12px;white-space:normal;line-height:1.35}
+.metricCard strong{font-size:25px;margin:7px 0 3px}
+.metricCard small{font-size:11px;line-height:1.3}
+.contentGrid{gap:12px;}
+@media(max-width:1450px){.metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:1080px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
