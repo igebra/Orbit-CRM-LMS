@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import OrbitSidebar from "../../components/OrbitSidebar";
@@ -296,6 +296,7 @@ export default function LeadsPage() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [expandedLeadId, setExpandedLeadId] = useState<string | null>(null);
   const [importModalOpen, setImportModalOpen] = useState(false);
 
   const [followUpOpen, setFollowUpOpen] = useState(false);
@@ -1130,7 +1131,8 @@ export default function LeadsPage() {
                   <tr><td colSpan={9} className={styles.empty}>No leads found.</td></tr>
                 ) : (
                   filteredLeads.map((lead, index) => (
-                    <tr key={lead.id} className={lead.is_duplicate ? styles.duplicateRow : ""}>
+                    <Fragment key={lead.id}>
+                    <tr className={lead.is_duplicate ? styles.duplicateRow : ""}>
                       <td>
                         <input type="checkbox" aria-label={`Select lead for ${lead.child_name}`}
                           checked={selected.has(lead.id)}
@@ -1164,8 +1166,26 @@ export default function LeadsPage() {
                         ) : "—"}
                         {lead.next_action && <small>{lead.next_action}</small>}
                       </td>
-                      <td>
-                        <div className={styles.rowActions}>
+                      <td className={styles.actionsColumn}>
+                        {(canManageCrm || lead.converted_student_id || (canConvertLead && lead.lead_stage !== "Lost")) ? (
+                          <button
+                            type="button"
+                            className={styles.actionToggle}
+                            aria-expanded={expandedLeadId === lead.id}
+                            aria-controls={`lead-actions-${lead.id}`}
+                            onClick={() => setExpandedLeadId((current) => current === lead.id ? null : lead.id)}
+                          >
+                            Actions <span aria-hidden="true">{expandedLeadId === lead.id ? "▴" : "▾"}</span>
+                          </button>
+                        ) : "—"}
+                      </td>
+                    </tr>
+                    {expandedLeadId === lead.id && (
+                      <tr id={`lead-actions-${lead.id}`} className={styles.expandedActionRow}>
+                        <td colSpan={9}>
+                          <div className={styles.expandedActionContent}>
+                            <span className={styles.expandedActionLabel}>Actions for {lead.child_name}</span>
+                            <div className={styles.rowActions}>
                           {canManageCrm && (
                             <button onClick={() => editLead(lead)}>Edit</button>
                           )}
@@ -1202,8 +1222,11 @@ export default function LeadsPage() {
                             </button>
                           )}
                         </div>
-                      </td>
-                    </tr>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    </Fragment>
                   ))
                 )}
               </tbody>
