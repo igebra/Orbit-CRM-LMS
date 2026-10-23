@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import OrbitSidebar from "../components/OrbitSidebar";
 import styles from "../lms.module.css";
+import visual from "./students-visual.module.css";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -298,13 +299,13 @@ export default function StudentsPage() {
   }
 
   return (
-    <div className={styles.shell}>
+    <div className={`${styles.shell} ${visual.shell}`}>
       <OrbitSidebar email={email} active="students" />
 
-      <main className={styles.main}>
-        <header className={styles.header}>
+      <main className={`${styles.main} ${visual.main}`}>
+        <header className={`${styles.header} ${visual.header}`}>
           <div>
-            <p className={styles.kicker}>LMS · STUDENTS</p>
+            <p className={styles.kicker}>CRM · STUDENTS</p>
             <h1>Students</h1>
             <p className={styles.subtitle}>Student profiles, course enrollments and CRM conversions.</p>
           </div>
@@ -315,7 +316,7 @@ export default function StudentsPage() {
           </div>
         </header>
 
-        <section className={styles.stats}>
+        <section className={`${styles.stats} ${visual.stats}`}>
           <div className={styles.stat}><span>Total Students</span><strong>{stats.total}</strong></div>
           <div className={styles.stat}><span>Active Students</span><strong>{stats.active}</strong></div>
           <div className={styles.stat}><span>Active Enrollments</span><strong>{stats.enrollments}</strong></div>
@@ -324,7 +325,7 @@ export default function StudentsPage() {
 
         {message && <div className={styles.message}>{message}</div>}
 
-        <section className={styles.card}>
+        <section className={`${styles.card} ${visual.card}`}>
           <div className={styles.toolbar}>
             <input
               type="search"
@@ -335,7 +336,7 @@ export default function StudentsPage() {
             <button className={styles.smallButton} onClick={loadStudents}>↻</button>
           </div>
 
-          <div className={styles.tableWrap}>
+          <div className={`${styles.tableWrap} ${visual.tableWrap}`}>
             <table>
               <thead>
                 <tr>
