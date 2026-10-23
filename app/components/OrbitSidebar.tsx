@@ -334,52 +334,57 @@ export default function OrbitSidebar({ email, active }: Props) {
             </button>
           )}
 
-          {canSeeAccess && (
-            <button
-              className={active === "access" ? styles.navActive : ""}
-              onClick={() => navigate("/access")}
-            >
-              <span>⚙</span> Access
-
-              {pendingAccess > 0 && (
-                <span
-                  title={`${pendingAccess} pending access request${
-                    pendingAccess === 1 ? "" : "s"
-                  }`}
-                  style={{
-                    marginLeft: "auto",
-                    minWidth: 20,
-                    height: 20,
-                    padding: "0 6px",
-                    borderRadius: 999,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: "#D9853B",
-                    color: "#fff",
-                    fontSize: 10,
-                    fontWeight: 900,
-                  }}
-                >
-                  {pendingAccess}
-                </span>
-              )}
-            </button>
-          )}
-
-          {canSeeAccess && (
-            <button
-              className={active === "portal-access" ? styles.navActive : ""}
-              onClick={() => navigate("/portal-access")}
-            >
-              <span>◇</span> Portal Access
-            </button>
-          )}
-
           <button type="button">
             <span>◌</span> AQMATICS
             <small className={styles.soon}>Soon</small>
           </button>
+
+          {canSeeAccess && (
+            <div className={styles.adminGroup} aria-label="Administration">
+              <div className={styles.adminLabel}>Administration</div>
+              {canSeeAccess && (
+                <button
+                  className={active === "access" ? styles.navActive : ""}
+                  onClick={() => navigate("/access")}
+                >
+                  <span>⚙</span> Access
+    
+                  {pendingAccess > 0 && (
+                    <span
+                      title={`${pendingAccess} pending access request${
+                        pendingAccess === 1 ? "" : "s"
+                      }`}
+                      style={{
+                        marginLeft: "auto",
+                        minWidth: 20,
+                        height: 20,
+                        padding: "0 6px",
+                        borderRadius: 999,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "#D9853B",
+                        color: "#fff",
+                        fontSize: 10,
+                        fontWeight: 900,
+                      }}
+                    >
+                      {pendingAccess}
+                    </span>
+                  )}
+                </button>
+              )}
+    
+              {canSeeAccess && (
+                <button
+                  className={active === "portal-access" ? styles.navActive : ""}
+                  onClick={() => navigate("/portal-access")}
+                >
+                  <span>◇</span> Portal Access
+                </button>
+              )}
+            </div>
+          )}
         </nav>
       </div>
 
