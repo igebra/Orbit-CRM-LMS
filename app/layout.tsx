@@ -1,4 +1,8 @@
 import type { Metadata } from "next";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
+
+const orbitHeading = Plus_Jakarta_Sans({ subsets: ["latin"], display: "swap", variable: "--font-orbit-heading" });
+const orbitBody = Inter({ subsets: ["latin"], display: "swap", variable: "--font-orbit-body" });
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -13,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={`${orbitHeading.variable} ${orbitBody.variable}`}>{children}</body>
     </html>
   );
 }
