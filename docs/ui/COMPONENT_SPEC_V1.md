@@ -181,3 +181,6 @@ Sidebar handles visual composition only; server/session adapter supplies fully a
 - Create actual React components in a feature branch only after test backlog freeze. Review via PR -> `develop`; deploy only after 9PM IST under one-approved-release-per-app rule.
 
 **Design reference:** pastel CRM dashboard mockup shared during Orbit CRM LMS 06 chat; visual intent only, mock numbers/people are not production records.
+
+## BRAND-008 geometry and interaction freeze
+The authoritative shared-size, spacing, radius, icon and state specification is [`COMPONENT_STANDARDS_BRAND_008.md`](COMPONENT_STANDARDS_BRAND_008.md) with exact values in [`component-tokens.json`](component-tokens.json). These rules are **FROZEN** across CRM, LMS and ByteXL. If this older component proposal differs (e.g. radius/control sizing), **BRAND-008 supersedes it**. Product-owner hold: KPI height and six-across layout remain unresolved; don't impose a new KPI height during makeover.
