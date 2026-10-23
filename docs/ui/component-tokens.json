@@ -1,0 +1,156 @@
+{
+  "id": "BRAND-008",
+  "version": "1.0",
+  "approvedOn": "2026-10-23",
+  "status": "frozen",
+  "appliesTo": [
+    "Orbit CRM",
+    "Orbit LMS",
+    "ByteXL"
+  ],
+  "typographyRef": "BRAND-006",
+  "typography": {
+    "heading": "Plus Jakarta Sans",
+    "bodyAndUI": "Inter",
+    "allowDifferentProgrammeFont": false,
+    "button": {
+      "sizePx": 14,
+      "weight": 600
+    },
+    "compactButton": {
+      "sizePx": 13,
+      "weight": 600
+    }
+  },
+  "controls": {
+    "buttonHeightPx": {
+      "small": 32,
+      "default": 40,
+      "large": 44
+    },
+    "iconButtonSquarePx": {
+      "small": 32,
+      "default": 40,
+      "large": 44
+    },
+    "buttonHorizontalPaddingPx": {
+      "small": 12,
+      "default": 16,
+      "large": 20
+    },
+    "buttonIconPx": 16,
+    "buttonIconGapPx": 8,
+    "inputHeightPx": {
+      "dense": 36,
+      "default": 40,
+      "large": 44
+    },
+    "searchHeightPx": 40,
+    "sidebarItemMinHeightPx": 44,
+    "sidebarChildMinHeightPx": 38,
+    "tabHeightPx": 36,
+    "tableHeaderMinHeightPx": 40,
+    "tableRowMinHeightPx": 48,
+    "tableRowDenseMinHeightPx": 40,
+    "statusChipHeightPx": 26,
+    "modalCloseSquarePx": 40,
+    "textareaMinHeightPx": 112
+  },
+  "spacingPx": {
+    "0": 0,
+    "1": 4,
+    "2": 8,
+    "3": 12,
+    "4": 16,
+    "5": 20,
+    "6": 24,
+    "8": 32,
+    "10": 40,
+    "12": 48
+  },
+  "layout": {
+    "pageGutterPx": 24,
+    "gridGapPx": 16,
+    "panelPaddingPx": 16,
+    "sidebarExpandedWidthPx": 248,
+    "formFieldGapPx": 12,
+    "labelGapPx": 8,
+    "panelHeaderGapPx": 12
+  },
+  "radiusPx": {
+    "sm": 8,
+    "md": 10,
+    "lg": 16,
+    "xl": 20,
+    "pill": 9999
+  },
+  "surface": {
+    "page": "#F8FAFB",
+    "panel": "#FFFFFF",
+    "border": "#DCE5E8",
+    "text": "#263D46",
+    "subtext": "#52656F",
+    "action": "#286F7A",
+    "cardShadow": "0 4px 18px rgba(38, 61, 70, 0.045)",
+    "borderWidthPx": 1
+  },
+  "icons": {
+    "family": "Lucide outline",
+    "preferredEngineeringPackage": "lucide-react",
+    "requireEngineeringDependencyApproval": true,
+    "allowedEquivalent": "shared Lucide-style inline SVGs",
+    "strokeWidthPx": 1.75,
+    "sizesPx": {
+      "inline": 16,
+      "nav": 18,
+      "card": 20,
+      "large": 24
+    },
+    "prohibit": [
+      "emoji navigation icons",
+      "mixed icon fonts",
+      "unlabeled icon buttons"
+    ]
+  },
+  "states": [
+    "default",
+    "hover",
+    "pressed",
+    "selected",
+    "focus-visible",
+    "disabled",
+    "read-only",
+    "loading",
+    "empty",
+    "success",
+    "error",
+    "warning",
+    "permission-denied"
+  ],
+  "accessibility": {
+    "wcagTarget": "2.2 AA",
+    "minimumNormalTextContrast": 4.5,
+    "minimumLargeTextAndNonTextContrast": 3,
+    "focusOutlinePx": 2,
+    "focusOffsetPx": 2,
+    "focusColor": "#286F7A",
+    "keyboardNavigationRequired": true,
+    "clearSemanticsRequired": true
+  },
+  "dialog": {
+    "widthMaxPx": {
+      "small": 480,
+      "medium": 720,
+      "large": 960
+    },
+    "maxViewportHeightPercent": 90,
+    "closeButtonPx": 40,
+    "stickyHeaderFooterForLongForms": true,
+    "requireFocusTrap": true
+  },
+  "hold": {
+    "kpiCardHeightPx": null,
+    "kpiCardsPerRow": null,
+    "reason": "Product owner explicitly put compact KPI redesign on hold; do not lock those values"
+  }
+}
