@@ -56,8 +56,8 @@ const COURSES: Course[] = [
     description:
       "AI-first learning pathway that progresses from AI foundations to generative AI, machine learning, LLMs, agentic AI and advanced AI systems.",
     brochure: "/brochures/aiedge-brochure.pdf",
-    priceLabel: "$499 / Level",
-    pricing: ["$499 per level"],
+    priceLabel: "$499 / 5-month programme",
+    pricing: ["US website: $499 for the advertised five-month programme; confirm the level quotation with Sales"],
     audience: "Grades 4–10",
     levels: "3 levels per school group",
     classes: "20 classes per level",
@@ -208,8 +208,8 @@ const COURSES: Course[] = [
     description:
       "Coding-first pathway beginning with Python foundations and progressing through data, machine learning, deep learning, generative AI and applied projects.",
     brochure: "/brochures/coding4ai-brochure.pdf",
-    priceLabel: "$499 / Level",
-    pricing: ["$499 per level"],
+    priceLabel: "$499 / 5-month programme",
+    pricing: ["US website: $499 for the advertised five-month programme; confirm the level quotation with Sales"],
     audience: "Grades 4–10",
     levels: "3 levels per school group",
     classes: "20 classes per level",
@@ -413,8 +413,8 @@ const COURSES: Course[] = [
     priceLabel: "From $129 / Month",
     pricing: [
       "$129 / month — Grades 1–4",
-      "$169 / month — Grades 5–8",
-      "$199 / month — Grades 7–10 (as listed in brochure)",
+      "$149 / month — Grades 5–8 (website FAQ)",
+      "$199 / month — higher-grade Math (website FAQ; grade bands overlap)",
     ],
     audience: "Grades 1–10 + advanced high-school mathematics",
     levels: "Grade / subject based",
@@ -430,7 +430,7 @@ const COURSES: Course[] = [
       "Regular PTMs",
     ],
     note:
-      "Pricing note: the brochure lists Grades 5–8 at $169/month and Grades 7–10 at $199/month, so Grades 7–8 overlap. Orbit displays the brochure wording until the pricing band is confirmed.",
+      "Public website FAQ and older brochure show different Math pricing for some grades. Current US FAQ lists $129 (Grades 1–4), $149 (Grades 5–8) and $199 (higher grades), with overlapping grade ranges. Confirm quote before enrolment.",
     tracks: [
       { title: "Grade 1", topics: ["Number & Place Value","Addition & Subtraction","Measurement & Data Handling","Geometry"] },
       { title: "Grade 2", topics: ["Number Systems","Addition & Subtraction","Multiplication & Division","Geometry","Measurement & Data Handling"] },
@@ -520,7 +520,7 @@ const COURSE_WEBSITE_LINKS: Record<string, string> = {
   math:"https://www.igebra.ai/courses/math/",
   "accelerated-math":"https://www.igebra.ai/accelerated-math/",
   "math-plus":"https://www.igebra.ai/courses-offered/",
-  aiedge:"https://www.igebra.ai/courses/aiedge/",
+  aiedge:"https://www.igebra.ai/courses/ai-edge/",
   coding4ai:"https://www.igebra.ai/courses/coding4ai/",
 };
 
@@ -533,7 +533,7 @@ const SITE_COURSES: Course[] = [
 ];
 
 function CourseIcon3D({ courseId }: { courseId: string }) {
-  if (courseId === "math") {
+  if (courseId === "math" || courseId === "accelerated-math" || courseId === "math-plus") {
     return (
       <span className={`${styles.courseNameIcon} ${styles.mathCourseIcon}`} aria-hidden="true">
         <svg viewBox="0 0 56 56">
@@ -804,6 +804,9 @@ export default function CoursesPage() {
                 </div>
 
                 <div className={styles.price}>{course.priceLabel}</div>
+                {course.id==="math-plus" && <p className={styles.regionNotice}>Regional listing · confirm market and availability</p>}
+                <a href={COURSE_WEBSITE_LINKS[course.id]} target="_blank" rel="noopener noreferrer"
+                  className={styles.websiteSource}>Official course page ↗</a>
 
                 <div className={styles.actions}>
                   <button className={styles.primary} onClick={() => openCourse(course)}>
@@ -907,8 +910,8 @@ export default function CoursesPage() {
             </div>
 
             <div className={styles.modalFooter}>
-              <a href={selectedCourse.brochure} target="_blank" rel="noopener noreferrer" className={styles.primary}>
-                {selectedCourse.id==="accelerated-math" || selectedCourse.id==="math-plus"?"View Website Listing":"View Official Brochure"}
+              <a href={COURSE_WEBSITE_LINKS[selectedCourse.id]} target="_blank" rel="noopener noreferrer" className={styles.primary}>
+                View Official Course Page
               </a>
               <button className={styles.secondary} onClick={() => setSelectedCourse(null)}>
                 Close
