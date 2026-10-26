@@ -127,3 +127,13 @@
 /* Approved character is decorative and never replaces finance actions. */
 .mascotHeading{display:flex;align-items:center;justify-content:space-between;gap:12px;}
 .mascot{width:43px;height:58px;object-fit:contain;pointer-events:none;user-select:none;flex:none;}
+
+/* UI-012: single payment entry point; fee-plan configuration lives on its own tab. */
+.planHeaderActions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;}
+.missingPlanNotice{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:10px 12px;border:1px solid #DCE5E8;border-radius:10px;background:#F8FAFB;
+  color:#52656F;font:500 12px/1.4 var(--font-orbit-body),Inter,sans-serif;}
+.missingPlanNotice .textLink{flex:none;}
+.formError{color:#A43936;background:#FFF5F3;border:1px solid #EBCAC7;border-radius:10px;
+  padding:10px 12px;margin:0;font:500 12px/1.4 var(--font-orbit-body),Inter,sans-serif;}
+@media(max-width:950px){.planHeaderActions{justify-content:flex-start}.missingPlanNotice{flex-wrap:wrap;}}
