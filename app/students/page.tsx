@@ -261,63 +261,93 @@ export default function StudentsPage() {
 
   async function saveStudent(event: FormEvent) {
     event.preventDefault();
-    if (!form.student_name.trim()) {
-      setMessage("Student Name is required.");
+    if (!["super_admin","admin","sales","sales_marketing"].includes(role)) {
+      setMessage("You do not have permission to create student profiles.");
       return;
     }
-
+    if (!form.student_name.trim()) { setMessage("Student name is required."); return; }
+    if (form.notes.trim() && !form.course_name && !form.create_plan) {
+      setMessage("Select an initial course to save a note in the student profile.");
+      return;
+    }
+    let selectedBatch:BatchOption|undefined;
+    if (form.create_plan) {
+      if(!canConfigurePlan){setMessage("Payment plan access is restricted.");return;}
+      selectedBatch=batchOptions.find(row=>row.id===form.batch_id);
+      const total=Number(form.total_fee_usd),instalment=Number(form.installment_amount_usd);
+      if(!selectedBatch){setMessage("Select a running batch for the payment plan.");return;}
+      if(!Number.isFinite(total)||total<=0||!Number.isFinite(instalment)||instalment<=0||instalment>total){
+        setMessage("Total fee and installment must be positive, and installment cannot exceed total fee.");return;
+      }
+      if (!form.plan_start_date){setMessage("Enter the payment plan start date.");return;}
+      if (form.course_name && form.course_name!==selectedBatch.course_name) {
+        setMessage("The selected course must match the batch used for the fee plan.");return;
+      }
+    }
     setSaving(true);
     setMessage("");
-
-    const { data: studentRow, error: studentError } = await supabase
-      .from("students")
-      .insert({
-        lead_id: form.lead_id || null,
-        student_name: form.student_name.trim(),
-        grade: form.grade || null,
-        parent_first_name: form.parent_first_name.trim() || null,
-        parent_last_name: form.parent_last_name.trim() || null,
-        email: form.email.trim().toLowerCase() || null,
-        phone: form.phone.trim() || null,
-        created_by: userId || null,
-        updated_by: userId || null,
-      })
-      .select("id")
-      .single();
-
-    if (studentError || !studentRow) {
-      setMessage(studentError?.message || "Could not create student.");
-      setSaving(false);
-      return;
+    const {data:studentRow,error:studentError}=await supabase.from("students").insert({
+      lead_id:form.lead_id||null,student_name:form.student_name.trim(),
+      grade:form.grade||null,parent_first_name:form.parent_first_name.trim()||null,
+      parent_last_name:form.parent_last_name.trim()||null,
+      email:form.email.trim().toLowerCase()||null,phone:form.phone.trim()||null,
+      created_by:userId||null,updated_by:userId||null,
+    }).select("id").single();
+    if(studentError||!studentRow){
+      setSaving(false);setMessage(studentError?.message||"Could not create student.");return;
     }
-
-    if (form.course_name) {
-      const { error: enrollmentError } = await supabase.from("student_enrollments").insert({
-        student_id: studentRow.id,
-        course_name: form.course_name,
-        created_by: userId || null,
+    // Preserve saved student even when a follow-up finance step fails: never
+    // silently retry the entire form and accidentally create another profile.
+    const id=studentRow.id as string;
+    async function partialFailure(step:string,reason:string){
+      setSaving(false);setModalOpen(false);setForm(EMPTY_FORM);
+      setMessage(`Student created, but ${step} could not be completed: ${reason}. Open the student profile to complete setup; do not add the student again.`);
+      await loadStudents();
+    }
+    const course=form.course_name||selectedBatch?.course_name||"";
+    if(course){
+      const {error}=await supabase.from("student_enrollments").insert({
+        student_id:id,course_name:course,notes:form.notes.trim()||null,
+        created_by:userId||null,
       });
-      if (enrollmentError) setMessage(enrollmentError.message);
+      if(error){await partialFailure("course enrollment / notes",error.message);return;}
     }
-
-    if (form.lead_id) {
-      await supabase
-        .from("leads")
-        .update({
-          lead_stage: "Enrolled",
-          converted_student_id: studentRow.id,
-          converted_at: new Date().toISOString(),
-          updated_by: userId || null,
-        })
-        .eq("id", form.lead_id);
+    if(form.create_plan&&selectedBatch){
+      const {error:membershipError}=await supabase.from("batch_students").insert({
+        batch_id:selectedBatch.id,student_id:id,
+      });
+      if(membershipError){await partialFailure("batch assignment",membershipError.message);return;}
+      const {data:planId,error:planError}=await supabase.rpc("ensure_payment_plan_for_entry",{
+        p_batch_id:selectedBatch.id,
+        p_student_id:id,
+        p_total_fee_usd:Number(form.total_fee_usd),
+        p_payment_plan:form.payment_plan,
+        p_installment_amount_usd:form.payment_plan==="Paid in Full"?
+          Number(form.total_fee_usd):Number(form.installment_amount_usd),
+        p_plan_start_date:form.plan_start_date,
+      });
+      if(planError){await partialFailure("payment plan",planError.message);return;}
+      if(form.notes.trim()&&planId){
+        const {error:noteError}=await supabase.from("batch_student_finance")
+          .update({notes:form.notes.trim(),updated_by:userId||null})
+          .eq("id",planId);
+        if(noteError){
+          // Note is already stored against the initial course; don't duplicate student.
+          setMessage("Student and fee plan created; the fee-plan note could not be copied.");
+        }
+      }
     }
-
-    setSaving(false);
-    setModalOpen(false);
-    setForm(EMPTY_FORM);
+    if(form.lead_id){
+      const {error}=await supabase.from("leads").update({
+        lead_stage:"Enrolled",converted_student_id:id,
+        converted_at:new Date().toISOString(),updated_by:userId||null,
+      }).eq("id",form.lead_id);
+      if(error){await partialFailure("lead conversion",error.message);return;}
+    }
+    setSaving(false);setModalOpen(false);setForm(EMPTY_FORM);
     await loadStudents();
+    setMessage(`${form.student_name.trim()} created successfully${form.create_plan?" with a fee plan":""}.`);
   }
-
 
   async function deleteStudent(student: Student) {
     if (!canDelete) return;
