@@ -101,22 +101,15 @@ export default function TrainersPage() {
     setTrainers((data || []) as Trainer[]);
   }
 
+  // Display is consistently alphabetical; S.No reflects the visible sorted list.
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return trainers;
-
-    return trainers.filter((trainer) =>
-      [
-        trainer.trainer_name,
-        trainer.email,
-        trainer.phone,
-        trainer.timezone,
-        trainer.courses,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase()
-        .includes(q)
+    return trainers.filter(trainer =>
+      !q || [trainer.trainer_name,trainer.email,trainer.phone,trainer.timezone,trainer.courses]
+        .filter(Boolean).join(" ").toLowerCase().includes(q)
+    ).sort((a,b) =>
+      a.trainer_name.localeCompare(b.trainer_name,undefined,{sensitivity:"base"}) ||
+      a.id.localeCompare(b.id)
     );
   }, [trainers, search]);
 
