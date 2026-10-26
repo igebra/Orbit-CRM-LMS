@@ -501,7 +501,69 @@ export default function StudentsPage() {
                 <label><span>Parent Last Name</span><input value={form.parent_last_name} onChange={(event) => setForm({ ...form, parent_last_name: event.target.value })} /></label>
                 <label><span>Email</span><input type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /></label>
                 <label><span>Phone</span><input value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} /></label>
-                <label className={styles.full}><span>Initial Course Enrollment</span><select value={form.course_name} onChange={(event) => setForm({ ...form, course_name: event.target.value })}><option value="">Select course</option>{COURSES.map((course) => <option key={course}>{course}</option>)}</select></label>
+                <label className={styles.full}>
+                  <span>Initial Course Enrollment</span>
+                  <select value={form.course_name} onChange={event=>setForm({...form,course_name:event.target.value})}>
+                    <option value="">Select course</option>
+                    {Array.from(new Set([...COURSES,...batchOptions.map(b=>b.course_name)])).map(course=>
+                      <option key={course} value={course}>{course}</option>)}
+                  </select>
+                </label>
+                <label className={styles.full}>
+                  <span>Student Notes (Optional)</span>
+                  <textarea className={visual.notesField} rows={3} maxLength={1500}
+                    placeholder="Learning needs, parent instructions, follow-ups or other important notes…"
+                    value={form.notes} onChange={event=>setForm({...form,notes:event.target.value})} />
+                  <small className={visual.helperText}>Saved to the initial course enrolment, and shown on the student profile.</small>
+                </label>
+                {canConfigurePlan && (
+                  <section className={`${styles.full} ${visual.financeSection}`} aria-label="Optional student fee plan">
+                    <label className={visual.financeToggle}>
+                      <input type="checkbox" checked={form.create_plan}
+                        onChange={e=>setForm({...form,create_plan:e.target.checked,
+                          batch_id:e.target.checked?form.batch_id:""})} />
+                      <span>Add a Payment Plan (Optional)</span>
+                    </label>
+                    <p>Attach this student to a running batch and set the fee plan now, or do it later in Payments.</p>
+                    {form.create_plan && (
+                      <div className={visual.financeGrid}>
+                        <label className={visual.financeFull}>
+                          <span>Assign to Batch *</span>
+                          <select required value={form.batch_id} onChange={e=>{
+                            const nextBatch=batchOptions.find(b=>b.id===e.target.value);
+                            setForm({...form,batch_id:e.target.value,
+                              course_name:nextBatch?.course_name||form.course_name});
+                          }}>
+                            <option value="">Select running batch</option>
+                            {batchOptions.map(batch=>
+                              <option key={batch.id} value={batch.id}>{batch.batch_name} · {batch.course_name}</option>)}
+                          </select>
+                        </label>
+                        <label><span>Total Fee (USD) *</span>
+                          <input required type="number" min="0.01" step="0.01" placeholder="0.00"
+                            value={form.total_fee_usd} onChange={e=>setForm({...form,total_fee_usd:e.target.value,
+                              ...(form.payment_plan==="Paid in Full"?{installment_amount_usd:e.target.value}:{})})} />
+                        </label>
+                        <label><span>Payment Plan *</span>
+                          <select required value={form.payment_plan} onChange={e=>setForm({...form,payment_plan:e.target.value,
+                            ...(e.target.value==="Paid in Full"?{installment_amount_usd:form.total_fee_usd}:{})})}>
+                            {PLAN_TYPES.map(plan=><option key={plan}>{plan}</option>)}
+                          </select>
+                        </label>
+                        <label><span>Installment Amount (USD) *</span>
+                          <input required type="number" min="0.01" step="0.01" placeholder="0.00"
+                            value={form.installment_amount_usd} readOnly={form.payment_plan==="Paid in Full"}
+                            onChange={e=>setForm({...form,installment_amount_usd:e.target.value})} />
+                        </label>
+                        <label><span>Plan Start Date *</span>
+                          <input required type="date" value={form.plan_start_date}
+                            onChange={e=>setForm({...form,plan_start_date:e.target.value})} />
+                        </label>
+                      </div>
+                    )}
+                  </section>
+                )}
+                {message && <div className={`${styles.full} ${visual.formMessage}`} role="alert">{message}</div>
               </div>
               <div className={styles.modalFooter}>
                 <OrbitButton variant="secondary" onClick={() => setModalOpen(false)} disabled={saving}>Cancel</OrbitButton>
