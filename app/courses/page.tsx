@@ -689,7 +689,7 @@ export default function CoursesPage() {
       <main className={styles.main}>
         <header className={styles.header}>
           <div>
-            <p className={styles.kicker}>LMS · COURSE CATALOGUE</p>
+            <p className={styles.kicker}>CRM · COURSE CATALOGUE</p>
             <h1>Courses</h1>
             <p>
               Program structure, pricing, levels, curriculum and official brochures.
