@@ -155,6 +155,13 @@ export default function ReportsPage() {
     };
   }, [attendanceRows]);
 
+  const progressSummary = useMemo(() => ({
+    batches: progressRows.length,
+    active: progressRows.filter(row => row.batch_status.toLowerCase() === "active").length,
+    completed: progressRows.reduce((sum,row)=>sum+Number(row.completed_sessions||0),0),
+    enrolments: progressRows.reduce((sum,row)=>sum+Number(row.student_count||0),0),
+  }), [progressRows]);
+
   function setPreset(offset: number) {
     const range = monthRange(offset);
     setFrom(range.from);
@@ -228,7 +235,7 @@ export default function ReportsPage() {
   function exportCsv() {
     let headers: string[] = [];
     let rows: unknown[][] = [];
-    let fileName = "orbit-lms-report.csv";
+    let fileName = "orbit-crm-report.csv";
 
     if (tab === "trainer") {
       headers = ["Date","Batch","Course","Session","Topic","Status","Present","Attendance Marked"];
@@ -302,9 +309,9 @@ export default function ReportsPage() {
       <main className={styles.main}>
         <header className={styles.header}>
           <div>
-            <p className={styles.kicker}>LMS · REPORTS</p>
-            <h1>Delivery Reports</h1>
-            <p>Trainer classes, attendance and batch progress.</p>
+            <p className={styles.kicker}>CRM · REPORTS</p>
+            <h1>Reports</h1>
+            <p>Trainer sessions, student attendance and batch delivery performance.</p>
           </div>
 
           {hasRows && (
@@ -314,26 +321,29 @@ export default function ReportsPage() {
           )}
         </header>
 
-        <div className={styles.tabs}>
+        <nav className={styles.tabs} aria-label="Report categories">
           <button
             className={tab === "trainer" ? styles.activeTab : ""}
+            aria-current={tab === "trainer" ? "page" : undefined}
             onClick={() => setTab("trainer")}
           >
             Trainer
           </button>
           <button
             className={tab === "attendance" ? styles.activeTab : ""}
+            aria-current={tab === "attendance" ? "page" : undefined}
             onClick={() => setTab("attendance")}
           >
             Attendance
           </button>
           <button
             className={tab === "progress" ? styles.activeTab : ""}
+            aria-current={tab === "progress" ? "page" : undefined}
             onClick={() => setTab("progress")}
           >
             Batch Progress
           </button>
-        </div>
+        </nav>
 
         {tab !== "progress" ? (
           <section className={styles.filters}>
@@ -395,7 +405,7 @@ export default function ReportsPage() {
           </section>
         )}
 
-        {message && <div className={styles.message}>{message}</div>}
+        {message && <div className={styles.message} role="status">{message}</div>}
 
         {tab === "trainer" && (
           <>
@@ -407,7 +417,7 @@ export default function ReportsPage() {
 
             <section className={styles.card}>
               <div className={styles.tableWrap}>
-                <table>
+                <table aria-label={tab === "trainer" ? "Trainer delivery report" : "Student attendance report"}>
                   <thead>
                     <tr>
                       <th>Date</th><th>Batch</th><th>Course</th><th>Session</th>
@@ -445,7 +455,7 @@ export default function ReportsPage() {
 
             <section className={styles.card}>
               <div className={styles.tableWrap}>
-                <table>
+                <table aria-label={tab === "trainer" ? "Trainer delivery report" : "Student attendance report"}>
                   <thead>
                     <tr>
                       <th>Date</th><th>Batch</th><th>Course</th><th>Session</th>
@@ -474,9 +484,15 @@ export default function ReportsPage() {
         )}
 
         {tab === "progress" && (
-          <section className={styles.card}>
+          <>
+            <section className={styles.summary}>
+              <div><span>Batches in report</span><strong>{progressSummary.batches}</strong></div>
+              <div><span>Completed classes</span><strong>{progressSummary.completed}</strong></div>
+              <div><span>Student enrolments across batches</span><strong>{progressSummary.enrolments}</strong></div>
+            </section>
+            <section className={styles.card}>
             <div className={styles.tableWrap}>
-              <table>
+              <table aria-label="Batch progress report">
                 <thead>
                   <tr>
                     <th>Batch</th><th>Course</th><th>Trainer</th><th>Status</th>
@@ -501,7 +517,8 @@ export default function ReportsPage() {
                 </tbody>
               </table>
             </div>
-          </section>
+            </section>
+          </>
         )}
       </main>
     </div>
