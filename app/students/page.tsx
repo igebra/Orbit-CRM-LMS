@@ -312,6 +312,7 @@ export default function StudentsPage() {
             <p className={styles.subtitle}>Student profiles, course enrollments and CRM conversions.</p>
           </div>
           <div className={styles.headerActions}>
+            <img src="/orbit-mascot.png" alt="Orbit mascot" className={visual.headerMascot} width={54} height={72} />
             <OrbitButton variant="primary" icon={<OrbitNavIcon name="plus" />} onClick={() => { setForm(EMPTY_FORM); setModalOpen(true); }}>
               Add Student
             </OrbitButton>
@@ -351,15 +352,14 @@ export default function StudentsPage() {
                   <th>Contact</th>
                   <th>Course(s)</th>
                   <th>Status</th>
-                  <th>Created</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={7} className={styles.empty}>Loading students...</td></tr>
+                  <tr><td colSpan={6} className={styles.empty}>Loading students...</td></tr>
                 ) : filteredStudents.length === 0 ? (
-                  <tr><td colSpan={7} className={styles.empty}>No students found.</td></tr>
+                  <tr><td colSpan={6} className={styles.empty}>No students found.</td></tr>
                 ) : filteredStudents.map((student) => (
                   <tr key={student.id}>
                     <td>{student.student_name}<small>{student.grade || "—"}</small></td>
@@ -367,7 +367,6 @@ export default function StudentsPage() {
                     <td>{student.email || "—"}<small>{student.phone || "—"}</small></td>
                     <td>{(coursesByStudent.get(student.id) || ["—"]).map((course) => <small key={course}>{course}</small>)}</td>
                     <td><span className={styles.badge}>{student.status}</span></td>
-                    <td>{new Date(student.created_at).toLocaleDateString()}</td>
                     {canDelete && (
                       <td>
                         <div className={styles.rowActions}>
