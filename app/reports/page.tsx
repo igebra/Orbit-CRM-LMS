@@ -420,15 +420,17 @@ export default function ReportsPage() {
                 <table aria-label="Trainer delivery report">
                   <thead>
                     <tr>
+                      <th data-sno>S.No</th>
                       <th>Date</th><th>Batch</th><th>Course</th><th>Session</th>
                       <th>Topic Covered</th><th>Status</th><th>Attendance</th>
                     </tr>
                   </thead>
                   <tbody>
                     {trainerRows.length === 0 ? (
-                      <tr><td colSpan={7} className={styles.empty}>Select a trainer and run the report.</td></tr>
-                    ) : trainerRows.map((row) => (
+                      <tr><td colSpan={8} className={styles.empty}>Select a trainer and run the report.</td></tr>
+                    ) : trainerRows.map((row, index) => (
                       <tr key={row.session_id}>
+                        <td data-sno>{index + 1}</td>
                         <td>{row.class_date}</td>
                         <td>{row.batch_name}</td>
                         <td>{row.course_name}</td>
@@ -458,15 +460,17 @@ export default function ReportsPage() {
                 <table aria-label="Student attendance report">
                   <thead>
                     <tr>
+                      <th data-sno>S.No</th>
                       <th>Date</th><th>Batch</th><th>Course</th><th>Session</th>
                       <th>Student</th><th>Attendance</th><th>Trainer</th>
                     </tr>
                   </thead>
                   <tbody>
                     {attendanceRows.length === 0 ? (
-                      <tr><td colSpan={7} className={styles.empty}>Run an attendance report.</td></tr>
+                      <tr><td colSpan={8} className={styles.empty}>Run an attendance report.</td></tr>
                     ) : attendanceRows.map((row, index) => (
                       <tr key={`${row.session_id}-${row.student_name}-${index}`}>
+                        <td data-sno>{index + 1}</td>
                         <td>{row.class_date}</td>
                         <td>{row.batch_name}</td>
                         <td>{row.course_name}</td>
@@ -495,15 +499,17 @@ export default function ReportsPage() {
               <table aria-label="Batch progress report">
                 <thead>
                   <tr>
+                    <th data-sno>S.No</th>
                     <th>Batch</th><th>Course</th><th>Trainer</th><th>Status</th>
                     <th>Classes</th><th>Students</th><th>Attendance</th><th>Homework</th>
                   </tr>
                 </thead>
                 <tbody>
                   {progressRows.length === 0 ? (
-                    <tr><td colSpan={8} className={styles.empty}>Load the Batch Progress report.</td></tr>
-                  ) : progressRows.map((row) => (
+                    <tr><td colSpan={9} className={styles.empty}>Load the Batch Progress report.</td></tr>
+                  ) : progressRows.map((row, index) => (
                     <tr key={row.batch_id}>
+                      <td data-sno>{index + 1}</td>
                       <td><strong>{row.batch_name}</strong></td>
                       <td>{row.course_name}</td>
                       <td>{row.trainer_name || "—"}</td>
