@@ -370,6 +370,7 @@ export default function StudentsPage() {
             <table aria-label="Student directory">
               <thead>
                 <tr>
+                  <th data-sno>S.No</th>
                   <th>Student</th>
                   <th>Parent</th>
                   <th>Contact</th>
@@ -380,11 +381,12 @@ export default function StudentsPage() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={6} className={styles.empty}>Loading students...</td></tr>
+                  <tr><td colSpan={7} className={styles.empty}>Loading students...</td></tr>
                 ) : filteredStudents.length === 0 ? (
-                  <tr><td colSpan={6} className={styles.empty}>No students found.</td></tr>
-                ) : filteredStudents.map((student) => (
+                  <tr><td colSpan={7} className={styles.empty}>No students found.</td></tr>
+                ) : filteredStudents.map((student, index) => (
                   <tr key={student.id}>
+                    <td data-sno>{index + 1}</td>
                     <td>{student.student_name}<small>{student.grade || "—"}</small></td>
                     <td>{[student.parent_first_name, student.parent_last_name].filter(Boolean).join(" ") || "—"}</td>
                     <td>{student.email || "—"}<small>{student.phone || "—"}</small></td>
