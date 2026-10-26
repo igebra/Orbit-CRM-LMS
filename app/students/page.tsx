@@ -56,6 +56,11 @@ type Enrollment = {
   status: string;
 };
 
+type BatchOption = { id:string; batch_name:string; course_name:string; status:string; };
+
+const PLAN_TYPES = ["After Every 4 Classes","Monthly","Quarterly","Half-yearly","Yearly","Paid in Full","Custom"];
+const FINANCE_MANAGERS = ["super_admin","admin","sales","sales_marketing","accounts_finance"];
+
 type LeadOption = {
   id: string;
   parent_first_name: string;
@@ -77,6 +82,13 @@ type FormState = {
   email: string;
   phone: string;
   course_name: string;
+  notes: string;
+  create_plan: boolean;
+  batch_id: string;
+  total_fee_usd: string;
+  installment_amount_usd: string;
+  payment_plan: string;
+  plan_start_date: string;
 };
 
 const EMPTY_FORM: FormState = {
@@ -88,6 +100,13 @@ const EMPTY_FORM: FormState = {
   email: "",
   phone: "",
   course_name: "",
+  notes: "",
+  create_plan: false,
+  batch_id: "",
+  total_fee_usd: "",
+  installment_amount_usd: "",
+  payment_plan: "Monthly",
+  plan_start_date: new Date().toISOString().slice(0, 10),
 };
 
 export default function StudentsPage() {
@@ -98,6 +117,7 @@ export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [leadOptions, setLeadOptions] = useState<LeadOption[]>([]);
+  const [batchOptions, setBatchOptions] = useState<BatchOption[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -106,6 +126,7 @@ export default function StudentsPage() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
   const canDelete = ["super_admin", "admin", "sales", "sales_marketing"].includes(role);
+  const canConfigurePlan = FINANCE_MANAGERS.includes(role);
 
   useEffect(() => {
     async function initialize() {
@@ -124,7 +145,7 @@ export default function StudentsPage() {
         .single();
 
       setRole(profile?.role || "");
-      await Promise.all([loadStudents(), loadLeads()]);
+      await Promise.all([loadStudents(), loadLeads(), loadBatchOptions()]);
     }
     initialize();
   }, [router]);
@@ -146,6 +167,14 @@ export default function StudentsPage() {
       setEnrollments((enrollmentRows || []) as Enrollment[]);
     }
     setLoading(false);
+  }
+
+  async function loadBatchOptions() {
+    const {data,error} = await supabase.from("batches")
+      .select("id,batch_name,course_name,status").eq("status","Active")
+      .order("batch_name",{ascending:true});
+    if(error){ setMessage(error.message); return; }
+    setBatchOptions((data || []) as BatchOption[]);
   }
 
   async function loadLeads() {
@@ -224,6 +253,9 @@ export default function StudentsPage() {
       email: lead.email || "",
       phone: lead.phone_number ? `${lead.phone_country_code || ""} ${lead.phone_number}`.trim() : "",
       course_name: lead.course_interested || "",
+      notes:"",create_plan:false,batch_id:"",total_fee_usd:"",
+      installment_amount_usd:"",payment_plan:"Monthly",
+      plan_start_date:new Date().toISOString().slice(0,10),
     });
   }
 
