@@ -71,3 +71,15 @@
 .formGrid label span{font:500 13px var(--font-orbit-body),sans-serif;color:#263D46;}
 .formGrid input,.formGrid select{height:40px;border-radius:10px;border-color:#DCE5E8;font:400 14px var(--font-orbit-body),sans-serif;}
 @media(max-width:1060px){.tableWrap th,.tableWrap td{padding:8px 4px;font-size:11px;}}
+
+
+/* UI-013 · Trainer directory S.No width plus original eight columns. */
+.tableWrap th:nth-child(1){width:4%}
+.tableWrap th:nth-child(2){width:13%}
+.tableWrap th:nth-child(3){width:20%}
+.tableWrap th:nth-child(4){width:12%}
+.tableWrap th:nth-child(5){width:12%}
+.tableWrap th:nth-child(6){width:15%}
+.tableWrap th:nth-child(7){width:10%}
+.tableWrap th:nth-child(8){width:8%}
+.tableWrap th:nth-child(9){width:6%}
