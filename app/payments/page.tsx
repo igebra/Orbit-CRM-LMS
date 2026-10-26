@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import OrbitSidebar from "../components/OrbitSidebar";
 import styles from "./payments.module.css";
+import view from "./payments-workspace.module.css";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -167,6 +168,10 @@ export default function PaymentsPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [workspaceTab, setWorkspaceTab] = useState("Overview");
+  const [ledgerCourse, setLedgerCourse] = useState("All");
+  const [ledgerStatus, setLedgerStatus] = useState("All");
+  const [ledgerPage, setLedgerPage] = useState(0);
   const [savingPayment, setSavingPayment] = useState(false);
   const [editPaymentOpen, setEditPaymentOpen] = useState(false);
   const [deletePaymentOpen, setDeletePaymentOpen] = useState(false);
@@ -703,6 +708,79 @@ export default function PaymentsPage() {
     anchor.download = `orbit-payments-${from}-to-${to}.csv`;
     anchor.click();
     URL.revokeObjectURL(url);
+  }
+
+
+  // Programme summary uses actual USD transaction amounts and actual enrolled
+  // fee plans; it never invents an INR conversion or a monthly fee forecast.
+  const programmeSummaries = useMemo(() => {
+    const names = ["Math", "AiEdge", "Coding4AI", "Other"];
+    const groups = names.map(name => ({
+      name, collected: 0, committed: 0, lifetimePaid: 0,
+      pending: 0, students: new Set<string>(), transactions: 0,
+    }));
+    function category(course: string) {
+      const label=(course || "").toLowerCase().replace(/[^a-z0-9]/g,"");
+      if (/coding4ai|c4ai|coding/.test(label)) return "Coding4AI";
+      if (/aiedge/.test(label)) return "AiEdge";
+      if (/math|geometry|algebra|calculus|statistics|precalculus|psat|sat/.test(label)) return "Math";
+      return "Other";
+    }
+    for (const row of transactions) {
+      const group=groups.find(g=>g.name===category(row.course_name));
+      if(group){group.collected+=Number(row.amount_usd||0);group.transactions++;}
+    }
+    if (!isMarketing) for(const row of outstanding){
+      const group=groups.find(g=>g.name===category(row.course_name));
+      if(group){
+        group.committed+=Number(row.total_fee_usd||0);
+        group.lifetimePaid+=Number(row.total_paid_usd||0);
+        group.pending+=Number(row.pending_usd||0);
+        if(row.student_id)group.students.add(row.student_id);
+      }
+    }
+    return groups.filter(g=>g.name!=="Other"||g.collected>0||g.committed>0||g.pending>0);
+  },[transactions,outstanding,isMarketing]);
+
+  const ledgerRows=useMemo(()=>{
+    const q=search.trim().toLowerCase();
+    return outstanding.filter(row=>{
+      if(ledgerCourse!=="All" && !(
+         ledgerCourse==="Math" ? /math|algebra|geometry|calculus|statistics|psat|sat/i.test(row.course_name||"") :
+         ledgerCourse==="AiEdge" ? /ai.?edge/i.test(row.course_name||"") :
+         ledgerCourse==="Coding4AI" ? /coding.?4.?ai|coding/i.test(row.course_name||"") : true
+       ))return false;
+      if(ledgerStatus!=="All" && row.payment_status!==ledgerStatus)return false;
+      if(q && ![row.student_name,row.batch_name,row.course_name,row.payment_plan]
+        .some(v=>String(v||"").toLowerCase().includes(q)))return false;
+      return true;
+    }).sort((a,b)=>(a.student_name||"").localeCompare(b.student_name||""));
+  },[outstanding,search,ledgerCourse,ledgerStatus]);
+  const visibleLedger=ledgerRows.slice(ledgerPage*12,(ledgerPage+1)*12);
+  const recentPayments=useMemo(()=>[...transactions].sort((a,b)=>
+    b.payment_date.localeCompare(a.payment_date)).slice(0,5),[transactions]);
+  const planValue=useMemo(()=>outstanding.reduce((sum,row)=>sum+Number(row.total_fee_usd||0),0),[outstanding]);
+  const lifetimePaid=useMemo(()=>outstanding.reduce((sum,row)=>sum+Number(row.total_paid_usd||0),0),[outstanding]);
+  const feePlanCount=outstanding.length;
+  const overdueStudents=outstanding.filter(row=>row.payment_status==="Overdue").length;
+  const monthlyLabel=new Date(from+"T00:00:00").toLocaleDateString("en-IN",{month:"long",year:"numeric"});
+
+  function chooseQuickStudent(key:string){
+    const found=paymentOptions.find(row=>row.batch_id+"::"+row.student_id===key);
+    if(!found){
+      setPaymentForm(prev=>({...prev,batch_id:"",student_id:"",finance_id:"",amount_usd:""}));
+      return;
+    }
+    setPaymentForm(prev=>({
+      ...prev, batch_id:found.batch_id,student_id:found.student_id,
+      finance_id:found.finance_id||"",
+      amount_usd: found.installment_amount_usd
+        ? String(Math.min(Number(found.installment_amount_usd),
+          Number(found.pending_usd??found.total_fee_usd??0))) : "",
+      setup_total_fee_usd:found.total_fee_usd?String(found.total_fee_usd):"",
+      setup_installment_amount_usd:found.installment_amount_usd?String(found.installment_amount_usd):"",
+      setup_payment_plan:found.payment_plan||"Monthly",
+    }));
   }
 
   if (!allowedRoles.includes(role) && !loading) {
