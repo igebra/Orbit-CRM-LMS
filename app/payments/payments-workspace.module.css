@@ -137,3 +137,26 @@
 .formError{color:#A43936;background:#FFF5F3;border:1px solid #EBCAC7;border-radius:10px;
   padding:10px 12px;margin:0;font:500 12px/1.4 var(--font-orbit-body),Inter,sans-serif;}
 @media(max-width:950px){.planHeaderActions{justify-content:flex-start}.missingPlanNotice{flex-wrap:wrap;}}
+
+
+/* UI-013 Full-width finance workspace after removing duplicate side-entry form.
+   Move Quick Stats and Recent Payments below the full-width ledger. */
+.columns{grid-template-columns:minmax(0,1fr)!important;gap:16px;width:100%;}
+.content,.ledger,.programmes,.metrics,.tableScroller{width:100%;min-width:0;max-width:100%;}
+.rightRail{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:16px;width:100%;}
+.rightRail .sideCard:first-child{grid-row:auto!important;}
+/* Fee plan ledger has 10 columns after S.No. */
+.ledgerTable[aria-label="Student payment plan ledger"] th:nth-child(1){width:4%}
+.ledgerTable[aria-label="Student payment plan ledger"] th:nth-child(2){width:12%}
+.ledgerTable[aria-label="Student payment plan ledger"] th:nth-child(3){width:17%}
+.ledgerTable[aria-label="Student payment plan ledger"] th:nth-child(4){width:10%}
+.ledgerTable[aria-label="Student payment plan ledger"] th:nth-child(5){width:10%}
+.ledgerTable[aria-label="Student payment plan ledger"] th:nth-child(6){width:10%}
+.ledgerTable[aria-label="Student payment plan ledger"] th:nth-child(7){width:10%}
+.ledgerTable[aria-label="Student payment plan ledger"] th:nth-child(8){width:10%}
+.ledgerTable[aria-label="Student payment plan ledger"] th:nth-child(9){width:9%}
+.ledgerTable[aria-label="Student payment plan ledger"] th:nth-child(10){width:8%}
+/* Transaction history is shorter when read-only roles have no Actions column. */
+.ledgerTable[aria-label="Payment transaction history"] th{width:auto;}
+.ledgerTable[aria-label="Payment transaction history"] th:first-child{width:4%;}
+@media(max-width:780px){.rightRail{grid-template-columns:1fr!important;}}
