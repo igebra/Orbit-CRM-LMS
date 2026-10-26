@@ -123,3 +123,7 @@
 @media(max-width:980px){.rightRail{grid-template-columns:1fr 1fr}.rightRail .sideCard:first-child{grid-row:span 2}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.programmeGrid{grid-template-columns:1fr 1fr}.filterBar{flex-wrap:wrap;}}
 @media(max-width:750px){.main{padding:16px}.rightRail{grid-template-columns:1fr}.programmeGrid{grid-template-columns:1fr}.reports{grid-template-columns:1fr}.dateControls input{width:118px}.tableScroller{overflow-x:auto}.ledgerTable{min-width:760px!important}.tabs{gap:12px}}
 @media(prefers-reduced-motion:reduce){.progressTrack>div{transition:none;}}
+
+/* Approved character is decorative and never replaces finance actions. */
+.mascotHeading{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.mascot{width:43px;height:58px;object-fit:contain;pointer-events:none;user-select:none;flex:none;}
