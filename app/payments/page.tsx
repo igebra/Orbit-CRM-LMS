@@ -518,8 +518,8 @@ export default function PaymentsPage() {
     }
 
     setPaymentOpen(false);
-    setMessage("Payment recorded successfully.");
     await loadReports(from, to);
+    setMessage("Payment recorded successfully.");
   }
 
   function openEditPayment(row: Transaction) {
