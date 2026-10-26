@@ -886,3 +886,12 @@ main div[class*="tableWrap"] > table td button svg {
   main div[class*="tableWrap"] > table {table-layout:auto;}
   main div[class*="tableWrap"] {overflow-x:auto;}
 }
+
+
+/* UI-013 · Unified numbering column in all CRM data tables. */
+main table th[data-sno],main table td[data-sno],
+main table :is(th,td)[data-sno]{
+  width:42px;min-width:36px;max-width:48px;text-align:center!important;
+  white-space:nowrap;font-variant-numeric:tabular-nums;
+  color:#52656F;font-weight:600;
+}
