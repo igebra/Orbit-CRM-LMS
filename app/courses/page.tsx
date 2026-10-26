@@ -815,7 +815,7 @@ export default function CoursesPage() {
                   <a href={course.brochure} target="_blank" rel="noopener noreferrer" className={styles.secondary}>
                     {course.id==="accelerated-math" || course.id==="math-plus"?"Website":"Brochure"}
                   </a>
-                  {canEditCourse && (
+                  {canEditCourse && ["math","aiedge","coding4ai"].includes(course.id) && (
                     <button className={styles.secondary} onClick={() => openEditCourse(course)}>
                       Edit Course
                     </button>
