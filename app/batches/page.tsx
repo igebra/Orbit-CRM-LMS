@@ -203,6 +203,27 @@ export default function BatchesPage() {
     setLoading(false);
   }
 
+  // Running means a batch marked Active. A batch with both weekday and
+  // weekend classes is counted in both schedule groups; unknown days are
+  // excluded from those two groups, but retained in Running.
+  const batchSummary = useMemo(() => {
+    const running = batches.filter(b => b.status?.toLowerCase() === "active");
+    let weekday = 0;
+    let weekend = 0;
+    let both = 0;
+    let unscheduled = 0;
+    for (const batch of running) {
+      const days = (batch.class_days || []).map(day => day.trim().slice(0, 3).toLowerCase());
+      const onWeekday = days.some(day => ["mon","tue","wed","thu","fri"].includes(day));
+      const onWeekend = days.some(day => ["sat","sun"].includes(day));
+      if (onWeekday) weekday++;
+      if (onWeekend) weekend++;
+      if (onWeekday && onWeekend) both++;
+      if (!onWeekday && !onWeekend) unscheduled++;
+    }
+    return {total:batches.length,running:running.length,weekday,weekend,both,unscheduled};
+  }, [batches]);
+
   const studentNamesByBatch = useMemo(() => {
     const studentMap = new Map(students.map((student) => [student.id, student.student_name]));
     const batchMap = new Map<string, string[]>();
@@ -366,6 +387,19 @@ export default function BatchesPage() {
             </div>
           )}
         </header>
+
+        <section className={visual.batchStats} aria-label="Batch operations summary">
+          <div className={visual.allBatches}><span>Total Batches</span><strong>{loading ? "—" : batchSummary.total}</strong><small>All statuses</small></div>
+          <div className={visual.runningBatches}><span>Running Batches</span><strong>{loading ? "—" : batchSummary.running}</strong><small>Currently active</small></div>
+          <div className={visual.weekdayBatches}><span>Weekday Batches</span><strong>{loading ? "—" : batchSummary.weekday}</strong><small>Active · Monday–Friday</small></div>
+          <div className={visual.weekendBatches}><span>Weekend Batches</span><strong>{loading ? "—" : batchSummary.weekend}</strong><small>Active · Saturday–Sunday</small></div>
+        </section>
+        {!loading && (batchSummary.both > 0 || batchSummary.unscheduled > 0) && (
+          <p className={visual.scheduleNote}>
+            {batchSummary.both > 0 ? `${batchSummary.both} active ${batchSummary.both === 1 ? "batch runs" : "batches run"} on both weekdays and weekends (included in both counts).` : ""}
+            {batchSummary.unscheduled > 0 ? ` ${batchSummary.unscheduled} active ${batchSummary.unscheduled === 1 ? "batch has" : "batches have"} no class days configured.` : ""}
+          </p>
+        )}
 
         {message && <div className={styles.message}>{message}</div>}
 
