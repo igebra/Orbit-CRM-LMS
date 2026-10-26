@@ -126,7 +126,8 @@ export default function StudentsPage() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
   const canDelete = ["super_admin", "admin", "sales", "sales_marketing"].includes(role);
-  const canConfigurePlan = FINANCE_MANAGERS.includes(role);
+  const canCreateStudent = canDelete;
+  const canConfigurePlan = canCreateStudent && FINANCE_MANAGERS.includes(role);
 
   useEffect(() => {
     async function initialize() {
@@ -312,6 +313,7 @@ export default function StudentsPage() {
       });
       if(error){await partialFailure("course enrollment / notes",error.message);return;}
     }
+    let noteCopyWarning = false;
     if(form.create_plan&&selectedBatch){
       const {error:membershipError}=await supabase.from("batch_students").insert({
         batch_id:selectedBatch.id,student_id:id,
@@ -333,7 +335,7 @@ export default function StudentsPage() {
           .eq("id",planId);
         if(noteError){
           // Note is already stored against the initial course; don't duplicate student.
-          setMessage("Student and fee plan created; the fee-plan note could not be copied.");
+          noteCopyWarning = true;
         }
       }
     }
@@ -346,7 +348,9 @@ export default function StudentsPage() {
     }
     setSaving(false);setModalOpen(false);setForm(EMPTY_FORM);
     await loadStudents();
-    setMessage(`${form.student_name.trim()} created successfully${form.create_plan?" with a fee plan":""}.`);
+    setMessage(noteCopyWarning
+      ? `${form.student_name.trim()} created with fee plan and course notes. Finance note could not be copied; check the student's fee plan.`
+      : `${form.student_name.trim()} created successfully${form.create_plan?" with a fee plan":""}.`);
   }
 
   async function deleteStudent(student: Student) {
@@ -386,9 +390,10 @@ export default function StudentsPage() {
           </div>
           <div className={styles.headerActions}>
             <img src="/orbit-mascot-approved.svg" alt="Orbit mascot" className={visual.headerMascot} width={54} height={72} />
-            <OrbitButton variant="primary" icon={<OrbitNavIcon name="plus" />} onClick={() => { setForm(EMPTY_FORM); setModalOpen(true); }}>
+            {canCreateStudent && <OrbitButton variant="primary" icon={<OrbitNavIcon name="plus" />}
+              onClick={() => { setMessage(""); setForm(EMPTY_FORM); setModalOpen(true); }}>
               Add Student
-            </OrbitButton>
+            </OrbitButton>}
           </div>
         </header>
 
