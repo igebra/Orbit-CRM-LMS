@@ -1233,6 +1233,7 @@ export default function DemoSchedulePage() {
             <table>
               <thead>
                 <tr>
+                  <th data-sno>S.No</th>
                   <th>Demo</th>
                   <th>Students</th>
                   <th>Selected Time</th>
@@ -1248,11 +1249,11 @@ export default function DemoSchedulePage() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={11} className={styles.empty}>Loading demo schedule...</td></tr>
+                  <tr><td colSpan={12} className={styles.empty}>Loading demo schedule...</td></tr>
                 ) : filteredDemos.length === 0 ? (
-                  <tr><td colSpan={11} className={styles.empty}>No demos scheduled yet.</td></tr>
+                  <tr><td colSpan={12} className={styles.empty}>No demos scheduled yet.</td></tr>
                 ) : (
-                  filteredDemos.map((demo) => {
+                  filteredDemos.map((demo, index) => {
                     const attendedCount = demo.attendees.filter(
                       (item) => item.attendance_status === "Attended"
                     ).length;
@@ -1260,6 +1261,7 @@ export default function DemoSchedulePage() {
 
                     return (
                       <tr key={demo.id}>
+                        <td data-sno>{index + 1}</td>
                         <td><strong>{demo.demo_course}</strong></td>
                         <td>
                           <strong>{demo.attendees.length} student(s)</strong>
@@ -1502,10 +1504,10 @@ export default function DemoSchedulePage() {
                           <div className={styles.previewTitle}>Preview — first 5 rows</div>
                           <div className={styles.previewTableWrap}>
                             <table>
-                              <thead><tr>{excelHeaders.slice(0, 6).map((header) => <th key={header}>{header}</th>)}</tr></thead>
+                              <thead><tr><th data-sno>S.No</th>{excelHeaders.slice(0, 6).map((header) => <th key={header}>{header}</th>)}</tr></thead>
                               <tbody>
                                 {excelRows.slice(0, 5).map((row, index) => (
-                                  <tr key={index}>{excelHeaders.slice(0, 6).map((header) => <td key={header}>{cellToString(row[header]) || "—"}</td>)}</tr>
+                                  <tr key={index}><td data-sno>{index + 1}</td>{excelHeaders.slice(0, 6).map((header) => <td key={header}>{cellToString(row[header]) || "—"}</td>)}</tr>
                                 ))}
                               </tbody>
                             </table>
