@@ -725,7 +725,7 @@ export default function PaymentsPage() {
       <main className={styles.main}>
         <header className={styles.header}>
           <div>
-            <p className={styles.kicker}>FINANCE · PAYMENTS</p>
+            <p className={styles.kicker}>CRM · PAYMENTS</p>
             <h1>Payments</h1>
             <p>
               Collections, payment modes, pending fees and transaction history.
@@ -960,6 +960,7 @@ export default function PaymentsPage() {
 
             <input
               className={styles.search}
+              aria-label="Search transactions by student, batch or payment mode"
               type="search"
               placeholder="Search student, batch, mode..."
               value={search}
@@ -968,7 +969,7 @@ export default function PaymentsPage() {
           </div>
 
           <div className={styles.tableWrap}>
-            <table>
+            <table className={styles.transactionsTable} aria-label="Transactions">
               <thead>
                 <tr>
                   <th>Date</th>
@@ -1042,7 +1043,7 @@ export default function PaymentsPage() {
           </div>
 
           <div className={styles.tableWrap}>
-            <table>
+            <table className={styles.outstandingTable} aria-label="Outstanding payment plans">
               <thead>
                 <tr>
                   <th>Student</th>
@@ -1584,7 +1585,7 @@ export default function PaymentsPage() {
                 <div className={styles.empty}>No deleted payments found.</div>
               ) : (
                 <div className={styles.tableWrap}>
-                  <table>
+                  <table aria-label="Deleted payments audit history">
                     <thead>
                       <tr>
                         <th>Deleted</th>
