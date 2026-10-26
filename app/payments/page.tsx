@@ -250,21 +250,21 @@ export default function PaymentsPage() {
         return;
       }
 
-      await loadReports(defaultRange.from, defaultRange.to);
+      await loadReports(defaultRange.from, defaultRange.to, currentRole);
     }
 
     init();
   }, [router]);
 
-  async function loadReports(dateFrom = from, dateTo = to) {
+  async function loadReports(dateFrom = from, dateTo = to, accessRole = role) {
     setLoading(true);
     setMessage("");
 
     const marketingRange = getPresetRange("month");
-    const effectiveFrom = role === "marketing" ? marketingRange.from : dateFrom;
-    const effectiveTo = role === "marketing" ? marketingRange.to : dateTo;
+    const effectiveFrom = accessRole === "marketing" ? marketingRange.from : dateFrom;
+    const effectiveTo = accessRole === "marketing" ? marketingRange.to : dateTo;
 
-    if (role === "marketing") {
+    if (accessRole === "marketing") {
       setPreset("month");
       setFrom(marketingRange.from);
       setTo(marketingRange.to);
@@ -275,8 +275,8 @@ export default function PaymentsPage() {
         p_from: effectiveFrom,
         p_to: effectiveTo,
       }),
-      supabase.rpc("payment_outstanding_report"),
-      supabase.rpc("payment_entry_options"),
+      accessRole === "marketing" ? Promise.resolve({data: [],error: null}) : supabase.rpc("payment_outstanding_report"),
+      accessRole === "marketing" ? Promise.resolve({data: [],error: null}) : supabase.rpc("payment_entry_options"),
     ]);
 
     if (paymentOptionResult.error) {
@@ -764,6 +764,7 @@ export default function PaymentsPage() {
   const feePlanCount=outstanding.length;
   const overdueStudents=outstanding.filter(row=>row.payment_status==="Overdue").length;
   const monthlyLabel=new Date(from+"T00:00:00").toLocaleDateString("en-IN",{month:"long",year:"numeric"});
+  const periodLabel=preset==="month"?monthlyLabel:from+" – "+to;
 
   function chooseQuickStudent(key:string){
     const found=paymentOptions.find(row=>row.batch_id+"::"+row.student_id===key);
@@ -859,7 +860,7 @@ export default function PaymentsPage() {
                 <section className={view.programmes}>
                   <div className={view.sectionHeading}>
                     <div><h2>Collections by Programme</h2>
-                      <p>{monthlyLabel} · payment transactions in selected period</p></div>
+                      <p>{periodLabel} · payment transactions in selected period</p></div>
                     <span className={view.currencyTag}>USD · recorded values</span>
                   </div>
                   <div className={view.programmeGrid}>
