@@ -563,7 +563,7 @@ export default function StudentsPage() {
                     )}
                   </section>
                 )}
-                {message && <div className={`${styles.full} ${visual.formMessage}`} role="alert">{message}</div>
+                {message && <div className={`${styles.full} ${visual.formMessage}`} role="alert">{message}</div>}
               </div>
               <div className={styles.modalFooter}>
                 <OrbitButton variant="secondary" onClick={() => setModalOpen(false)} disabled={saving}>Cancel</OrbitButton>
