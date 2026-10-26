@@ -241,6 +241,7 @@ export default function TrainersPage() {
             <table aria-label="Trainer directory">
               <thead>
                 <tr>
+                  <th data-sno>S.No</th>
                   <th>Trainer</th>
                   <th>Email</th>
                   <th>Phone</th>
@@ -254,14 +255,15 @@ export default function TrainersPage() {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className={styles.empty}>
+                    <td colSpan={9} className={styles.empty}>
                       No trainers found.
                     </td>
                   </tr>
                 ) : (
-                  filtered.map((trainer) => (
+                  filtered.map((trainer, index) => (
                     <Fragment key={trainer.id}>
                     <tr>
+                      <td data-sno>{index + 1}</td>
                       <td><strong>{trainer.trainer_name}</strong></td>
                       <td>{trainer.email || "—"}</td>
                       <td>{trainer.phone || "—"}</td>
@@ -284,7 +286,7 @@ export default function TrainersPage() {
                     </tr>
                     {expandedTrainerId === trainer.id && (
                       <tr id={`trainer-actions-${trainer.id}`} className={styles.expandedActions}>
-                        <td colSpan={8}>
+                        <td colSpan={9}>
                           <div className={styles.expandedActionsContent}>
                             <span>Actions for {trainer.trainer_name}</span>
                             <div className={styles.actions}>
