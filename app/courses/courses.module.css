@@ -315,3 +315,9 @@
 .curriculumHeader select{height:40px;border-radius:10px;border-color:#DCE5E8;font:400 13px var(--font-orbit-body),sans-serif;}
 @media(max-width:1280px){.courseGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.main{padding:20px 24px;}}
 @media(max-width:960px){.courseGrid{grid-template-columns:1fr}.catalogueNote{flex-direction:column}.courseBody{padding:14px;}}
+
+
+/* UI-014 · Approved decorative Orbit mascot in Courses heading */
+.headerTools{display:flex;align-items:center;gap:14px;flex:none}
+.headerMascot{width:52px;height:68px;object-fit:contain;user-select:none;pointer-events:none}
+@media(max-width:960px){.headerTools{gap:8px}.headerMascot{width:44px;height:58px}}
