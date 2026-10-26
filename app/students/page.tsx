@@ -188,14 +188,25 @@ export default function StudentsPage() {
     );
   }, [students, search, coursesByStudent]);
 
-  const stats = useMemo(() => ({
-    total: students.length,
-    active: students.filter((student) => student.status === "Active").length,
-    enrollments: enrollments.filter((row) => row.status === "Active").length,
-    math: enrollments.filter((row) =>
-      ["Math", "AP ", "SAT", "Algebra", "Geometry", "Calculus", "Statistics"].some((term) => row.course_name.includes(term))
-    ).length,
-  }), [students, enrollments]);
+  // Count unique *active students* in each active course programme, rather
+  // than enrolment records (a student may be enrolled in multiple levels).
+  // School/advanced maths all belong to the Math programme.
+  const programmeStats = useMemo(() => {
+    const activeStudentIds = new Set(students.filter(
+      student => student.status?.toLowerCase() === "active"
+    ).map(student => student.id));
+    const ids: Record<"math" | "aiedge" | "coding4ai", Set<string>> = {
+      math: new Set<string>(), aiedge: new Set<string>(), coding4ai: new Set<string>(),
+    };
+    for (const row of enrollments) {
+      if (row.status?.toLowerCase() !== "active" || !activeStudentIds.has(row.student_id)) continue;
+      const course = row.course_name.trim().toLowerCase();
+      if (/^ai\s*edge/.test(course)) ids.aiedge.add(row.student_id);
+      else if (/^coding\s*4\s*ai|^c4ai|^coding/.test(course)) ids.coding4ai.add(row.student_id);
+      else if (/^(math|ap\b|sat\b|psat\b|algebra|geometry|calculus|pre.?calculus|statistics)/.test(course)) ids.math.add(row.student_id);
+    }
+    return {math:ids.math.size,aiedge:ids.aiedge.size,coding4ai:ids.coding4ai.size};
+  }, [students,enrollments]);
 
   function selectLead(leadId: string) {
     if (!leadId) {
@@ -319,12 +330,24 @@ export default function StudentsPage() {
           </div>
         </header>
 
-        <section className={`${styles.stats} ${visual.stats}`}>
-          <div className={styles.stat}><span>Total Students</span><strong>{stats.total}</strong></div>
-          <div className={styles.stat}><span>Active Students</span><strong>{stats.active}</strong></div>
-          <div className={styles.stat}><span>Active Enrollments</span><strong>{stats.enrollments}</strong></div>
-          <div className={styles.stat}><span>Math Enrollments</span><strong>{stats.math}</strong></div>
+        <section className={visual.programmeStats} aria-label="Active students by programme">
+          <div className={visual.mathStat}>
+            <span>Math</span>
+            <strong>{loading ? "—" : programmeStats.math}</strong>
+            <small>Active students enrolled</small>
+          </div>
+          <div className={visual.aiedgeStat}>
+            <span>AiEdge</span>
+            <strong>{loading ? "—" : programmeStats.aiedge}</strong>
+            <small>Active students enrolled</small>
+          </div>
+          <div className={visual.codingStat}>
+            <span>Coding4AI</span>
+            <strong>{loading ? "—" : programmeStats.coding4ai}</strong>
+            <small>Active students enrolled</small>
+          </div>
         </section>
+        <p className={visual.statNote}>Each student is counted once per programme, even when enrolled in multiple levels. {loading ? "" : `${students.length} student profiles total · ${students.filter(s => s.status?.toLowerCase() === "active").length} active.`}</p>
 
         {message && <div className={styles.message} role="status">{message}</div>}
 
