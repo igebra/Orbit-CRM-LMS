@@ -405,7 +405,7 @@ const COURSES: Course[] = [
   },
   {
     id: "math",
-    name: "Math",
+    name: "US Math",
     tagline: "School Math + Concept Clarity + Exam Confidence",
     description:
       "Year-long school mathematics support with curriculum-aligned teaching, revision support, PTMs and supplementary live classes.",
