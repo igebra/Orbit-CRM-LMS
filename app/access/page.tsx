@@ -551,6 +551,7 @@ export default function AccessPage() {
               <table>
                 <thead>
                   <tr>
+                    <th data-sno>S.No</th>
                     <th>Name</th>
                     <th>Email</th>
                     <th>Requested</th>
@@ -564,13 +565,14 @@ export default function AccessPage() {
                 <tbody>
                   {filteredRequests.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className={styles.empty}>
+                      <td colSpan={9} className={styles.empty}>
                         No access requests found.
                       </td>
                     </tr>
                   ) : (
-                    filteredRequests.map((request) => (
+                    filteredRequests.map((request, index) => (
                       <tr key={request.request_id}>
+                        <td data-sno>{index + 1}</td>
                         <td><strong>{request.full_name || "—"}</strong></td>
                         <td>{request.email}</td>
                         <td>{request.requested_role}</td>
@@ -688,6 +690,7 @@ export default function AccessPage() {
               <table>
                 <thead>
                   <tr>
+                    <th data-sno>S.No</th>
                     <th>User</th>
                     <th>Email</th>
                     <th>Role</th>
@@ -699,18 +702,19 @@ export default function AccessPage() {
                 <tbody>
                   {filteredUsers.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className={styles.empty}>
+                      <td colSpan={7} className={styles.empty}>
                         No Orbit users found.
                       </td>
                     </tr>
                   ) : (
-                    filteredUsers.map((user) => {
+                    filteredUsers.map((user, index) => {
                       const protectedFromAdmin =
                         !isSuperAdmin && user.role === "super_admin";
                       const isSelf = user.user_id === userId;
 
                       return (
                         <tr key={user.user_id}>
+                          <td data-sno>{index + 1}</td>
                           <td><strong>{user.full_name || "Orbit User"}</strong></td>
                           <td>{user.email || "—"}</td>
                           <td>{displayRole(user.role)}</td>
