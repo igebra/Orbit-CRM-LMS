@@ -67,8 +67,8 @@ export default function ProgrammeOverview({role}:{role:string}){
      {error?<p>Batch information is unavailable.</p>:
      <>
      <div className={styles.totals}><div><span>Total batches</span><strong>{data?data.totalBatches:"—"}</strong></div><div><span>Active</span><strong>{data?data.activeBatches:"—"}</strong></div></div>
-     <table><thead><tr><th>Programme</th><th>Active batches</th><th>Students</th></tr></thead>
-     <tbody>{families.map(key=><tr key={key}><td>{key}</td><td>{data?data.batchByFamily[key]:"—"}</td><td>{data?data.enrollments[key]:"—"}</td></tr>)}</tbody></table>
+     <table><thead><tr><th data-sno>S.No</th><th>Programme</th><th>Active batches</th><th>Students</th></tr></thead>
+     <tbody>{families.map((key,index)=><tr key={key}><td data-sno>{index + 1}</td><td>{key}</td><td>{data?data.batchByFamily[key]:"—"}</td><td>{data?data.enrollments[key]:"—"}</td></tr>)}</tbody></table>
      </>}
    </section>
  </div>;
