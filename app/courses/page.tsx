@@ -776,7 +776,10 @@ export default function CoursesPage() {
               Programme catalogue from igebra.ai · eligibility, pricing and course details.
             </p>
           </div>
-          <div className={styles.courseCount}>5 website listings</div>
+          <div className={styles.headerTools}>
+            <img src="/orbit-mascot-approved.svg" alt="" className={styles.headerMascot} width={52} height={68} />
+            <div className={styles.courseCount}>5 website listings</div>
+          </div>
         </header>
 
         {message && <div className={styles.courseMessage}>{message}</div>}
