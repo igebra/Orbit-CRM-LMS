@@ -1073,7 +1073,7 @@ export default function PaymentsPage() {
               </section>
             )}
             <section className={view.sideCard}>
-              <h2>Quick Stats</h2>
+              <div className={view.mascotHeading}><h2>Quick Stats</h2><img src="/orbit-mascot-approved.svg" className={view.mascot} alt="" width={43} height={58} /></div>
               <div className={view.statLine}><span>Payments in period</span><strong>{transactions.length}</strong></div>
               {!isMarketing&&<>
                 <div className={view.statLine}><span>Recorded fee plans</span><strong>{feePlanCount}</strong></div>
