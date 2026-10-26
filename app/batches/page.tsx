@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import OrbitSidebar from "../components/OrbitSidebar";
 import { COURSE_OPTIONS, courseDefaults } from "../lib/orbitCourses";
 import styles from "../lms.module.css";
+import visual from "./batches-visual.module.css";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -346,13 +347,13 @@ export default function BatchesPage() {
   }
 
   return (
-    <div className={styles.shell}>
+    <div className={`${styles.shell} ${visual.shell}`}>
       <OrbitSidebar email={email} active="batches" />
 
-      <main className={styles.main}>
-        <header className={styles.header}>
+      <main className={`${styles.main} ${visual.main}`}>
+        <header className={`${styles.header} ${visual.header}`}>
           <div>
-            <p className={styles.kicker}>LMS · BATCHES</p>
+            <p className={styles.kicker}>CRM · BATCHES</p>
             <h1>Batches</h1>
             <p className={styles.subtitle}>Manage trainers, schedules, students and class operations.</p>
           </div>
@@ -368,9 +369,9 @@ export default function BatchesPage() {
 
         {message && <div className={styles.message}>{message}</div>}
 
-        <section className={styles.card}>
-          <div className={styles.tableWrap}>
-            <table>
+        <section className={`${styles.card} ${visual.list}`}>
+          <div className={`${styles.tableWrap} ${visual.tableWrap}`}>
+            <table aria-label="Batch directory">
               <thead>
                 <tr>
                   <th>Batch</th>
@@ -381,7 +382,7 @@ export default function BatchesPage() {
                   <th className={styles.batchClassesMonth}>Classes / Month</th>
                   <th>Students</th>
                   <th>Status</th>
-                  <th></th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
