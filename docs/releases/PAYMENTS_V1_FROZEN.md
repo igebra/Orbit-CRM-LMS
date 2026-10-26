@@ -34,3 +34,13 @@
 
 ## Related work
 Course catalogue updates are a separate CRM module and **do not unfreeze Payments**.
+
+## UI-012 — User-approved simplification (26 October 2026)
+The owner requested that payment recording must not be duplicated or confused with fee-plan setup.
+- One main **Record Payment** entry point in the page header opens the single payment form.
+- Remove the separate right-rail Record a Payment form; keep **Quick Stats** and **Recent Payments**.
+- A student with an existing plan can be paid in one dialog: Batch, Student, Amount (USD), Payment Date, Payment Mode, Reference.
+- Do **not** create a fee plan silently during payment recording.
+- **Fee Plans & Renewals** has its own **Set Up Fee Plan** action/dialog for students without a plan.
+- A missing-plan student in Record Payment sees a concise explanation and link to fee plans; Save is disabled until the plan exists.
+- No changes to underlying payment amounts, fee history, audit logs or user permissions.
