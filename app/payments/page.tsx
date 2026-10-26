@@ -1092,6 +1092,98 @@ export default function PaymentsPage() {
         </div>
       </main>
 
+      {planOpen && canManageFinance && (
+        <div className={styles.backdrop}>
+          <div className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="fee-plan-title">
+            <div className={styles.modalHeader}>
+              <div>
+                <h2 id="fee-plan-title">Set Up Fee Plan</h2>
+                <p>Configure the student's fee schedule once. Payments are recorded separately.</p>
+              </div>
+              <button type="button" className={styles.close} aria-label="Close fee plan"
+                onClick={()=>{setPlanOpen(false);setEntryError("");}}>×</button>
+            </div>
+
+            <form onSubmit={saveFeePlan}>
+              <div className={styles.formGrid}>
+                <label>
+                  <span>Batch *</span>
+                  <select required value={paymentForm.batch_id}
+                    onChange={e=>setPaymentForm(prev=>({
+                      ...prev,batch_id:e.target.value,student_id:"",finance_id:"",
+                      setup_total_fee_usd:"",setup_installment_amount_usd:"",
+                    }))}>
+                    <option value="">Select batch</option>
+                    {paymentBatchOptions.filter(batch=>paymentOptions.some(row=>
+                      row.batch_id===batch.id && !row.finance_id)).map(batch=>
+                      <option key={batch.id} value={batch.id}>{batch.name} — {batch.course}</option>)}
+                  </select>
+                </label>
+                <label>
+                  <span>Student *</span>
+                  <select required value={paymentForm.student_id}
+                    disabled={!paymentForm.batch_id}
+                    onChange={e=>setPaymentForm(prev=>({...prev,student_id:e.target.value,finance_id:""}))}>
+                    <option value="">Select student</option>
+                    {paymentOptions.filter(row=>row.batch_id===paymentForm.batch_id &&
+                      !row.finance_id).map(row=><option key={row.student_id} value={row.student_id}>
+                        {row.student_name}
+                      </option>)}
+                  </select>
+                </label>
+                <label>
+                  <span>Total Fee (USD) *</span>
+                  <input required type="number" min="0.01" step="0.01"
+                    value={paymentForm.setup_total_fee_usd} placeholder="0.00"
+                    onChange={e=>setPaymentForm(prev=>({
+                      ...prev,setup_total_fee_usd:e.target.value,
+                      ...(prev.setup_payment_plan==="Paid in Full"?
+                        {setup_installment_amount_usd:e.target.value}:{})
+                    }))} />
+                </label>
+                <label>
+                  <span>Plan Type *</span>
+                  <select value={paymentForm.setup_payment_plan}
+                    onChange={e=>setPaymentForm(prev=>({
+                      ...prev,setup_payment_plan:e.target.value,
+                      ...(e.target.value==="Paid in Full"?
+                        {setup_installment_amount_usd:prev.setup_total_fee_usd}:{})
+                    }))}>
+                    {["After Every 4 Classes","Monthly","Quarterly","Half-yearly",
+                      "Yearly","Paid in Full","Custom"].map(plan=>
+                        <option key={plan} value={plan}>{plan}</option>)}
+                  </select>
+                </label>
+                <label>
+                  <span>Installment Amount (USD) *</span>
+                  <input required type="number" min="0.01" step="0.01"
+                    value={paymentForm.setup_installment_amount_usd} placeholder="0.00"
+                    readOnly={paymentForm.setup_payment_plan==="Paid in Full"}
+                    onChange={e=>setPaymentForm(prev=>({
+                      ...prev,setup_installment_amount_usd:e.target.value
+                    }))} />
+                </label>
+                <label>
+                  <span>Plan Start Date *</span>
+                  <input required type="date" value={paymentForm.setup_plan_start_date}
+                    onChange={e=>setPaymentForm(prev=>({
+                      ...prev,setup_plan_start_date:e.target.value
+                    }))} />
+                </label>
+                {entryError && <p className={view.formError+" "+styles.full} role="alert">{entryError}</p>}
+              </div>
+              <div className={styles.modalFooter}>
+                <button type="button" className={styles.secondary}
+                  onClick={()=>{setPlanOpen(false);setEntryError("");}} disabled={savingPlan}>Cancel</button>
+                <button type="submit" className={styles.primary} disabled={savingPlan}>
+                  {savingPlan?"Saving…":"Save Fee Plan"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {paymentOpen && (
         <div className={styles.backdrop}>
           <div className={styles.modal}>
