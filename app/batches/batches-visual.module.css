@@ -21,16 +21,16 @@
 .tableWrap th:nth-child(7){width:15%}
 .tableWrap th:nth-child(8){width:8%}
 .tableWrap th:nth-child(9){width:9%}
-.tableWrap td:nth-child(6){text-align:center;}
-.tableWrap td:nth-child(8)>span{padding:0;border:0;background:none;border-radius:0;color:#286F7A;box-shadow:none;font:600 12px var(--font-orbit-body),sans-serif;}
-.tableWrap td:nth-child(9)>div{display:flex;gap:4px;align-items:center;flex-wrap:wrap;}
-.tableWrap td:nth-child(9) button{border:0!important;background:transparent!important;box-shadow:none!important;border-radius:6px;padding:4px;min-height:32px;cursor:pointer;font:600 12px var(--font-orbit-body),sans-serif;}
-.tableWrap td:nth-child(9) button:first-child{color:#286F7A!important;}
-.tableWrap td:nth-child(9) button:last-child{color:#A43936!important;}
-.tableWrap td:nth-child(9) button:hover{background:#EAF3F5!important;text-decoration:underline;}
-.tableWrap td:nth-child(9) button:focus-visible{outline:2px solid #286F7A;outline-offset:2px;}
-.tableWrap td:nth-child(7)>div{display:block;max-width:none;}
-.tableWrap td:nth-child(7) span{display:block;white-space:normal;font:500 12px/1.4 var(--font-orbit-body),sans-serif;padding:0;border:0;background:none;}
+.tableWrap td:nth-child(7){text-align:center;}
+.tableWrap td:nth-child(9)>span{padding:0;border:0;background:none;border-radius:0;color:#286F7A;box-shadow:none;font:600 12px var(--font-orbit-body),sans-serif;}
+.tableWrap td:nth-child(10)>div{display:flex;gap:4px;align-items:center;flex-wrap:wrap;}
+.tableWrap td:nth-child(10) button{border:0!important;background:transparent!important;box-shadow:none!important;border-radius:6px;padding:4px;min-height:32px;cursor:pointer;font:600 12px var(--font-orbit-body),sans-serif;}
+.tableWrap td:nth-child(10) button:first-child{color:#286F7A!important;}
+.tableWrap td:nth-child(10) button:last-child{color:#A43936!important;}
+.tableWrap td:nth-child(10) button:hover{background:#EAF3F5!important;text-decoration:underline;}
+.tableWrap td:nth-child(10) button:focus-visible{outline:2px solid #286F7A;outline-offset:2px;}
+.tableWrap td:nth-child(8)>div{display:block;max-width:none;}
+.tableWrap td:nth-child(8) span{display:block;white-space:normal;font:500 12px/1.4 var(--font-orbit-body),sans-serif;padding:0;border:0;background:none;}
 @media(max-width:1090px){.tableWrap th,.tableWrap td{font-size:11px!important;padding:9px 4px!important;}}
 
 
@@ -50,3 +50,16 @@
 .batchStats .weekendBatches{border-top:3px solid #F3D7C5;background:linear-gradient(180deg,#FFF9F4,#fff 55%);}
 .scheduleNote{margin:0 0 14px!important;color:#52656F!important;font:400 11px/1.45 var(--font-orbit-body),Inter,sans-serif!important;}
 @media(max-width:1100px){.batchStats{grid-template-columns:repeat(2,minmax(0,1fr));}}
+
+
+/* UI-013 · Adjust compact batch grid for new S.No column. */
+.tableWrap th:nth-child(1){width:4%;}
+.tableWrap th:nth-child(2){width:10%;}
+.tableWrap th:nth-child(3){width:14%;}
+.tableWrap th:nth-child(4){width:11%;}
+.tableWrap th:nth-child(5){width:10%;}
+.tableWrap th:nth-child(6){width:11%;}
+.tableWrap th:nth-child(7){width:10%;}
+.tableWrap th:nth-child(8){width:14%;}
+.tableWrap th:nth-child(9){width:8%;}
+.tableWrap th:nth-child(10){width:8%;}
