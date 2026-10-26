@@ -800,398 +800,297 @@ export default function PaymentsPage() {
     <div className={styles.shell}>
       <OrbitSidebar email={email} active="payments" />
 
-      <main className={styles.main}>
-        <header className={styles.header}>
+      <main className={view.main}>
+        <header className={view.header}>
           <div>
-            <p className={styles.kicker}>CRM · PAYMENTS</p>
+            <p className={view.eyebrow}>CRM · FINANCE</p>
             <h1>Payments</h1>
-            <p>
-              Collections, payment modes, pending fees and transaction history.
-            </p>
+            <p>Track fees, record payments and review collections in one place.</p>
           </div>
-
-          <div className={styles.headerActions}>
-            {canManageFinance && (
-              <button className={styles.primary} onClick={openManualPayment}>
-                + Add Payment
-              </button>
+          <div className={view.headerControls}>
+            {!isMarketing && (
+              <div className={view.dateControls}>
+                <label>From <input aria-label="Payment report from date" type="date" value={from}
+                  onChange={event=>{setPreset("custom");setFrom(event.target.value)}} /></label>
+                <label>To <input aria-label="Payment report to date" type="date" value={to}
+                  onChange={event=>{setPreset("custom");setTo(event.target.value)}} /></label>
+                <button type="button" className={view.outlineButton} disabled={loading} onClick={()=>loadReports()}>
+                  {loading?"Loading…":"Apply"}
+                </button>
+              </div>
             )}
-
-            {role === "super_admin" && (
-              <button
-                type="button"
-                className={styles.secondary}
-                onClick={openDeletedPayments}
-              >
-                Deleted Payments
-              </button>
-            )}
-
-            <button
-              className={styles.secondary}
-              onClick={exportCsv}
-              disabled={filteredTransactions.length === 0}
-            >
-              Export CSV
-            </button>
+            {isMarketing && <span className={view.dateReadOnly}>{monthlyLabel} · read only</span>}
+            {canManageFinance && <button type="button" className={view.primaryButton} onClick={openManualPayment}>
+              + Record Payment
+            </button>}
           </div>
         </header>
 
-        {isMarketing ? (
-          <section className={styles.periodCard}>
-            <div>
-              <strong>Marketing Payment View</strong>
-              <p style={{ margin: "4px 0 0", fontSize: 11, color: "#6B7280" }}>
-                Current month payments only. Historical periods, outstanding balances
-                and payment editing are restricted.
-              </p>
-            </div>
-            <div className={styles.dateRange}>
-              <span style={{ fontSize: 11, fontWeight: 800 }}>
-                {from} → {to}
-              </span>
-            </div>
-          </section>
-        ) : (
-        <section className={styles.periodCard}>
-          <div className={styles.presetButtons}>
-            <button
-              className={preset === "week" ? styles.activePreset : ""}
-              onClick={() => applyPreset("week")}
-            >
-              This Week
-            </button>
-            <button
-              className={preset === "month" ? styles.activePreset : ""}
-              onClick={() => applyPreset("month")}
-            >
-              This Month
-            </button>
-            <button
-              className={preset === "quarter" ? styles.activePreset : ""}
-              onClick={() => applyPreset("quarter")}
-            >
-              This Quarter
-            </button>
-            <button
-              className={preset === "half" ? styles.activePreset : ""}
-              onClick={() => applyPreset("half")}
-            >
-              Half-Year
-            </button>
-            <button
-              className={preset === "year" ? styles.activePreset : ""}
-              onClick={() => applyPreset("year")}
-            >
-              This Year
-            </button>
-            <button
-              className={preset === "custom" ? styles.activePreset : ""}
-              onClick={() => applyPreset("custom")}
-            >
-              Custom
-            </button>
-          </div>
+        <nav className={view.tabs} aria-label="Payments sections">
+          {["Overview","Monthly Ledger","Payment History","Fee Plans & Renewals","Outstanding","Reports"].filter(tab=>
+            !isMarketing || ["Overview","Payment History","Reports"].includes(tab)
+          ).map(tab=><button type="button" key={tab} onClick={()=>{setWorkspaceTab(tab);setLedgerPage(0)}}
+            className={workspaceTab===tab?view.activeTab:""} aria-current={workspaceTab===tab?"page":undefined}>
+            {tab}
+          </button>)}
+        </nav>
 
-          <div className={styles.dateRange}>
-            <label>
-              <span>From</span>
-              <input
-                type="date"
-                value={from}
-                onChange={(event) => {
-                  setPreset("custom");
-                  setFrom(event.target.value);
-                }}
-              />
-            </label>
+        {message && <div className={view.notice} role="status">{message}</div>}
 
-            <label>
-              <span>To</span>
-              <input
-                type="date"
-                value={to}
-                onChange={(event) => {
-                  setPreset("custom");
-                  setTo(event.target.value);
-                }}
-              />
-            </label>
-
-            <button
-              className={styles.primary}
-              onClick={() => loadReports()}
-              disabled={loading}
-            >
-              {loading ? "Loading..." : "Apply"}
-            </button>
-          </div>
-        </section>
-
-        )}
-
-        {message && <div className={styles.message}>{message}</div>}
-
-        <section className={styles.stats}>
-          <div>
-            <span>Collected in Period</span>
-            <strong>{money(collected)}</strong>
-            <small>{from} → {to}</small>
-          </div>
-          <div>
-            <span>Transactions</span>
-            <strong>{transactions.length}</strong>
-            <small>Selected period</small>
-          </div>
-          {!isMarketing && (
-            <>
-              <div>
-                <span>Current Pending</span>
-                <strong>{money(pending)}</strong>
-                <small>All active payment plans</small>
-              </div>
-              <div>
-                <span>Current Overdue</span>
-                <strong>{money(overdue)}</strong>
-                <small>{outstanding.filter((row) => row.payment_status === "Overdue").length} students</small>
-              </div>
-            </>
-          )}
-        </section>
-
-        <section className={styles.breakdownGrid}>
-          <div className={styles.panel}>
-            <div className={styles.panelHeader}>
-              <div>
-                <h2>Payment Modes</h2>
-                <p>Collections in selected period</p>
-              </div>
-            </div>
-
-            <div className={styles.breakdownList}>
-              {modes.length === 0 ? (
-                <div className={styles.empty}>No payments in this period.</div>
-              ) : (
-                modes.map(([mode, amount]) => (
-                  <div key={mode}>
-                    <span>{mode}</span>
-                    <strong>{money(amount)}</strong>
+        <div className={view.columns}>
+          <div className={view.content}>
+            {workspaceTab==="Overview" && (
+              <>
+                <div className={view.metrics}>
+                  {(!isMarketing ? [
+                    {label:"Expected · all fee plans",value:money(planValue),caption:"Total agreed fee value",tone:"blue"},
+                    {label:"Collected · selected period",value:money(collected),caption:transactions.length+" recorded transactions",tone:"green"},
+                    {label:"Outstanding · all plans",value:money(pending),caption:"Pending plan balances",tone:"yellow"},
+                    {label:"Overdue · all plans",value:money(overdue),caption:overdueStudents+" students",tone:"pink"}
+                  ] : [
+                    {label:"Collected · current month",value:money(collected),caption:"Payments received",tone:"green"},
+                    {label:"Transactions",value:String(transactions.length),caption:"Current month only",tone:"blue"}
+                  ]).map(card=><section className={view.metric+" "+view[card.tone]} key={card.label}>
+                    <span>{card.label}</span>
+                    <strong>{loading?"—":card.value}</strong>
+                    <small>{card.caption}</small>
+                  </section>)}
+                </div>
+                <section className={view.programmes}>
+                  <div className={view.sectionHeading}>
+                    <div><h2>Collections by Programme</h2>
+                      <p>{monthlyLabel} · payment transactions in selected period</p></div>
+                    <span className={view.currencyTag}>USD · recorded values</span>
                   </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          <div className={styles.panel}>
-            <div className={styles.panelHeader}>
-              <div>
-                <h2>Batch Collections</h2>
-                <p>Which batches generated collections</p>
-              </div>
-            </div>
-
-            <div className={styles.breakdownList}>
-              {batches.length === 0 ? (
-                <div className={styles.empty}>No collections in this period.</div>
-              ) : (
-                batches.slice(0, 10).map(([batch, amount]) => (
-                  <div key={batch}>
-                    <span>{batch}</span>
-                    <strong>{money(amount)}</strong>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {!isMarketing && (
-          <div className={styles.panel}>
-            <div className={styles.panelHeader}>
-              <div>
-                <h2>Payment Plans</h2>
-                <p>Current student plan mix</p>
-              </div>
-            </div>
-
-            <div className={styles.breakdownList}>
-              {plans.length === 0 ? (
-                <div className={styles.empty}>No payment plans configured.</div>
-              ) : (
-                plans.map(([plan, count]) => (
-                  <div key={plan}>
-                    <span>{plan}</span>
-                    <strong>{count}</strong>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-          )}
-        </section>
-
-        <section className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <div>
-              <h2>Transactions</h2>
-              <p>Detailed payment report for the selected period</p>
-            </div>
-
-            <input
-              className={styles.search}
-              aria-label="Search transactions by student, batch or payment mode"
-              type="search"
-              placeholder="Search student, batch, mode..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          </div>
-
-          <div className={styles.tableWrap}>
-            <table className={styles.transactionsTable} aria-label="Transactions">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Student</th>
-                  <th>Batch</th>
-                  <th>Course</th>
-                  <th>Plan</th>
-                  <th>Amount</th>
-                  <th>Mode</th>
-                  <th>Reference</th>
-                  {canManageFinance && <th>Actions</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredTransactions.length === 0 ? (
-                  <tr>
-                    <td colSpan={canManageFinance ? 9 : 8} className={styles.empty}>
-                      No transactions found.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredTransactions.map((row) => (
-                    <tr key={row.transaction_id}>
-                      <td>
-                        {new Date(
-                          `${row.payment_date}T00:00:00`
-                        ).toLocaleDateString()}
-                      </td>
-                      <td><strong>{row.student_name}</strong></td>
-                      <td>{row.batch_name}</td>
-                      <td>{row.course_name}</td>
-                      <td>{row.payment_plan}</td>
-                      <td><strong>{money(row.amount_usd)}</strong></td>
-                      <td>{row.payment_mode}</td>
-                      <td>{row.reference || "—"}</td>
-                      {canManageFinance && (
-                        <td>
-                          <div className={styles.transactionActions}>
-                            <button
-                              type="button"
-                              className={styles.editPaymentButton}
-                              onClick={() => openEditPayment(row)}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              className={styles.deletePaymentButton}
-                              onClick={() => openDeletePayment(row)}
-                            >
-                              Delete
-                            </button>
+                  <div className={view.programmeGrid}>
+                    {programmeSummaries.map((item,index)=>{
+                      const rate=item.committed>0?
+                        Math.min(100,Math.round(100*item.lifetimePaid/item.committed)):0;
+                      return <div className={view.programmeCard} key={item.name}>
+                        <div className={view.programmeName}>
+                          <span className={view.programmeIcon+" "+view["colour"+index]}>
+                            {item.name==="Math"?"∑":item.name==="AiEdge"?"AI":item.name==="Coding4AI"?"</>":"+"}
+                          </span>
+                          <h3>{item.name}</h3>
+                        </div>
+                        <div className={view.programmeValue}>
+                          <span>Collected this period</span><strong>{loading?"—":money(item.collected)}</strong>
+                        </div>
+                        {!isMarketing && <>
+                          <div className={view.programmeMeta}>
+                            <span>Agreed fees: <strong>{money(item.committed)}</strong></span>
+                            <span>Pending: <strong>{money(item.pending)}</strong></span>
                           </div>
-                        </td>
-                      )}
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
+                          <div className={view.progressTrack} role="meter" aria-label={item.name+" lifetime plan collection progress"}
+                            aria-valuemin={0} aria-valuemax={100} aria-valuenow={rate}>
+                            <div style={{width:rate+"%"}} />
+                          </div>
+                          <small>{rate}% paid towards recorded plans · {item.students.size} enrolled students</small>
+                        </>}
+                        {isMarketing && <small>{item.transactions} payments in selected month</small>}
+                      </div>
+                    })}
+                  </div>
+                  {!isMarketing && <p className={view.dataNote}>
+                    Plan value and pending are lifetime figures; collected is for the selected period.
+                    These are different time ranges and are not a monthly forecast.
+                  </p>}
+                </section>
+              </>
+            )}
 
-        {!isMarketing && (
-        <section className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <div>
-              <h2>Current Outstanding</h2>
-              <p>Pending fees and the next payment due</p>
-            </div>
+            {(workspaceTab==="Overview" || workspaceTab==="Monthly Ledger" ||
+                workspaceTab==="Fee Plans & Renewals" || workspaceTab==="Outstanding") && !isMarketing && (
+              <section className={view.ledger}>
+                <div className={view.sectionHeading}>
+                  <div>
+                    <h2>{workspaceTab==="Outstanding"?"Outstanding Fee Balances":
+                      workspaceTab==="Fee Plans & Renewals"?"Fee Plans & Renewals":"Student Fee Ledger"}</h2>
+                    <p>Current payment plans, balances and renewal dates</p>
+                  </div>
+                  <button type="button" className={view.textLink} onClick={()=>setWorkspaceTab("Payment History")}>
+                    Payment history →
+                  </button>
+                </div>
+                <div className={view.filterBar}>
+                  <input type="search" aria-label="Search student fee plans" placeholder="Search students, batches, courses…"
+                    value={search} onChange={e=>{setSearch(e.target.value);setLedgerPage(0)}} />
+                  <select value={ledgerCourse} aria-label="Filter by programme" onChange={e=>{setLedgerCourse(e.target.value);setLedgerPage(0)}}>
+                    {["All","Math","AiEdge","Coding4AI"].map(name=><option key={name} value={name}>{name==="All"?"All programmes":name}</option>)}
+                  </select>
+                  <select value={ledgerStatus} aria-label="Filter by payment status" onChange={e=>{setLedgerStatus(e.target.value);setLedgerPage(0)}}>
+                    <option value="All">All statuses</option>
+                    {Array.from(new Set(outstanding.map(row=>row.payment_status))).filter(Boolean).sort().map(
+                      status=><option key={status} value={status}>{status}</option>)}
+                  </select>
+                  <button type="button" className={view.outlineButton} onClick={exportCsv}
+                    disabled={filteredTransactions.length===0} title="Export transaction history in selected period">
+                    Export CSV
+                  </button>
+                </div>
+                <div className={view.tableScroller}>
+                  <table className={view.ledgerTable} aria-label="Student payment plan ledger">
+                    <thead><tr>
+                      <th>Student</th><th>Course / Batch</th><th>Fee Plan</th>
+                      <th>Plan Total</th><th>Paid to Date</th><th>Balance</th>
+                      <th>Next Due</th><th>Status</th><th>Action</th>
+                    </tr></thead>
+                    <tbody>
+                      {loading?<tr><td colSpan={9} className={view.empty}>Loading payment plans…</td></tr>:
+                      visibleLedger.length===0?<tr><td colSpan={9} className={view.empty}>No matching fee plans found.</td></tr>:
+                      visibleLedger.map(row=><tr key={row.finance_id}>
+                        <td><strong>{row.student_name}</strong></td>
+                        <td>{row.course_name}<small>{row.batch_name}</small></td>
+                        <td>{row.payment_plan}</td>
+                        <td>{money(row.total_fee_usd)}</td>
+                        <td>{money(row.total_paid_usd)}</td>
+                        <td><strong>{money(row.pending_usd)}</strong></td>
+                        <td>{row.next_due_date||"—"}</td>
+                        <td><span className={row.payment_status==="Overdue"?view.bad:row.payment_status==="Paid"?view.good:view.neutral}>
+                          {row.payment_status}</span></td>
+                        <td>{canManageFinance?<button className={view.rowAction} type="button" onClick={()=>{
+                          chooseQuickStudent(row.batch_id+"::"+row.student_id);
+                          setPaymentOpen(true);
+                        }}>Record</button>:null}</td>
+                      </tr>)}
+                    </tbody>
+                  </table>
+                </div>
+                <div className={view.tableFooter}>
+                  <span>{ledgerRows.length===0?"0":ledgerPage*12+1}–{Math.min(ledgerRows.length,(ledgerPage+1)*12)} of {ledgerRows.length} fee plans</span>
+                  <div>
+                    <button type="button" disabled={ledgerPage===0} onClick={()=>setLedgerPage(n=>Math.max(0,n-1))} aria-label="Previous ledger page">‹</button>
+                    <span>Page {ledgerPage+1}</span>
+                    <button type="button" disabled={(ledgerPage+1)*12>=ledgerRows.length} onClick={()=>setLedgerPage(n=>n+1)} aria-label="Next ledger page">›</button>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {workspaceTab==="Payment History" && (
+              <section className={view.ledger}>
+                <div className={view.sectionHeading}>
+                  <div><h2>Payment History</h2><p>All recorded transactions in the selected period</p></div>
+                  <button type="button" className={view.outlineButton} onClick={exportCsv}
+                    disabled={filteredTransactions.length===0}>Export CSV</button>
+                </div>
+                <div className={view.filterBar}>
+                  <input type="search" placeholder="Search student, batch, payment mode…" aria-label="Search payment history"
+                    value={search} onChange={e=>setSearch(e.target.value)} />
+                </div>
+                <div className={view.tableScroller}>
+                  <table aria-label="Payment transaction history" className={view.ledgerTable}>
+                    <thead><tr><th>Date</th><th>Student</th><th>Course</th><th>Batch</th><th>Amount USD</th>
+                      <th>Mode</th><th>Reference</th>{canManageFinance&&<th>Actions</th>}</tr></thead>
+                    <tbody>{filteredTransactions.length===0?<tr>
+                      <td colSpan={canManageFinance?8:7} className={view.empty}>No payments found for this period.</td>
+                    </tr>:filteredTransactions.map(row=><tr key={row.transaction_id}>
+                      <td>{row.payment_date}</td><td><strong>{row.student_name}</strong></td>
+                      <td>{row.course_name}</td><td>{row.batch_name}</td><td><strong>{money(row.amount_usd)}</strong></td>
+                      <td>{row.payment_mode}</td><td>{row.reference||"—"}</td>
+                      {canManageFinance&&<td className={view.inlineActions}>
+                        <button type="button" onClick={()=>openEditPayment(row)}>Edit</button>
+                        <button type="button" onClick={()=>openDeletePayment(row)}>Delete</button>
+                      </td>}</tr>)}</tbody>
+                  </table>
+                </div>
+                {role==="super_admin"&&<button type="button" className={view.auditLink} onClick={openDeletedPayments}>
+                  Review deleted payments (audit)
+                </button>}
+              </section>
+            )}
+
+            {workspaceTab==="Reports" && (
+              <div className={view.reports}>
+                <section className={view.reportCard}><h2>Payment modes</h2><p>Current period</p>
+                  {modes.length===0?<small>No transactions recorded.</small>:
+                    modes.map(([name,value])=><div key={name}><span>{name}</span><strong>{money(value)}</strong></div>)}
+                </section>
+                <section className={view.reportCard}><h2>Batch collections</h2><p>Current period</p>
+                  {batches.length===0?<small>No collections recorded.</small>:
+                    batches.slice(0,12).map(([name,value])=><div key={name}><span>{name}</span><strong>{money(value)}</strong></div>)}
+                </section>
+                {!isMarketing&&<section className={view.reportCard}><h2>Payment plans</h2><p>Current plan mix</p>
+                  {plans.length===0?<small>No plans found.</small>:
+                    plans.map(([name,count])=><div key={name}><span>{name}</span><strong>{count}</strong></div>)}
+                </section>}
+              </div>
+            )}
           </div>
 
-          <div className={styles.tableWrap}>
-            <table className={styles.outstandingTable} aria-label="Outstanding payment plans">
-              <thead>
-                <tr>
-                  <th>Student</th>
-                  <th>Batch</th>
-                  <th>Plan</th>
-                  <th>Total Fee</th>
-                  <th>Paid</th>
-                  <th>Pending</th>
-                  <th>Next Due</th>
-                  <th>Status</th>
-                  {canManageFinance && <th>Actions</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {outstanding.length === 0 ? (
-                  <tr>
-                    <td colSpan={canManageFinance ? 9 : 8} className={styles.empty}>
-                      No payment plans configured.
-                    </td>
-                  </tr>
-                ) : (
-                  outstanding.map((row) => (
-                    <tr key={row.finance_id}>
-                      <td><strong>{row.student_name}</strong></td>
-                      <td>
-                        {row.batch_name}
-                        <small>{row.course_name}</small>
-                      </td>
-                      <td>{row.payment_plan}</td>
-                      <td>{money(row.total_fee_usd)}</td>
-                      <td>{money(row.total_paid_usd)}</td>
-                      <td><strong>{money(row.pending_usd)}</strong></td>
-                      <td>
-                        <strong>{row.next_due_label}</strong>
-                        <small>{row.next_due_date || "Date pending"}</small>
-                      </td>
-                      <td>
-                        <span
-                          className={`${styles.status} ${
-                            row.payment_status === "Overdue"
-                              ? styles.overdue
-                              : row.payment_status === "Due Soon"
-                              ? styles.dueSoon
-                              : row.payment_status === "Paid"
-                              ? styles.paid
-                              : ""
-                          }`}
-                        >
-                          {row.payment_status}
-                        </span>
-                      </td>
-                      {canManageFinance && (
-                        <td>
-                          <button
-                            type="button"
-                            className={styles.deletePlanButton}
-                            onClick={() => openDeletePlan(row)}
-                          >
-                            Delete Plan
-                          </button>
-                        </td>
-                      )}
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
-        )}
+          <aside className={view.rightRail} aria-label="Payment actions and statistics">
+            {canManageFinance && (
+              <section className={view.sideCard}>
+                <h2>Record a Payment</h2>
+                <p>Apply a payment against an existing student fee plan.</p>
+                <form className={view.quickForm} onSubmit={saveManualPayment}>
+                  <label>Student *
+                    <select required aria-label="Select student for payment"
+                      value={paymentForm.batch_id&&paymentForm.student_id?
+                        paymentForm.batch_id+"::"+paymentForm.student_id:""}
+                      onChange={e=>chooseQuickStudent(e.target.value)}>
+                      <option value="">Select student</option>
+                      {paymentOptions.slice().sort((a,b)=>a.student_name.localeCompare(b.student_name)).map(row=>
+                        <option key={row.batch_id+"::"+row.student_id} value={row.batch_id+"::"+row.student_id}>
+                          {row.student_name} · {row.batch_name}
+                        </option>)}
+                    </select>
+                  </label>
+                  <label>Course / Batch
+                    <input readOnly value={selectedPaymentOption?
+                      selectedPaymentOption.course_name+" · "+selectedPaymentOption.batch_name:"Select student first"} />
+                  </label>
+                  {selectedPaymentOption?.finance_id ? <>
+                    <label>Amount (USD) *
+                      <input required type="number" inputMode="decimal" min="0.01" step="0.01"
+                        placeholder="0.00" value={paymentForm.amount_usd}
+                        onChange={e=>setPaymentForm(prev=>({...prev,amount_usd:e.target.value}))} />
+                    </label>
+                    <label>Payment Date *
+                      <input required type="date" value={paymentForm.payment_date}
+                        onChange={e=>setPaymentForm(prev=>({...prev,payment_date:e.target.value}))} />
+                    </label>
+                    <label>Payment Mode *
+                      <select required value={paymentForm.payment_mode} onChange={e=>
+                        setPaymentForm(prev=>({...prev,payment_mode:e.target.value}))}>
+                        {PAYMENT_MODES.map(mode=><option key={mode}>{mode}</option>)}
+                      </select>
+                    </label>
+                    <label>Reference / Notes
+                      <textarea rows={2} placeholder="Reference or note (optional)" value={paymentForm.reference}
+                        onChange={e=>setPaymentForm(prev=>({...prev,reference:e.target.value}))} />
+                    </label>
+                    <button type="submit" className={view.primaryButton} disabled={savingPayment}>
+                      {savingPayment?"Saving…":"Save Payment"}
+                    </button>
+                  </>:<div className={view.planMessage}>
+                    {selectedPaymentOption?"This student needs a fee plan before recording payment.":"Select a student to begin."}
+                    <button type="button" className={view.outlineButton} disabled={!selectedPaymentOption}
+                      onClick={()=>setPaymentOpen(true)}>Open payment form</button>
+                  </div>}
+                </form>
+              </section>
+            )}
+            <section className={view.sideCard}>
+              <h2>Quick Stats</h2>
+              <div className={view.statLine}><span>Payments in period</span><strong>{transactions.length}</strong></div>
+              {!isMarketing&&<>
+                <div className={view.statLine}><span>Recorded fee plans</span><strong>{feePlanCount}</strong></div>
+                <div className={view.statLine}><span>Overdue students</span><strong>{overdueStudents}</strong></div>
+                <div className={view.statLine}><span>Total plan payments</span><strong>{money(lifetimePaid)}</strong></div>
+              </>}
+            </section>
+            <section className={view.sideCard}>
+              <div className={view.sideHeading}><h2>Recent Payments</h2>
+                <button type="button" onClick={()=>setWorkspaceTab("Payment History")}>View all</button></div>
+              {recentPayments.length===0?<p>No recorded payments in selected period.</p>:
+                recentPayments.map(row=><div className={view.recentLine} key={row.transaction_id}>
+                  <div><strong>{row.student_name}</strong><small>{row.payment_date}</small></div>
+                  <strong>{money(row.amount_usd)}</strong>
+                </div>)}
+            </section>
+          </aside>
+        </div>
       </main>
 
       {paymentOpen && (
