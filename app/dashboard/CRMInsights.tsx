@@ -157,8 +157,9 @@ export default function CRMInsights({role}:{role:string}) {
           <header><h3>Recent leads</h3><button type="button" className={styles.link} onClick={()=>router.push("/crm/leads")}>View all →</button></header>
           {!rows.length?<p className={styles.empty}>No recent leads.</p>:
           <div className={styles.tableWrap}><table>
-            <thead><tr><th>Student</th><th>Parent</th><th>Stage</th></tr></thead>
-            <tbody>{rows.slice(0,5).map(r=><tr key={r.id}>
+            <thead><tr><th data-sno>S.No</th><th>Student</th><th>Parent</th><th>Stage</th></tr></thead>
+            <tbody>{rows.slice(0,5).map((r,index)=><tr key={r.id}>
+              <td data-sno>{index + 1}</td>
               <td>{r.child_name||"Not recorded"}</td>
               <td>{[r.parent_first_name,r.parent_last_name].filter(Boolean).join(" ")||"Not recorded"}</td>
               <td><span className={styles.status}>{r.lead_stage||"Unspecified"}</span></td>
