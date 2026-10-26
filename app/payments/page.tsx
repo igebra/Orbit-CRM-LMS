@@ -168,6 +168,9 @@ export default function PaymentsPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [planOpen, setPlanOpen] = useState(false);
+  const [savingPlan, setSavingPlan] = useState(false);
+  const [entryError, setEntryError] = useState("");
   const [workspaceTab, setWorkspaceTab] = useState("Overview");
   const [ledgerCourse, setLedgerCourse] = useState("All");
   const [ledgerStatus, setLedgerStatus] = useState("All");
@@ -439,62 +442,102 @@ export default function PaymentsPage() {
       setup_installment_amount_usd: "",
       setup_plan_start_date: localIso(new Date()),
     });
+    setEntryError("");
     setPaymentOpen(true);
+  }
+
+  function openPlanSetup() {
+    if (!canManageFinance) return;
+    setEntryError("");
+    setPaymentForm(current=>({
+      ...current,
+      batch_id: "", student_id:"", finance_id:"",
+      setup_total_fee_usd:"", setup_payment_plan:"Monthly",
+      setup_installment_amount_usd:"",
+      setup_plan_start_date:localIso(new Date()),
+    }));
+    setPlanOpen(true);
+  }
+
+  function openPlanForSelectedStudent() {
+    if (!canManageFinance) return;
+    setEntryError("");
+    setPaymentOpen(false);
+    setWorkspaceTab("Fee Plans & Renewals");
+    setPlanOpen(true);
+  }
+
+  async function saveFeePlan(event: React.FormEvent) {
+    event.preventDefault();
+    if (!canManageFinance) return;
+    setEntryError("");
+    const choice=paymentOptions.find(option =>
+      option.batch_id === paymentForm.batch_id &&
+      option.student_id === paymentForm.student_id
+    );
+    if (!choice || choice.finance_id) {
+      setEntryError("Choose a student who does not already have a fee plan.");
+      return;
+    }
+    const total=Number(paymentForm.setup_total_fee_usd);
+    const installment=Number(paymentForm.setup_installment_amount_usd);
+    if (!Number.isFinite(total) || total<=0 || !Number.isFinite(installment) || installment<=0) {
+      setEntryError("Enter valid positive amounts for the total fee and installment.");
+      return;
+    }
+    if (installment>total) {
+      setEntryError("The installment amount cannot exceed the total fee.");
+      return;
+    }
+    if (!paymentForm.setup_plan_start_date) {
+      setEntryError("Select a plan start date.");
+      return;
+    }
+    setSavingPlan(true);
+    const {error}=await supabase.rpc("ensure_payment_plan_for_entry",{
+      p_batch_id:choice.batch_id,
+      p_student_id:choice.student_id,
+      p_total_fee_usd:total,
+      p_payment_plan:paymentForm.setup_payment_plan,
+      p_installment_amount_usd:installment,
+      p_plan_start_date:paymentForm.setup_plan_start_date,
+    });
+    setSavingPlan(false);
+    if (error) {
+      setEntryError(error.message);
+      return;
+    }
+    setPlanOpen(false);
+    await loadReports(from,to);
+    setMessage("Fee plan created. You can now record payments for this student.");
   }
 
   async function saveManualPayment(event: React.FormEvent) {
     event.preventDefault();
+    if (!canManageFinance) return;
+    setEntryError("");
 
     if (!paymentForm.batch_id || !paymentForm.student_id) {
-      setMessage("Select a batch and student.");
+      setEntryError("Select a batch and student.");
       return;
     }
 
-    let financeId = paymentForm.finance_id;
-
+    // Payment entry never creates a fee plan. Keep setup in Fee Plans & Renewals.
+    const financeId = selectedPaymentOption?.finance_id;
     if (!financeId) {
-      const totalFee = Number(paymentForm.setup_total_fee_usd);
-      const installment = Number(paymentForm.setup_installment_amount_usd);
-
-      if (!totalFee || totalFee <= 0) {
-        setMessage("This student has no payment plan yet. Enter the total fee.");
-        return;
-      }
-
-      if (!installment || installment <= 0) {
-        setMessage("Enter a valid installment amount.");
-        return;
-      }
-
-      const { data: createdFinanceId, error: setupError } = await supabase.rpc(
-        "ensure_payment_plan_for_entry",
-        {
-          p_batch_id: paymentForm.batch_id,
-          p_student_id: paymentForm.student_id,
-          p_total_fee_usd: totalFee,
-          p_payment_plan: paymentForm.setup_payment_plan,
-          p_installment_amount_usd: installment,
-          p_plan_start_date: paymentForm.setup_plan_start_date,
-        }
-      );
-
-      if (setupError || !createdFinanceId) {
-        setMessage(setupError?.message || "Could not create the payment plan.");
-        return;
-      }
-
-      financeId = String(createdFinanceId);
+      setEntryError("Set up a fee plan first under Fee Plans & Renewals.");
+      return;
     }
 
     const amount = Number(paymentForm.amount_usd);
 
     if (!amount || amount <= 0) {
-      setMessage("Enter a valid payment amount.");
+      setEntryError("Enter a valid payment amount.");
       return;
     }
 
     if (!paymentForm.payment_date) {
-      setMessage("Payment Date is required.");
+      setEntryError("Payment Date is required.");
       return;
     }
 
@@ -513,7 +556,7 @@ export default function PaymentsPage() {
     setSavingPayment(false);
 
     if (error) {
-      setMessage(error.message);
+      setEntryError(error.message);
       return;
     }
 
