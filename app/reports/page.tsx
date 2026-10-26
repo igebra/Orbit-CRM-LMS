@@ -417,7 +417,7 @@ export default function ReportsPage() {
 
             <section className={styles.card}>
               <div className={styles.tableWrap}>
-                <table aria-label={tab === "trainer" ? "Trainer delivery report" : "Student attendance report"}>
+                <table aria-label="Trainer delivery report">
                   <thead>
                     <tr>
                       <th>Date</th><th>Batch</th><th>Course</th><th>Session</th>
@@ -455,7 +455,7 @@ export default function ReportsPage() {
 
             <section className={styles.card}>
               <div className={styles.tableWrap}>
-                <table aria-label={tab === "trainer" ? "Trainer delivery report" : "Student attendance report"}>
+                <table aria-label="Student attendance report">
                   <thead>
                     <tr>
                       <th>Date</th><th>Batch</th><th>Course</th><th>Session</th>
