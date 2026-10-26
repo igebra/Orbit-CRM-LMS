@@ -467,6 +467,7 @@ export default function PortalAccessPage() {
                 <table>
                   <thead>
                     <tr>
+                      <th data-sno>S.No</th>
                       <th>Student</th>
                       <th>Access</th>
                       <th>User</th>
@@ -480,13 +481,14 @@ export default function PortalAccessPage() {
                   <tbody>
                     {filteredGrants.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className={styles.empty}>
+                        <td colSpan={8} className={styles.empty}>
                           No portal access has been granted yet.
                         </td>
                       </tr>
                     ) : (
-                      filteredGrants.map((grantRow) => (
+                      filteredGrants.map((grantRow, index) => (
                         <tr key={grantRow.grant_id}>
+                          <td data-sno>{index + 1}</td>
                           <td>
                             <strong>{grantRow.student_name}</strong>
                             <small>{grantRow.grade || "—"}</small>
@@ -554,6 +556,7 @@ export default function PortalAccessPage() {
               <table>
                 <thead>
                   <tr>
+                    <th data-sno>S.No</th>
                     <th>Course</th>
                     <th>Session</th>
                     <th>Resource</th>
@@ -565,12 +568,12 @@ export default function PortalAccessPage() {
                 <tbody>
                   {filteredResources.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className={styles.empty}>
+                      <td colSpan={6} className={styles.empty}>
                         No LMS resources found.
                       </td>
                     </tr>
                   ) : (
-                    filteredResources.map((resource) => {
+                    filteredResources.map((resource, index) => {
                       const session = curriculum.find(
                         (item) =>
                           item.id === resource.curriculum_session_id
@@ -578,6 +581,7 @@ export default function PortalAccessPage() {
 
                       return (
                         <tr key={resource.id}>
+                          <td data-sno>{index + 1}</td>
                           <td>{session?.course_name || "—"}</td>
                           <td>
                             <strong>
