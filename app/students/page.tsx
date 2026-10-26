@@ -312,7 +312,7 @@ export default function StudentsPage() {
             <p className={styles.subtitle}>Student profiles, course enrollments and CRM conversions.</p>
           </div>
           <div className={styles.headerActions}>
-            <img src="/orbit-mascot.png" alt="Orbit mascot" className={visual.headerMascot} width={54} height={72} />
+            <img src="/orbit-mascot-approved.svg" alt="Orbit mascot" className={visual.headerMascot} width={54} height={72} />
             <OrbitButton variant="primary" icon={<OrbitNavIcon name="plus" />} onClick={() => { setForm(EMPTY_FORM); setModalOpen(true); }}>
               Add Student
             </OrbitButton>
