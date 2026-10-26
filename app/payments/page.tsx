@@ -952,9 +952,16 @@ export default function PaymentsPage() {
                       workspaceTab==="Fee Plans & Renewals"?"Fee Plans & Renewals":"Student Fee Ledger"}</h2>
                     <p>Current payment plans, balances and renewal dates</p>
                   </div>
-                  <button type="button" className={view.textLink} onClick={()=>setWorkspaceTab("Payment History")}>
-                    Payment history →
-                  </button>
+                  <div className={view.planHeaderActions}>
+                    {workspaceTab==="Fee Plans & Renewals" && canManageFinance && (
+                      <button type="button" className={view.primaryButton} onClick={openPlanSetup}>
+                        + Set Up Fee Plan
+                      </button>
+                    )}
+                    <button type="button" className={view.textLink} onClick={()=>setWorkspaceTab("Payment History")}>
+                      Payment history →
+                    </button>
+                  </div>
                 </div>
                 <div className={view.filterBar}>
                   <input type="search" aria-label="Search student fee plans" placeholder="Search students, batches, courses…"
@@ -1063,58 +1070,6 @@ export default function PaymentsPage() {
           </div>
 
           <aside className={view.rightRail} aria-label="Payment actions and statistics">
-            {canManageFinance && (
-              <section className={view.sideCard}>
-                <h2>Record a Payment</h2>
-                <p>Apply a payment against an existing student fee plan.</p>
-                <form className={view.quickForm} onSubmit={saveManualPayment}>
-                  <label>Student *
-                    <select required aria-label="Select student for payment"
-                      value={paymentForm.batch_id&&paymentForm.student_id?
-                        paymentForm.batch_id+"::"+paymentForm.student_id:""}
-                      onChange={e=>chooseQuickStudent(e.target.value)}>
-                      <option value="">Select student</option>
-                      {paymentOptions.slice().sort((a,b)=>a.student_name.localeCompare(b.student_name)).map(row=>
-                        <option key={row.batch_id+"::"+row.student_id} value={row.batch_id+"::"+row.student_id}>
-                          {row.student_name} · {row.batch_name}
-                        </option>)}
-                    </select>
-                  </label>
-                  <label>Course / Batch
-                    <input readOnly value={selectedPaymentOption?
-                      selectedPaymentOption.course_name+" · "+selectedPaymentOption.batch_name:"Select student first"} />
-                  </label>
-                  {selectedPaymentOption?.finance_id ? <>
-                    <label>Amount (USD) *
-                      <input required type="number" inputMode="decimal" min="0.01" step="0.01"
-                        placeholder="0.00" value={paymentForm.amount_usd}
-                        onChange={e=>setPaymentForm(prev=>({...prev,amount_usd:e.target.value}))} />
-                    </label>
-                    <label>Payment Date *
-                      <input required type="date" value={paymentForm.payment_date}
-                        onChange={e=>setPaymentForm(prev=>({...prev,payment_date:e.target.value}))} />
-                    </label>
-                    <label>Payment Mode *
-                      <select required value={paymentForm.payment_mode} onChange={e=>
-                        setPaymentForm(prev=>({...prev,payment_mode:e.target.value}))}>
-                        {PAYMENT_MODES.map(mode=><option key={mode}>{mode}</option>)}
-                      </select>
-                    </label>
-                    <label>Reference / Notes
-                      <textarea rows={2} placeholder="Reference or note (optional)" value={paymentForm.reference}
-                        onChange={e=>setPaymentForm(prev=>({...prev,reference:e.target.value}))} />
-                    </label>
-                    <button type="submit" className={view.primaryButton} disabled={savingPayment}>
-                      {savingPayment?"Saving…":"Save Payment"}
-                    </button>
-                  </>:<div className={view.planMessage}>
-                    {selectedPaymentOption?"This student needs a fee plan before recording payment.":"Select a student to begin."}
-                    <button type="button" className={view.outlineButton} disabled={!selectedPaymentOption}
-                      onClick={()=>setPaymentOpen(true)}>Open payment form</button>
-                  </div>}
-                </form>
-              </section>
-            )}
             <section className={view.sideCard}>
               <div className={view.mascotHeading}><h2>Quick Stats</h2><img src="/orbit-mascot-approved.svg" className={view.mascot} alt="" width={43} height={58} /></div>
               <div className={view.statLine}><span>Payments in period</span><strong>{transactions.length}</strong></div>
@@ -1142,8 +1097,8 @@ export default function PaymentsPage() {
           <div className={styles.modal}>
             <div className={styles.modalHeader}>
               <div>
-                <h2>Add Payment</h2>
-                <p>Record a payment received manually.</p>
+                <h2>Record Payment</h2>
+                <p>Select a student, enter the amount and save.</p>
               </div>
               <button
                 type="button"
@@ -1234,95 +1189,15 @@ export default function PaymentsPage() {
                 </label>
 
                 {selectedPaymentOption && !selectedPaymentOption.finance_id && (
-                  <div className={`${styles.quickPlan} ${styles.full}`}>
-                    <div className={styles.quickPlanHead}>
-                      <strong>Payment plan not configured</strong>
-                      <span>Set it here once, then record this payment.</span>
-                    </div>
-
-                    <div className={styles.quickPlanGrid}>
-                      <label>
-                        <span>Total Fee USD *</span>
-                        <input
-                          type="number"
-                          min="0.01"
-                          step="0.01"
-                          value={paymentForm.setup_total_fee_usd}
-                          onChange={(event)=>{
-                            const value=event.target.value;
-                            setPaymentForm({
-                              ...paymentForm,
-                              setup_total_fee_usd:value,
-                              ...(paymentForm.setup_payment_plan==="Paid in Full"
-                                ? {
-                                    setup_installment_amount_usd:value,
-                                    amount_usd:value,
-                                  }
-                                : {})
-                            });
-                          }}
-                          placeholder="0.00"
-                        />
-                      </label>
-
-                      <label>
-                        <span>Payment Plan *</span>
-                        <select
-                          value={paymentForm.setup_payment_plan}
-                          onChange={(event)=>{
-                            const plan=event.target.value;
-                            setPaymentForm({
-                              ...paymentForm,
-                              setup_payment_plan:plan,
-                              ...(plan==="Paid in Full"
-                                ? {
-                                    setup_installment_amount_usd:paymentForm.setup_total_fee_usd,
-                                    amount_usd:paymentForm.setup_total_fee_usd,
-                                  }
-                                : {})
-                            });
-                          }}
-                        >
-                          <option>After Every 4 Classes</option>
-                          <option>Monthly</option>
-                          <option>Quarterly</option>
-                          <option>Half-yearly</option>
-                          <option>Yearly</option>
-                          <option>Paid in Full</option>
-                          <option>Custom</option>
-                        </select>
-                      </label>
-
-                      <label>
-                        <span>Installment Amount USD *</span>
-                        <input
-                          type="number"
-                          min="0.01"
-                          step="0.01"
-                          value={paymentForm.setup_installment_amount_usd}
-                          onChange={(event)=>setPaymentForm({
-                            ...paymentForm,
-                            setup_installment_amount_usd:event.target.value
-                          })}
-                          readOnly={paymentForm.setup_payment_plan==="Paid in Full"}
-                          placeholder="0.00"
-                        />
-                      </label>
-
-                      <label>
-                        <span>Plan Start Date *</span>
-                        <input
-                          type="date"
-                          value={paymentForm.setup_plan_start_date}
-                          onChange={(event)=>setPaymentForm({
-                            ...paymentForm,
-                            setup_plan_start_date:event.target.value
-                          })}
-                        />
-                      </label>
-                    </div>
+                  <div className={view.missingPlanNotice+" "+styles.full}>
+                    <span>Fee plan required before recording payment.</span>
+                    <button type="button" className={view.textLink} onClick={openPlanForSelectedStudent}>
+                      Go to Fee Plans &amp; Renewals →
+                    </button>
                   </div>
                 )}
+
+                {entryError && <p className={view.formError+" "+styles.full} role="alert">{entryError}</p>}
 
                 <label>
                   <span>Amount USD *</span>
@@ -1399,7 +1274,7 @@ export default function PaymentsPage() {
                 <button
                   type="submit"
                   className={styles.primary}
-                  disabled={savingPayment}
+                  disabled={savingPayment || !selectedPaymentOption?.finance_id}
                 >
                   {savingPayment ? "Saving..." : "Save Payment"}
                 </button>
