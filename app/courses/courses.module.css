@@ -198,3 +198,54 @@
   }
 }
 
+
+
+/* BRAND-008 / Courses — pastel-neutral catalogue with standard Orbit components.
+   Catalogue content remains in cards; data-directory tables alone are borderless. */
+.shell{grid-template-columns:248px minmax(0,1fr);background:#F8FAFB;color:#263D46;}
+.main{padding:24px 27px 40px;background:#F8FAFB;overflow-x:hidden;}
+.header{align-items:center;margin-bottom:20px;}
+.header h1{font:700 28px/1.25 var(--font-orbit-heading),sans-serif;color:#263D46;}
+.header p{font:400 14px/1.45 var(--font-orbit-body),sans-serif;color:#52656F;}
+.kicker{color:#286F7A!important;font:600 11px var(--font-orbit-body),sans-serif!important;letter-spacing:.07em;}
+.courseCount{border:1px solid #DCE5E8;color:#286F7A;border-radius:10px;background:white;font:600 13px var(--font-orbit-body),sans-serif;padding:9px 12px;}
+.courseGrid{gap:16px;}
+.courseCard{border:1px solid #DCE5E8;border-radius:16px;box-shadow:0 4px 18px rgba(38,61,70,.045);background:#fff;}
+.courseTop{min-height:120px;padding:18px 18px 16px;color:#263D46;}
+.aiedge{background:#D9EBF1}
+.coding4ai{background:#DDD0E7}
+.math{background:#F3D7C5}
+.courseType{color:#52656F;font:600 11px var(--font-orbit-body),sans-serif;letter-spacing:.05em;}
+.courseTop h2{font:700 23px/1.2 var(--font-orbit-heading),sans-serif;color:#263D46;margin:0;}
+.courseTop p{color:#52656F;opacity:1;font:400 12px/1.45 var(--font-orbit-body),sans-serif;}
+.courseBody{padding:16px;}
+.description{min-height:0;color:#52656F;font:400 13px/1.5 var(--font-orbit-body),sans-serif;}
+.metrics{gap:8px;}
+.metrics div{border:0;border-radius:8px;background:#F8FAFB;padding:9px;}
+.metrics span,.summaryGrid span{color:#52656F;font:600 11px/1.4 var(--font-orbit-body),sans-serif;}
+.metrics strong{color:#263D46;font:600 12px/1.35 var(--font-orbit-body),sans-serif;}
+.price{font:700 16px var(--font-orbit-heading),sans-serif;color:#286F7A;border-top:1px solid #E6EDF0;}
+.actions{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;}
+.actions>.primary,.actions>.secondary{height:auto;min-height:40px;flex:1 1 120px;display:inline-flex;align-items:center;justify-content:center;text-align:center;font:600 13px/1.2 var(--font-orbit-body),sans-serif;border-radius:10px;padding:8px 12px;box-shadow:none;}
+.primary{background:#286F7A;border:1px solid #286F7A;color:#fff;}
+.primary:hover{background:#225E68;}
+.secondary{background:#fff;border:1px solid #DCE5E8;color:#286F7A;}
+.secondary:hover{background:#F0F4F5;}
+.primary:focus-visible,.secondary:focus-visible{outline:2px solid #286F7A;outline-offset:2px;}
+.courseNameIcon{background:rgba(255,255,255,.8);border:0;box-shadow:none;transform:none;}
+.courseNameIcon:after{display:none;}
+.courseNameIcon svg{filter:none;}
+.quickSummary{gap:16px;}
+.quickSummary>div{border:1px solid #DCE5E8;box-shadow:none;border-radius:16px;padding:14px;}
+.quickSummary span{color:#286F7A;font:600 12px var(--font-orbit-body),sans-serif;}
+.quickSummary strong{color:#263D46;font:600 15px var(--font-orbit-heading),sans-serif;}
+.quickSummary small{color:#52656F;font:400 12px var(--font-orbit-body),sans-serif;}
+.modal,.editModal{background:#fff;border-radius:20px;}
+.modalHeader h2{font:600 22px var(--font-orbit-heading),sans-serif;color:#263D46;}
+.modalEyebrow{color:#286F7A;}
+.modalBody h3{font:600 16px var(--font-orbit-heading),sans-serif;}
+.editGrid label span{font:500 13px var(--font-orbit-body),sans-serif;color:#263D46;text-transform:none;letter-spacing:0;}
+.editGrid input{height:40px;border-radius:10px;font:400 14px var(--font-orbit-body),sans-serif;}
+.editGrid textarea{border-radius:10px;font:400 14px var(--font-orbit-body),sans-serif;}
+@media(max-width:1300px){.courseGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:990px){.courseGrid{grid-template-columns:1fr}}
