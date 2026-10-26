@@ -408,6 +408,7 @@ export default function BatchesPage() {
             <table aria-label="Batch directory">
               <thead>
                 <tr>
+                  <th data-sno>S.No</th>
                   <th>Batch</th>
                   <th>Course</th>
                   <th>Trainer</th>
@@ -421,11 +422,12 @@ export default function BatchesPage() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={9} className={styles.empty}>Loading batches...</td></tr>
+                  <tr><td colSpan={10} className={styles.empty}>Loading batches...</td></tr>
                 ) : batches.length === 0 ? (
-                  <tr><td colSpan={9} className={styles.empty}>No batches found.</td></tr>
-                ) : batches.map((b) => (
+                  <tr><td colSpan={10} className={styles.empty}>No batches found.</td></tr>
+                ) : batches.map((b, index) => (
                   <tr key={b.id}>
+                    <td data-sno>{index + 1}</td>
                     <td>{b.batch_name}</td>
                     <td>{b.course_name}</td>
                     <td>{b.trainer_name || "—"}</td>
