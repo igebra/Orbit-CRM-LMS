@@ -982,14 +982,15 @@ export default function PaymentsPage() {
                 <div className={view.tableScroller}>
                   <table className={view.ledgerTable} aria-label="Student payment plan ledger">
                     <thead><tr>
-                      <th>Student</th><th>Course / Batch</th><th>Fee Plan</th>
+                      <th data-sno>S.No</th><th>Student</th><th>Course / Batch</th><th>Fee Plan</th>
                       <th>Plan Total</th><th>Paid to Date</th><th>Balance</th>
                       <th>Next Due</th><th>Status</th><th>Action</th>
                     </tr></thead>
                     <tbody>
-                      {loading?<tr><td colSpan={9} className={view.empty}>Loading payment plans…</td></tr>:
-                      visibleLedger.length===0?<tr><td colSpan={9} className={view.empty}>No matching fee plans found.</td></tr>:
-                      visibleLedger.map(row=><tr key={row.finance_id}>
+                      {loading?<tr><td colSpan={10} className={view.empty}>Loading payment plans…</td></tr>:
+                      visibleLedger.length===0?<tr><td colSpan={10} className={view.empty}>No matching fee plans found.</td></tr>:
+                      visibleLedger.map((row, index)=><tr key={row.finance_id}>
+                        <td data-sno>{ledgerPage * 12 + index + 1}</td>
                         <td><strong>{row.student_name}</strong></td>
                         <td>{row.course_name}<small>{row.batch_name}</small></td>
                         <td>{row.payment_plan}</td>
@@ -1031,11 +1032,12 @@ export default function PaymentsPage() {
                 </div>
                 <div className={view.tableScroller}>
                   <table aria-label="Payment transaction history" className={view.ledgerTable}>
-                    <thead><tr><th>Date</th><th>Student</th><th>Course</th><th>Batch</th><th>Amount USD</th>
+                    <thead><tr><th data-sno>S.No</th><th>Date</th><th>Student</th><th>Course</th><th>Batch</th><th>Amount USD</th>
                       <th>Mode</th><th>Reference</th>{canManageFinance&&<th>Actions</th>}</tr></thead>
                     <tbody>{filteredTransactions.length===0?<tr>
-                      <td colSpan={canManageFinance?8:7} className={view.empty}>No payments found for this period.</td>
-                    </tr>:filteredTransactions.map(row=><tr key={row.transaction_id}>
+                      <td colSpan={canManageFinance?9:8} className={view.empty}>No payments found for this period.</td>
+                    </tr>:filteredTransactions.map((row, index)=><tr key={row.transaction_id}>
+                      <td data-sno>{index + 1}</td>
                       <td>{row.payment_date}</td><td><strong>{row.student_name}</strong></td>
                       <td>{row.course_name}</td><td>{row.batch_name}</td><td><strong>{money(row.amount_usd)}</strong></td>
                       <td>{row.payment_mode}</td><td>{row.reference||"—"}</td>
@@ -1576,6 +1578,7 @@ export default function PaymentsPage() {
                   <table aria-label="Deleted payments audit history">
                     <thead>
                       <tr>
+                        <th data-sno>S.No</th>
                         <th>Deleted</th>
                         <th>Student</th>
                         <th>Batch</th>
@@ -1588,8 +1591,9 @@ export default function PaymentsPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {deletedPayments.map((row) => (
+                      {deletedPayments.map((row, index) => (
                         <tr key={row.correction_id}>
+                          <td data-sno>{index + 1}</td>
                           <td>{new Date(row.deleted_at).toLocaleString()}</td>
                           <td>
                             <strong>{row.student_name}</strong>
