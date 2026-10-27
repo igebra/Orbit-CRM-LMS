@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import OrbitSidebar from "../components/OrbitSidebar";
+import OrbitDeleteButton from "../components/ui/OrbitDeleteButton";
 import { COURSE_OPTIONS, courseDefaults } from "../lib/orbitCourses";
 import styles from "../lms.module.css";
 import visual from "./batches-visual.module.css";
@@ -457,17 +458,7 @@ export default function BatchesPage() {
                         </button>
 
                         {canDelete && (
-                          <button
-                            type="button"
-                            className={styles.iconDeleteButton}
-                            onClick={() => deleteBatch(b)}
-                            title={`Delete ${b.batch_name}`}
-                            aria-label={`Delete ${b.batch_name}`}
-                          >
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                              <path d="M8 8v9m4-9v9m4-9v9M5 6h14M9 6V4h6v2m3 0-1 14H7L6 6" />
-                            </svg>
-                          </button>
+                          <OrbitDeleteButton label={`Delete ${b.batch_name}`} onClick={() => deleteBatch(b)}/>
                         )}
                       </div>
                     </td>
