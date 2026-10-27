@@ -8,6 +8,7 @@ import styles from "../lms.module.css";
 import visual from "./students-visual.module.css";
 import OrbitButton from "../components/ui/OrbitButton";
 import OrbitNavIcon from "../components/OrbitNavIcon";
+import OrbitDeleteButton from "../components/ui/OrbitDeleteButton";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -463,7 +464,7 @@ export default function StudentsPage() {
                       <td>
                         <div className={styles.rowActions}>
                           <OrbitButton size="sm" variant="secondary" onClick={() => router.push(`/students/${student.id}`)}>Open</OrbitButton>
-                          <OrbitButton size="sm" variant="danger" onClick={() => deleteStudent(student)}>Delete</OrbitButton>
+                          <OrbitDeleteButton label={`Delete ${student.student_name}`} onClick={() => deleteStudent(student)}/>
                         </div>
                       </td>
                     )}
