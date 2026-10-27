@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import OrbitSidebar from "../components/OrbitSidebar";
-import OrbitNavIcon from "../components/OrbitNavIcon";
+import OrbitDeleteButton from "../components/ui/OrbitDeleteButton";
 import styles from "./access.module.css";
 
 const supabase = createClient(
@@ -655,13 +655,7 @@ export default function AccessPage() {
                               >
                                 Reject
                               </button>
-                              <button
-                                className={styles.deleteRequestButton}
-                                onClick={() => deleteRequest(request)}
-                                disabled={saving}
-                              >
-                                Remove
-                              </button>
+                              <OrbitDeleteButton label={`Remove ${request.status === "Approved" ? "approval" : "request"} for ${request.email}`} disabled={saving} onClick={() => deleteRequest(request)}/>
                             </div>
                           ) : request.status === "Rejected" ? (
                             <div className={styles.actions}>
@@ -671,23 +665,11 @@ export default function AccessPage() {
                               >
                                 Approve Again
                               </button>
-                              <button
-                                className={styles.deleteRequestButton}
-                                onClick={() => deleteRequest(request)}
-                                disabled={saving}
-                              >
-                                Remove
-                              </button>
+                              <OrbitDeleteButton label={`Remove ${request.status === "Approved" ? "approval" : "request"} for ${request.email}`} disabled={saving} onClick={() => deleteRequest(request)}/>
                             </div>
                           ) : accountState(request) === "Waiting Activation" ? (
                             <div className={styles.actions}>
-                              <button
-                                className={styles.deleteRequestButton}
-                                onClick={() => deleteRequest(request)}
-                                disabled={saving}
-                              >
-                                Remove Approval
-                              </button>
+                              <OrbitDeleteButton label={`Remove ${request.status === "Approved" ? "approval" : "request"} for ${request.email}`} disabled={saving} onClick={() => deleteRequest(request)}/>
                             </div>
                           ) : (
                             <div className={styles.actions}>
@@ -772,13 +754,7 @@ export default function AccessPage() {
                                 </button>
 
                                 {user.is_active && (
-                                  <button
-                                    className={styles.removeButton}
-                                    onClick={() => removeUserAccess(user)}
-                                    disabled={saving}
-                                  >
-                                    Remove User
-                                  </button>
+                                  <OrbitDeleteButton label={`Remove Orbit access for ${user.email || user.user_id}`} disabled={saving} onClick={() => removeUserAccess(user)}/>
                                 )}
                               </div>
                             )}
