@@ -11,7 +11,7 @@ import {
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import OrbitSidebar from "../../components/OrbitSidebar";
-import OrbitNavIcon from "../../components/OrbitNavIcon";
+import OrbitDeleteButton from "../../components/ui/OrbitDeleteButton";
 import * as XLSX from "xlsx";
 import styles from "./demos.module.css";
 
@@ -1308,11 +1308,7 @@ export default function DemoSchedulePage() {
                           onClick={() => editDemo(demo)} title="Edit demo and attendance">
                           Edit
                         </button>
-                        <button type="button" className={styles.deleteButton}
-                          aria-label={`Delete ${demo.demo_course} demo`}
-                          title="Delete demo" onClick={() => deleteDemo(demo.id)}>
-                          <OrbitNavIcon name="trash"/>
-                        </button>
+                        <OrbitDeleteButton label={`Delete ${demo.demo_course} demo`} onClick={() => deleteDemo(demo.id)}/>
                       </div> : <span>View only</span>}
                     </td>
                   </tr>;
