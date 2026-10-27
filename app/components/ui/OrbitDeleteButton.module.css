@@ -1,0 +1,23 @@
+/* BRAND-008 · Unified destructive row action */
+.deleteButton {
+  flex: 0 0 34px;
+  width: 34px !important;
+  min-width: 34px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle;
+  color: #A43936 !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  cursor: pointer;
+}
+.deleteButton:hover:not(:disabled) { background: #FFF0EF !important; }
+.deleteButton:focus-visible { outline: 2px solid #A43936; outline-offset: 2px; }
+.deleteButton:disabled { opacity: .45; cursor: not-allowed; }
+.deleteButton svg { width: 17px !important; height: 17px !important; flex: none; }
