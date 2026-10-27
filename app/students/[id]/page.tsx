@@ -582,6 +582,7 @@ async function saveStudentNotes() {
             <table>
               <thead>
                 <tr>
+                  <th data-sno>S.No</th>
                   <th>Course</th>
                   <th>Enrolled</th>
                   <th>Status</th>
@@ -594,13 +595,14 @@ async function saveStudentNotes() {
               <tbody>
                 {enrollments.length === 0 ? (
                   <tr>
-                    <td colSpan={canManage ? 6 : 5} className={styles.empty}>
+                    <td colSpan={canManage ? 7 : 6} className={styles.empty}>
                       No enrollments yet.
                     </td>
                   </tr>
                 ) : (
-                  enrollments.map((row) => (
+                  enrollments.map((row, index) => (
                     <tr key={row.id}>
+                      <td data-sno>{index + 1}</td>
                       <td>
                         <strong>{row.course_name}</strong>
                       </td>
@@ -643,6 +645,7 @@ async function saveStudentNotes() {
             <table>
               <thead>
                 <tr>
+                  <th data-sno>S.No</th>
                   <th>Date</th>
                   <th>Batch</th>
                   <th>Session</th>
@@ -656,13 +659,14 @@ async function saveStudentNotes() {
               <tbody>
                 {progress.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className={styles.empty}>
+                    <td colSpan={8} className={styles.empty}>
                       No class history yet.
                     </td>
                   </tr>
                 ) : (
-                  progress.map((row) => (
+                  progress.map((row, index) => (
                     <tr key={row.session_id}>
+                      <td data-sno>{index + 1}</td>
                       <td>{row.class_date}</td>
                       <td>
                         <strong>{row.batch_name}</strong>
@@ -704,6 +708,7 @@ async function saveStudentNotes() {
               <table>
                 <thead>
                   <tr>
+                    <th data-sno>S.No</th>
                     <th>Batch</th>
                     <th>Course</th>
                     <th>Total Fee</th>
@@ -717,13 +722,14 @@ async function saveStudentNotes() {
                 <tbody>
                   {payments.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className={styles.empty}>
+                      <td colSpan={8} className={styles.empty}>
                         No payment plan set.
                       </td>
                     </tr>
                   ) : (
-                    payments.map((row) => (
+                    payments.map((row, index) => (
                       <tr key={row.batch_id}>
+                        <td data-sno>{index + 1}</td>
                         <td>{row.batch_name}</td>
                         <td>{row.course_name}</td>
                         <td>{money(row.total_fee_usd)}</td>

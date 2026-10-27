@@ -155,6 +155,13 @@ export default function ReportsPage() {
     };
   }, [attendanceRows]);
 
+  const progressSummary = useMemo(() => ({
+    batches: progressRows.length,
+    active: progressRows.filter(row => row.batch_status.toLowerCase() === "active").length,
+    completed: progressRows.reduce((sum,row)=>sum+Number(row.completed_sessions||0),0),
+    enrolments: progressRows.reduce((sum,row)=>sum+Number(row.student_count||0),0),
+  }), [progressRows]);
+
   function setPreset(offset: number) {
     const range = monthRange(offset);
     setFrom(range.from);
@@ -228,7 +235,7 @@ export default function ReportsPage() {
   function exportCsv() {
     let headers: string[] = [];
     let rows: unknown[][] = [];
-    let fileName = "orbit-lms-report.csv";
+    let fileName = "orbit-crm-report.csv";
 
     if (tab === "trainer") {
       headers = ["Date","Batch","Course","Session","Topic","Status","Present","Attendance Marked"];
@@ -302,9 +309,9 @@ export default function ReportsPage() {
       <main className={styles.main}>
         <header className={styles.header}>
           <div>
-            <p className={styles.kicker}>LMS · REPORTS</p>
-            <h1>Delivery Reports</h1>
-            <p>Trainer classes, attendance and batch progress.</p>
+            <p className={styles.kicker}>CRM · REPORTS</p>
+            <h1>Reports</h1>
+            <p>Trainer sessions, student attendance and batch delivery performance.</p>
           </div>
 
           {hasRows && (
@@ -314,26 +321,29 @@ export default function ReportsPage() {
           )}
         </header>
 
-        <div className={styles.tabs}>
+        <nav className={styles.tabs} aria-label="Report categories">
           <button
             className={tab === "trainer" ? styles.activeTab : ""}
+            aria-current={tab === "trainer" ? "page" : undefined}
             onClick={() => setTab("trainer")}
           >
             Trainer
           </button>
           <button
             className={tab === "attendance" ? styles.activeTab : ""}
+            aria-current={tab === "attendance" ? "page" : undefined}
             onClick={() => setTab("attendance")}
           >
             Attendance
           </button>
           <button
             className={tab === "progress" ? styles.activeTab : ""}
+            aria-current={tab === "progress" ? "page" : undefined}
             onClick={() => setTab("progress")}
           >
             Batch Progress
           </button>
-        </div>
+        </nav>
 
         {tab !== "progress" ? (
           <section className={styles.filters}>
@@ -395,7 +405,7 @@ export default function ReportsPage() {
           </section>
         )}
 
-        {message && <div className={styles.message}>{message}</div>}
+        {message && <div className={styles.message} role="status">{message}</div>}
 
         {tab === "trainer" && (
           <>
@@ -407,18 +417,20 @@ export default function ReportsPage() {
 
             <section className={styles.card}>
               <div className={styles.tableWrap}>
-                <table>
+                <table aria-label="Trainer delivery report">
                   <thead>
                     <tr>
+                      <th data-sno>S.No</th>
                       <th>Date</th><th>Batch</th><th>Course</th><th>Session</th>
                       <th>Topic Covered</th><th>Status</th><th>Attendance</th>
                     </tr>
                   </thead>
                   <tbody>
                     {trainerRows.length === 0 ? (
-                      <tr><td colSpan={7} className={styles.empty}>Select a trainer and run the report.</td></tr>
-                    ) : trainerRows.map((row) => (
+                      <tr><td colSpan={8} className={styles.empty}>Select a trainer and run the report.</td></tr>
+                    ) : trainerRows.map((row, index) => (
                       <tr key={row.session_id}>
+                        <td data-sno>{index + 1}</td>
                         <td>{row.class_date}</td>
                         <td>{row.batch_name}</td>
                         <td>{row.course_name}</td>
@@ -445,18 +457,20 @@ export default function ReportsPage() {
 
             <section className={styles.card}>
               <div className={styles.tableWrap}>
-                <table>
+                <table aria-label="Student attendance report">
                   <thead>
                     <tr>
+                      <th data-sno>S.No</th>
                       <th>Date</th><th>Batch</th><th>Course</th><th>Session</th>
                       <th>Student</th><th>Attendance</th><th>Trainer</th>
                     </tr>
                   </thead>
                   <tbody>
                     {attendanceRows.length === 0 ? (
-                      <tr><td colSpan={7} className={styles.empty}>Run an attendance report.</td></tr>
+                      <tr><td colSpan={8} className={styles.empty}>Run an attendance report.</td></tr>
                     ) : attendanceRows.map((row, index) => (
                       <tr key={`${row.session_id}-${row.student_name}-${index}`}>
+                        <td data-sno>{index + 1}</td>
                         <td>{row.class_date}</td>
                         <td>{row.batch_name}</td>
                         <td>{row.course_name}</td>
@@ -474,20 +488,28 @@ export default function ReportsPage() {
         )}
 
         {tab === "progress" && (
-          <section className={styles.card}>
+          <>
+            <section className={styles.summary}>
+              <div><span>Batches in report</span><strong>{progressSummary.batches}</strong></div>
+              <div><span>Completed classes</span><strong>{progressSummary.completed}</strong></div>
+              <div><span>Student enrolments across batches</span><strong>{progressSummary.enrolments}</strong></div>
+            </section>
+            <section className={styles.card}>
             <div className={styles.tableWrap}>
-              <table>
+              <table aria-label="Batch progress report">
                 <thead>
                   <tr>
+                    <th data-sno>S.No</th>
                     <th>Batch</th><th>Course</th><th>Trainer</th><th>Status</th>
                     <th>Classes</th><th>Students</th><th>Attendance</th><th>Homework</th>
                   </tr>
                 </thead>
                 <tbody>
                   {progressRows.length === 0 ? (
-                    <tr><td colSpan={8} className={styles.empty}>Load the Batch Progress report.</td></tr>
-                  ) : progressRows.map((row) => (
+                    <tr><td colSpan={9} className={styles.empty}>Load the Batch Progress report.</td></tr>
+                  ) : progressRows.map((row, index) => (
                     <tr key={row.batch_id}>
+                      <td data-sno>{index + 1}</td>
                       <td><strong>{row.batch_name}</strong></td>
                       <td>{row.course_name}</td>
                       <td>{row.trainer_name || "—"}</td>
@@ -501,7 +523,8 @@ export default function ReportsPage() {
                 </tbody>
               </table>
             </div>
-          </section>
+            </section>
+          </>
         )}
       </main>
     </div>

@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useParams, useRouter } from "next/navigation";
 import OrbitSidebar from "../../components/OrbitSidebar";
+import OrbitDeleteButton from "../../components/ui/OrbitDeleteButton";
 import styles from "../../lms.module.css";
 
 const supabase = createClient(
@@ -488,7 +489,7 @@ export default function BatchDetailPage() {
                 {roster.length===0?<div className={styles.empty}>No students assigned.</div>:roster.map(x=>(
                   <div className={styles.rosterRow} key={x.id}>
                     <button className={styles.rosterStudentButton} onClick={()=>router.push(`/students/${x.id}`)}><strong>{x.student_name}</strong><small>{x.grade||"—"} · {x.email||x.phone||"No contact"}</small></button>
-                    {canAdmin && <button className={styles.danger} onClick={()=>removeStudent(x.id)}>Remove</button>}
+                    {canAdmin && <OrbitDeleteButton label={`Remove ${x.student_name} from batch`} onClick={()=>removeStudent(x.id)}/>}
                   </div>
                 ))}
               </div>
@@ -551,12 +552,13 @@ export default function BatchDetailPage() {
               <div className={styles.panelHeader}><div><h2>Student Payments</h2><span>USD only</span></div></div>
               <div className={styles.tableWrap}>
                 <table className={styles.financeTable}>
-                  <thead><tr><th>Student</th><th>Plan</th><th>Total Fee</th><th>Paid</th><th>Pending</th><th>Next Due</th><th>Status</th>{canManageFinance&&<th>Actions</th>}</tr></thead>
+                  <thead><tr><th data-sno>S.No</th><th>Student</th><th>Plan</th><th>Total Fee</th><th>Paid</th><th>Pending</th><th>Next Due</th><th>Status</th>{canManageFinance&&<th>Actions</th>}</tr></thead>
                   <tbody>
-                    {roster.map(student=>{
+                    {roster.map((student, index)=>{
                       const f=financeByStudent.get(student.id);
                       if (!f) return (
                         <tr key={student.id}>
+                          <td data-sno>{index + 1}</td>
                           <td>{student.student_name}</td><td colSpan={6}><span className={styles.muted}>Payment plan not configured</span></td>
                           {canManageFinance&&<td><button className={styles.smallButton} onClick={()=>openFinance(student)}>Set Plan</button></td>}
                         </tr>
@@ -564,6 +566,7 @@ export default function BatchDetailPage() {
 
                       return (
                         <tr key={student.id}>
+                          <td data-sno>{index + 1}</td>
                           <td>{student.student_name}<small>{student.grade||"—"}</small></td>
                           <td>{f.payment_plan}</td><td>{money(f.total_fee_usd)}</td><td>{money(f.total_paid_usd)}</td><td>{money(f.pending_usd)}</td>
                           <td><strong>{f.next_due_label}</strong><small>{f.next_due_date||"Date pending"}</small></td>

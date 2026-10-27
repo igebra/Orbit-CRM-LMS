@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import OrbitSidebar from "../components/OrbitSidebar";
+import OrbitDeleteButton from "../components/ui/OrbitDeleteButton";
 import styles from "./access.module.css";
 
 const supabase = createClient(
@@ -177,6 +178,19 @@ export default function AccessPage() {
     setLoading(false);
   }
 
+  // Legacy approvals were created without full_name. Prefer persisted profile
+  // names. When no verified name exists, show an explicitly marked email handle.
+  const profileNameByEmail = useMemo(() => new Map(
+    users.filter(user => Boolean(user.full_name?.trim()) && Boolean(user.email))
+      .map(user => [user.email!.trim().toLowerCase(), user.full_name!.trim()])
+  ), [users]);
+  function requestDisplayName(request: RequestRow) {
+    const saved = request.full_name?.trim()
+      || profileNameByEmail.get(request.email.trim().toLowerCase());
+    return {label: saved || request.email.split("@")[0] || "Name unavailable",
+      inferred: !saved};
+  }
+
   const filteredRequests = useMemo(() => {
     const q = search.trim().toLowerCase();
 
@@ -188,6 +202,7 @@ export default function AccessPage() {
         !q ||
         [
           request.full_name,
+          profileNameByEmail.get(request.email.trim().toLowerCase()),
           request.email,
           request.requested_role,
           request.approved_role,
@@ -200,7 +215,7 @@ export default function AccessPage() {
 
       return statusMatches && searchMatches;
     });
-  }, [requests, search, statusFilter]);
+  }, [requests, search, statusFilter, profileNameByEmail]);
 
   const filteredUsers = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -475,15 +490,19 @@ export default function AccessPage() {
             <p>Approve requests or grant Orbit access directly.</p>
           </div>
 
-          <button
-            className={styles.primary}
-            onClick={() => {
-              setGrantRole("trainer");
-              setGrantOpen(true);
-            }}
-          >
-            + Add User
-          </button>
+          <div className={styles.headerTools}>
+            <img src="/orbit-mascot-approved.svg" alt="" width={42} height={56}
+              className={styles.headerMascot}/>
+            <button
+              className={styles.primary}
+              onClick={() => {
+                setGrantRole("trainer");
+                setGrantOpen(true);
+              }}
+            >
+              + Add User
+            </button>
+          </div>
         </header>
 
         {message && <div className={styles.message}>{message}</div>}
@@ -551,6 +570,7 @@ export default function AccessPage() {
               <table>
                 <thead>
                   <tr>
+                    <th data-sno>S.No</th>
                     <th>Name</th>
                     <th>Email</th>
                     <th>Requested</th>
@@ -564,15 +584,22 @@ export default function AccessPage() {
                 <tbody>
                   {filteredRequests.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className={styles.empty}>
+                      <td colSpan={9} className={styles.empty}>
                         No access requests found.
                       </td>
                     </tr>
                   ) : (
-                    filteredRequests.map((request) => (
+                    filteredRequests.map((request, index) => (
                       <tr key={request.request_id}>
-                        <td><strong>{request.full_name || "—"}</strong></td>
-                        <td>{request.email}</td>
+                        <td data-sno>{index + 1}</td>
+                        <td>
+                          <strong title={requestDisplayName(request).inferred
+                            ? "Name not recorded; displaying the email username" : undefined}>
+                            {requestDisplayName(request).label}
+                          </strong>
+                          {requestDisplayName(request).inferred && <small className={styles.nameHint}>Name not provided</small>}
+                        </td>
+                        <td className={styles.emailCell} title={request.email}>{request.email}</td>
                         <td>{request.requested_role}</td>
                         <td>{new Date(request.created_at).toLocaleDateString()}</td>
                         <td>
@@ -632,13 +659,7 @@ export default function AccessPage() {
                               >
                                 Reject
                               </button>
-                              <button
-                                className={styles.deleteRequestButton}
-                                onClick={() => deleteRequest(request)}
-                                disabled={saving}
-                              >
-                                Remove
-                              </button>
+                              <OrbitDeleteButton label={`Remove access request / approval for ${request.email}`} disabled={saving} onClick={() => deleteRequest(request)}/>
                             </div>
                           ) : request.status === "Rejected" ? (
                             <div className={styles.actions}>
@@ -648,23 +669,11 @@ export default function AccessPage() {
                               >
                                 Approve Again
                               </button>
-                              <button
-                                className={styles.deleteRequestButton}
-                                onClick={() => deleteRequest(request)}
-                                disabled={saving}
-                              >
-                                Remove
-                              </button>
+                              <OrbitDeleteButton label={`Remove access request / approval for ${request.email}`} disabled={saving} onClick={() => deleteRequest(request)}/>
                             </div>
                           ) : accountState(request) === "Waiting Activation" ? (
                             <div className={styles.actions}>
-                              <button
-                                className={styles.deleteRequestButton}
-                                onClick={() => deleteRequest(request)}
-                                disabled={saving}
-                              >
-                                Remove Approval
-                              </button>
+                              <OrbitDeleteButton label={`Remove access request / approval for ${request.email}`} disabled={saving} onClick={() => deleteRequest(request)}/>
                             </div>
                           ) : (
                             <div className={styles.actions}>
@@ -688,6 +697,7 @@ export default function AccessPage() {
               <table>
                 <thead>
                   <tr>
+                    <th data-sno>S.No</th>
                     <th>User</th>
                     <th>Email</th>
                     <th>Role</th>
@@ -699,20 +709,22 @@ export default function AccessPage() {
                 <tbody>
                   {filteredUsers.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className={styles.empty}>
+                      <td colSpan={7} className={styles.empty}>
                         No Orbit users found.
                       </td>
                     </tr>
                   ) : (
-                    filteredUsers.map((user) => {
+                    filteredUsers.map((user, index) => {
                       const protectedFromAdmin =
                         !isSuperAdmin && user.role === "super_admin";
                       const isSelf = user.user_id === userId;
 
                       return (
                         <tr key={user.user_id}>
-                          <td><strong>{user.full_name || "Orbit User"}</strong></td>
-                          <td>{user.email || "—"}</td>
+                          <td data-sno>{index + 1}</td>
+                          <td><strong>{user.full_name?.trim() || user.email?.split("@")[0] || "Orbit User"}</strong>
+                            {!user.full_name?.trim() && <small className={styles.nameHint}>Name not provided</small>}</td>
+                          <td className={styles.emailCell} title={user.email || ""}>{user.email || "—"}</td>
                           <td>{displayRole(user.role)}</td>
                           <td>
                             <span
@@ -746,13 +758,7 @@ export default function AccessPage() {
                                 </button>
 
                                 {user.is_active && (
-                                  <button
-                                    className={styles.removeButton}
-                                    onClick={() => removeUserAccess(user)}
-                                    disabled={saving}
-                                  >
-                                    Remove User
-                                  </button>
+                                  <OrbitDeleteButton label={`Remove Orbit access for ${user.email || user.user_id}`} disabled={saving} onClick={() => removeUserAccess(user)}/>
                                 )}
                               </div>
                             )}

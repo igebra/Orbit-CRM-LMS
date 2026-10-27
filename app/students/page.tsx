@@ -5,6 +5,10 @@ import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import OrbitSidebar from "../components/OrbitSidebar";
 import styles from "../lms.module.css";
+import visual from "./students-visual.module.css";
+import OrbitButton from "../components/ui/OrbitButton";
+import OrbitNavIcon from "../components/OrbitNavIcon";
+import OrbitDeleteButton from "../components/ui/OrbitDeleteButton";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -53,6 +57,11 @@ type Enrollment = {
   status: string;
 };
 
+type BatchOption = { id:string; batch_name:string; course_name:string; status:string; };
+
+const PLAN_TYPES = ["After Every 4 Classes","Monthly","Quarterly","Half-yearly","Yearly","Paid in Full","Custom"];
+const FINANCE_MANAGERS = ["super_admin","admin","sales","sales_marketing","accounts_finance"];
+
 type LeadOption = {
   id: string;
   parent_first_name: string;
@@ -74,6 +83,13 @@ type FormState = {
   email: string;
   phone: string;
   course_name: string;
+  notes: string;
+  create_plan: boolean;
+  batch_id: string;
+  total_fee_usd: string;
+  installment_amount_usd: string;
+  payment_plan: string;
+  plan_start_date: string;
 };
 
 const EMPTY_FORM: FormState = {
@@ -85,6 +101,13 @@ const EMPTY_FORM: FormState = {
   email: "",
   phone: "",
   course_name: "",
+  notes: "",
+  create_plan: false,
+  batch_id: "",
+  total_fee_usd: "",
+  installment_amount_usd: "",
+  payment_plan: "Monthly",
+  plan_start_date: new Date().toISOString().slice(0, 10),
 };
 
 export default function StudentsPage() {
@@ -95,6 +118,7 @@ export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [leadOptions, setLeadOptions] = useState<LeadOption[]>([]);
+  const [batchOptions, setBatchOptions] = useState<BatchOption[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -103,6 +127,8 @@ export default function StudentsPage() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
   const canDelete = ["super_admin", "admin", "sales", "sales_marketing"].includes(role);
+  const canCreateStudent = canDelete;
+  const canConfigurePlan = canCreateStudent && FINANCE_MANAGERS.includes(role);
 
   useEffect(() => {
     async function initialize() {
@@ -121,7 +147,7 @@ export default function StudentsPage() {
         .single();
 
       setRole(profile?.role || "");
-      await Promise.all([loadStudents(), loadLeads()]);
+      await Promise.all([loadStudents(), loadLeads(), loadBatchOptions()]);
     }
     initialize();
   }, [router]);
@@ -143,6 +169,14 @@ export default function StudentsPage() {
       setEnrollments((enrollmentRows || []) as Enrollment[]);
     }
     setLoading(false);
+  }
+
+  async function loadBatchOptions() {
+    const {data,error} = await supabase.from("batches")
+      .select("id,batch_name,course_name,status").eq("status","Active")
+      .order("batch_name",{ascending:true});
+    if(error){ setMessage(error.message); return; }
+    setBatchOptions((data || []) as BatchOption[]);
   }
 
   async function loadLeads() {
@@ -185,14 +219,25 @@ export default function StudentsPage() {
     );
   }, [students, search, coursesByStudent]);
 
-  const stats = useMemo(() => ({
-    total: students.length,
-    active: students.filter((student) => student.status === "Active").length,
-    enrollments: enrollments.filter((row) => row.status === "Active").length,
-    math: enrollments.filter((row) =>
-      ["Math", "AP ", "SAT", "Algebra", "Geometry", "Calculus", "Statistics"].some((term) => row.course_name.includes(term))
-    ).length,
-  }), [students, enrollments]);
+  // Count unique *active students* in each active course programme, rather
+  // than enrolment records (a student may be enrolled in multiple levels).
+  // School/advanced maths all belong to the Math programme.
+  const programmeStats = useMemo(() => {
+    const activeStudentIds = new Set(students.filter(
+      student => student.status?.toLowerCase() === "active"
+    ).map(student => student.id));
+    const ids: Record<"math" | "aiedge" | "coding4ai", Set<string>> = {
+      math: new Set<string>(), aiedge: new Set<string>(), coding4ai: new Set<string>(),
+    };
+    for (const row of enrollments) {
+      if (row.status?.toLowerCase() !== "active" || !activeStudentIds.has(row.student_id)) continue;
+      const course = row.course_name.trim().toLowerCase();
+      if (/^ai\s*edge/.test(course)) ids.aiedge.add(row.student_id);
+      else if (/^coding\s*4\s*ai|^c4ai|^coding/.test(course)) ids.coding4ai.add(row.student_id);
+      else if (/^(math|ap\b|sat\b|psat\b|algebra|geometry|calculus|pre.?calculus|statistics)/.test(course)) ids.math.add(row.student_id);
+    }
+    return {math:ids.math.size,aiedge:ids.aiedge.size,coding4ai:ids.coding4ai.size};
+  }, [students,enrollments]);
 
   function selectLead(leadId: string) {
     if (!leadId) {
@@ -210,68 +255,104 @@ export default function StudentsPage() {
       email: lead.email || "",
       phone: lead.phone_number ? `${lead.phone_country_code || ""} ${lead.phone_number}`.trim() : "",
       course_name: lead.course_interested || "",
+      notes:"",create_plan:false,batch_id:"",total_fee_usd:"",
+      installment_amount_usd:"",payment_plan:"Monthly",
+      plan_start_date:new Date().toISOString().slice(0,10),
     });
   }
 
   async function saveStudent(event: FormEvent) {
     event.preventDefault();
-    if (!form.student_name.trim()) {
-      setMessage("Student Name is required.");
+    if (!["super_admin","admin","sales","sales_marketing"].includes(role)) {
+      setMessage("You do not have permission to create student profiles.");
       return;
     }
-
+    if (!form.student_name.trim()) { setMessage("Student name is required."); return; }
+    if (form.notes.trim() && !form.course_name && !form.create_plan) {
+      setMessage("Select an initial course to save a note in the student profile.");
+      return;
+    }
+    let selectedBatch:BatchOption|undefined;
+    if (form.create_plan) {
+      if(!canConfigurePlan){setMessage("Payment plan access is restricted.");return;}
+      selectedBatch=batchOptions.find(row=>row.id===form.batch_id);
+      const total=Number(form.total_fee_usd),instalment=Number(form.installment_amount_usd);
+      if(!selectedBatch){setMessage("Select a running batch for the payment plan.");return;}
+      if(!Number.isFinite(total)||total<=0||!Number.isFinite(instalment)||instalment<=0||instalment>total){
+        setMessage("Total fee and installment must be positive, and installment cannot exceed total fee.");return;
+      }
+      if (!form.plan_start_date){setMessage("Enter the payment plan start date.");return;}
+      if (form.course_name && form.course_name!==selectedBatch.course_name) {
+        setMessage("The selected course must match the batch used for the fee plan.");return;
+      }
+    }
     setSaving(true);
     setMessage("");
-
-    const { data: studentRow, error: studentError } = await supabase
-      .from("students")
-      .insert({
-        lead_id: form.lead_id || null,
-        student_name: form.student_name.trim(),
-        grade: form.grade || null,
-        parent_first_name: form.parent_first_name.trim() || null,
-        parent_last_name: form.parent_last_name.trim() || null,
-        email: form.email.trim().toLowerCase() || null,
-        phone: form.phone.trim() || null,
-        created_by: userId || null,
-        updated_by: userId || null,
-      })
-      .select("id")
-      .single();
-
-    if (studentError || !studentRow) {
-      setMessage(studentError?.message || "Could not create student.");
-      setSaving(false);
-      return;
+    const {data:studentRow,error:studentError}=await supabase.from("students").insert({
+      lead_id:form.lead_id||null,student_name:form.student_name.trim(),
+      grade:form.grade||null,parent_first_name:form.parent_first_name.trim()||null,
+      parent_last_name:form.parent_last_name.trim()||null,
+      email:form.email.trim().toLowerCase()||null,phone:form.phone.trim()||null,
+      created_by:userId||null,updated_by:userId||null,
+    }).select("id").single();
+    if(studentError||!studentRow){
+      setSaving(false);setMessage(studentError?.message||"Could not create student.");return;
     }
-
-    if (form.course_name) {
-      const { error: enrollmentError } = await supabase.from("student_enrollments").insert({
-        student_id: studentRow.id,
-        course_name: form.course_name,
-        created_by: userId || null,
+    // Preserve saved student even when a follow-up finance step fails: never
+    // silently retry the entire form and accidentally create another profile.
+    const id=studentRow.id as string;
+    async function partialFailure(step:string,reason:string){
+      setSaving(false);setModalOpen(false);setForm(EMPTY_FORM);
+      setMessage(`Student created, but ${step} could not be completed: ${reason}. Open the student profile to complete setup; do not add the student again.`);
+      await loadStudents();
+    }
+    const course=form.course_name||selectedBatch?.course_name||"";
+    if(course){
+      const {error}=await supabase.from("student_enrollments").insert({
+        student_id:id,course_name:course,notes:form.notes.trim()||null,
+        created_by:userId||null,
       });
-      if (enrollmentError) setMessage(enrollmentError.message);
+      if(error){await partialFailure("course enrollment / notes",error.message);return;}
     }
-
-    if (form.lead_id) {
-      await supabase
-        .from("leads")
-        .update({
-          lead_stage: "Enrolled",
-          converted_student_id: studentRow.id,
-          converted_at: new Date().toISOString(),
-          updated_by: userId || null,
-        })
-        .eq("id", form.lead_id);
+    let noteCopyWarning = false;
+    if(form.create_plan&&selectedBatch){
+      const {error:membershipError}=await supabase.from("batch_students").insert({
+        batch_id:selectedBatch.id,student_id:id,
+      });
+      if(membershipError){await partialFailure("batch assignment",membershipError.message);return;}
+      const {data:planId,error:planError}=await supabase.rpc("ensure_payment_plan_for_entry",{
+        p_batch_id:selectedBatch.id,
+        p_student_id:id,
+        p_total_fee_usd:Number(form.total_fee_usd),
+        p_payment_plan:form.payment_plan,
+        p_installment_amount_usd:form.payment_plan==="Paid in Full"?
+          Number(form.total_fee_usd):Number(form.installment_amount_usd),
+        p_plan_start_date:form.plan_start_date,
+      });
+      if(planError){await partialFailure("payment plan",planError.message);return;}
+      if(form.notes.trim()&&planId){
+        const {error:noteError}=await supabase.from("batch_student_finance")
+          .update({notes:form.notes.trim(),updated_by:userId||null})
+          .eq("id",planId);
+        if(noteError){
+          // Note is already stored against the initial course; don't duplicate student.
+          noteCopyWarning = true;
+        }
+      }
     }
-
-    setSaving(false);
-    setModalOpen(false);
-    setForm(EMPTY_FORM);
+    if(form.lead_id){
+      const {error}=await supabase.from("leads").update({
+        lead_stage:"Enrolled",converted_student_id:id,
+        converted_at:new Date().toISOString(),updated_by:userId||null,
+      }).eq("id",form.lead_id);
+      if(error){await partialFailure("lead conversion",error.message);return;}
+    }
+    setSaving(false);setModalOpen(false);setForm(EMPTY_FORM);
     await loadStudents();
+    setMessage(noteCopyWarning
+      ? `${form.student_name.trim()} created with fee plan and course notes. Finance note could not be copied; check the student's fee plan.`
+      : `${form.student_name.trim()} created successfully${form.create_plan?" with a fee plan":""}.`);
   }
-
 
   async function deleteStudent(student: Student) {
     if (!canDelete) return;
@@ -298,53 +379,71 @@ export default function StudentsPage() {
   }
 
   return (
-    <div className={styles.shell}>
+    <div className={`${styles.shell} ${visual.shell}`}>
       <OrbitSidebar email={email} active="students" />
 
-      <main className={styles.main}>
-        <header className={styles.header}>
+      <main className={`${styles.main} ${visual.main}`}>
+        <header className={`${styles.header} ${visual.header}`}>
           <div>
-            <p className={styles.kicker}>LMS · STUDENTS</p>
+            <p className={styles.kicker}>CRM · STUDENTS</p>
             <h1>Students</h1>
             <p className={styles.subtitle}>Student profiles, course enrollments and CRM conversions.</p>
           </div>
           <div className={styles.headerActions}>
-            <button className={styles.primary} onClick={() => { setForm(EMPTY_FORM); setModalOpen(true); }}>
-              + Add Student
-            </button>
+            <img src="/orbit-mascot-approved.svg" alt="Orbit mascot" className={visual.headerMascot} width={54} height={72} />
+            {canCreateStudent && <OrbitButton variant="primary" icon={<OrbitNavIcon name="plus" />}
+              onClick={() => { setMessage(""); setForm(EMPTY_FORM); setModalOpen(true); }}>
+              Add Student
+            </OrbitButton>}
           </div>
         </header>
 
-        <section className={styles.stats}>
-          <div className={styles.stat}><span>Total Students</span><strong>{stats.total}</strong></div>
-          <div className={styles.stat}><span>Active Students</span><strong>{stats.active}</strong></div>
-          <div className={styles.stat}><span>Active Enrollments</span><strong>{stats.enrollments}</strong></div>
-          <div className={styles.stat}><span>Math Enrollments</span><strong>{stats.math}</strong></div>
+        <section className={visual.programmeStats} aria-label="Active students by programme">
+          <div className={visual.mathStat}>
+            <span>Math</span>
+            <strong>{loading ? "—" : programmeStats.math}</strong>
+            <small>Active students enrolled</small>
+          </div>
+          <div className={visual.aiedgeStat}>
+            <span>AiEdge</span>
+            <strong>{loading ? "—" : programmeStats.aiedge}</strong>
+            <small>Active students enrolled</small>
+          </div>
+          <div className={visual.codingStat}>
+            <span>Coding4AI</span>
+            <strong>{loading ? "—" : programmeStats.coding4ai}</strong>
+            <small>Active students enrolled</small>
+          </div>
         </section>
+        <p className={visual.statNote}>Each student is counted once per programme, even when enrolled in multiple levels. {loading ? "" : `${students.length} student profiles total · ${students.filter(s => s.status?.toLowerCase() === "active").length} active.`}</p>
 
-        {message && <div className={styles.message}>{message}</div>}
+        {message && <div className={styles.message} role="status">{message}</div>}
 
-        <section className={styles.card}>
+        <section className={`${styles.card} ${visual.card}`}>
           <div className={styles.toolbar}>
             <input
+              aria-label="Search students"
               type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search student, parent, course, email..."
             />
-            <button className={styles.smallButton} onClick={loadStudents}>↻</button>
+            <button type="button" className={visual.iconButton} onClick={loadStudents}
+              aria-label="Refresh students" title="Refresh students" disabled={loading}>
+              <OrbitNavIcon name="refresh" />
+            </button>
           </div>
 
-          <div className={styles.tableWrap}>
-            <table>
+          <div className={`${styles.tableWrap} ${visual.tableWrap}`}>
+            <table aria-label="Student directory">
               <thead>
                 <tr>
+                  <th data-sno>S.No</th>
                   <th>Student</th>
                   <th>Parent</th>
                   <th>Contact</th>
                   <th>Course(s)</th>
                   <th>Status</th>
-                  <th>Created</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -353,40 +452,25 @@ export default function StudentsPage() {
                   <tr><td colSpan={7} className={styles.empty}>Loading students...</td></tr>
                 ) : filteredStudents.length === 0 ? (
                   <tr><td colSpan={7} className={styles.empty}>No students found.</td></tr>
-                ) : filteredStudents.map((student) => (
+                ) : filteredStudents.map((student, index) => (
                   <tr key={student.id}>
+                    <td data-sno>{index + 1}</td>
                     <td>{student.student_name}<small>{student.grade || "—"}</small></td>
                     <td>{[student.parent_first_name, student.parent_last_name].filter(Boolean).join(" ") || "—"}</td>
                     <td>{student.email || "—"}<small>{student.phone || "—"}</small></td>
                     <td>{(coursesByStudent.get(student.id) || ["—"]).map((course) => <small key={course}>{course}</small>)}</td>
                     <td><span className={styles.badge}>{student.status}</span></td>
-                    <td>{new Date(student.created_at).toLocaleDateString()}</td>
                     {canDelete && (
                       <td>
                         <div className={styles.rowActions}>
-                          <button
-                            className={styles.smallButton}
-                            onClick={() => router.push(`/students/${student.id}`)}
-                          >
-                            Open
-                          </button>
-                          <button
-                            className={styles.danger}
-                            onClick={() => deleteStudent(student)}
-                          >
-                            Delete
-                          </button>
+                          <OrbitButton size="sm" variant="secondary" onClick={() => router.push(`/students/${student.id}`)}>Open</OrbitButton>
+                          <OrbitDeleteButton label={`Delete ${student.student_name}`} onClick={() => deleteStudent(student)}/>
                         </div>
                       </td>
                     )}
                     {!canDelete && (
                       <td>
-                        <button
-                          className={styles.smallButton}
-                          onClick={() => router.push(`/students/${student.id}`)}
-                        >
-                          Open
-                        </button>
+                        <OrbitButton size="sm" variant="secondary" onClick={() => router.push(`/students/${student.id}`)}>Open</OrbitButton>
                       </td>
                     )}
                   </tr>
@@ -399,10 +483,12 @@ export default function StudentsPage() {
 
       {modalOpen && (
         <div className={styles.modalBackdrop}>
-          <div className={styles.modal}>
+          <div className={`${styles.modal} ${visual.modal}`} role="dialog" aria-modal="true" aria-labelledby="student-modal-title">
             <div className={styles.modalHeader}>
-              <div><h2>Add Student</h2><p>Create a student directly or convert an existing CRM lead.</p></div>
-              <button className={styles.close} onClick={() => setModalOpen(false)}>×</button>
+              <div><h2 id="student-modal-title">Add Student</h2><p>Create a student directly or convert an existing CRM lead.</p></div>
+              <button type="button" className={visual.iconButton} aria-label="Close Add Student" title="Close" onClick={() => setModalOpen(false)}>
+                <OrbitNavIcon name="close" />
+              </button>
             </div>
             <form className={styles.form} onSubmit={saveStudent}>
               <div className={styles.formGrid}>
@@ -415,17 +501,79 @@ export default function StudentsPage() {
                     ))}
                   </select>
                 </label>
-                <label><span>Student Name *</span><input value={form.student_name} onChange={(event) => setForm({ ...form, student_name: event.target.value })} /></label>
+                <label><span>Student Name *</span><input required autoFocus value={form.student_name} onChange={(event) => setForm({ ...form, student_name: event.target.value })} /></label>
                 <label><span>Grade</span><select value={form.grade} onChange={(event) => setForm({ ...form, grade: event.target.value })}><option value="">Select grade</option>{GRADES.map((grade) => <option key={grade}>{grade}</option>)}</select></label>
                 <label><span>Parent First Name</span><input value={form.parent_first_name} onChange={(event) => setForm({ ...form, parent_first_name: event.target.value })} /></label>
                 <label><span>Parent Last Name</span><input value={form.parent_last_name} onChange={(event) => setForm({ ...form, parent_last_name: event.target.value })} /></label>
                 <label><span>Email</span><input type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /></label>
                 <label><span>Phone</span><input value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} /></label>
-                <label className={styles.full}><span>Initial Course Enrollment</span><select value={form.course_name} onChange={(event) => setForm({ ...form, course_name: event.target.value })}><option value="">Select course</option>{COURSES.map((course) => <option key={course}>{course}</option>)}</select></label>
+                <label className={styles.full}>
+                  <span>Initial Course Enrollment</span>
+                  <select value={form.course_name} onChange={event=>setForm({...form,course_name:event.target.value})}>
+                    <option value="">Select course</option>
+                    {Array.from(new Set([...COURSES,...batchOptions.map(b=>b.course_name)])).map(course=>
+                      <option key={course} value={course}>{course}</option>)}
+                  </select>
+                </label>
+                <label className={styles.full}>
+                  <span>Student Notes (Optional)</span>
+                  <textarea className={visual.notesField} rows={3} maxLength={1500}
+                    placeholder="Learning needs, parent instructions, follow-ups or other important notes…"
+                    value={form.notes} onChange={event=>setForm({...form,notes:event.target.value})} />
+                  <small className={visual.helperText}>Saved to the initial course enrolment, and shown on the student profile.</small>
+                </label>
+                {canConfigurePlan && (
+                  <section className={`${styles.full} ${visual.financeSection}`} aria-label="Optional student fee plan">
+                    <label className={visual.financeToggle}>
+                      <input type="checkbox" checked={form.create_plan}
+                        onChange={e=>setForm({...form,create_plan:e.target.checked,
+                          batch_id:e.target.checked?form.batch_id:""})} />
+                      <span>Add a Payment Plan (Optional)</span>
+                    </label>
+                    <p>Attach this student to a running batch and set the fee plan now, or do it later in Payments.</p>
+                    {form.create_plan && (
+                      <div className={visual.financeGrid}>
+                        <label className={visual.financeFull}>
+                          <span>Assign to Batch *</span>
+                          <select required value={form.batch_id} onChange={e=>{
+                            const nextBatch=batchOptions.find(b=>b.id===e.target.value);
+                            setForm({...form,batch_id:e.target.value,
+                              course_name:nextBatch?.course_name||form.course_name});
+                          }}>
+                            <option value="">Select running batch</option>
+                            {batchOptions.map(batch=>
+                              <option key={batch.id} value={batch.id}>{batch.batch_name} · {batch.course_name}</option>)}
+                          </select>
+                        </label>
+                        <label><span>Total Fee (USD) *</span>
+                          <input required type="number" min="0.01" step="0.01" placeholder="0.00"
+                            value={form.total_fee_usd} onChange={e=>setForm({...form,total_fee_usd:e.target.value,
+                              ...(form.payment_plan==="Paid in Full"?{installment_amount_usd:e.target.value}:{})})} />
+                        </label>
+                        <label><span>Payment Plan *</span>
+                          <select required value={form.payment_plan} onChange={e=>setForm({...form,payment_plan:e.target.value,
+                            ...(e.target.value==="Paid in Full"?{installment_amount_usd:form.total_fee_usd}:{})})}>
+                            {PLAN_TYPES.map(plan=><option key={plan}>{plan}</option>)}
+                          </select>
+                        </label>
+                        <label><span>Installment Amount (USD) *</span>
+                          <input required type="number" min="0.01" step="0.01" placeholder="0.00"
+                            value={form.installment_amount_usd} readOnly={form.payment_plan==="Paid in Full"}
+                            onChange={e=>setForm({...form,installment_amount_usd:e.target.value})} />
+                        </label>
+                        <label><span>Plan Start Date *</span>
+                          <input required type="date" value={form.plan_start_date}
+                            onChange={e=>setForm({...form,plan_start_date:e.target.value})} />
+                        </label>
+                      </div>
+                    )}
+                  </section>
+                )}
+                {message && <div className={`${styles.full} ${visual.formMessage}`} role="alert">{message}</div>}
               </div>
               <div className={styles.modalFooter}>
-                <button type="button" className={styles.secondary} onClick={() => setModalOpen(false)}>Cancel</button>
-                <button type="submit" className={styles.primary} disabled={saving}>{saving ? "Saving..." : "Add Student"}</button>
+                <OrbitButton variant="secondary" onClick={() => setModalOpen(false)} disabled={saving}>Cancel</OrbitButton>
+                <OrbitButton type="submit" variant="primary" loading={saving}>{saving ? "Saving..." : "Add Student"}</OrbitButton>
               </div>
             </form>
           </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, Fragment, useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import OrbitSidebar from "../components/OrbitSidebar";
@@ -61,6 +61,7 @@ export default function TrainersPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY);
   const [saving, setSaving] = useState(false);
+  const [expandedTrainerId, setExpandedTrainerId] = useState<string | null>(null);
 
   const canManage = ["super_admin","admin","sales","sales_marketing"].includes(role);
 
@@ -100,22 +101,15 @@ export default function TrainersPage() {
     setTrainers((data || []) as Trainer[]);
   }
 
+  // Display is consistently alphabetical; S.No reflects the visible sorted list.
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return trainers;
-
-    return trainers.filter((trainer) =>
-      [
-        trainer.trainer_name,
-        trainer.email,
-        trainer.phone,
-        trainer.timezone,
-        trainer.courses,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase()
-        .includes(q)
+    return trainers.filter(trainer =>
+      !q || [trainer.trainer_name,trainer.email,trainer.phone,trainer.timezone,trainer.courses]
+        .filter(Boolean).join(" ").toLowerCase().includes(q)
+    ).sort((a,b) =>
+      a.trainer_name.localeCompare(b.trainer_name,undefined,{sensitivity:"base"}) ||
+      a.id.localeCompare(b.id)
     );
   }, [trainers, search]);
 
@@ -205,16 +199,18 @@ export default function TrainersPage() {
       <main className={styles.main}>
         <header className={styles.header}>
           <div>
-            <p className={styles.kicker}>LMS · TRAINERS</p>
+            <p className={styles.kicker}>CRM · TRAINERS</p>
             <h1>Trainers</h1>
             <p>Simple trainer directory used for batch and class assignment.</p>
           </div>
 
-          {canManage && (
-            <button className={styles.primary} onClick={openAdd}>
+          <div className={styles.headerTools}>
+            <img src="/orbit-mascot-approved.svg" alt="" className={styles.headerMascot}
+              width={44} height={58}/>
+            {canManage && <button className={styles.primary} onClick={openAdd}>
               + Add Trainer
-            </button>
-          )}
+            </button>}
+          </div>
         </header>
 
         {message && <div className={styles.message}>{message}</div>}
@@ -228,6 +224,7 @@ export default function TrainersPage() {
         <section className={styles.card}>
           <div className={styles.toolbar}>
             <input
+              aria-label="Search trainers"
               type="search"
               placeholder="Search trainer, email or course..."
               value={search}
@@ -236,9 +233,11 @@ export default function TrainersPage() {
           </div>
 
           <div className={styles.tableWrap}>
-            <table>
+            <table aria-label="Trainer directory">
+              <colgroup>{[5,12,16,11,10,20,9,7,10].map((width,i)=><col key={i} style={{width:`${width}%`}}/>)}</colgroup>
               <thead>
                 <tr>
+                  <th data-sno>S.No</th>
                   <th>Trainer</th>
                   <th>Email</th>
                   <th>Phone</th>
@@ -252,13 +251,15 @@ export default function TrainersPage() {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className={styles.empty}>
+                    <td colSpan={9} className={styles.empty}>
                       No trainers found.
                     </td>
                   </tr>
                 ) : (
-                  filtered.map((trainer) => (
-                    <tr key={trainer.id}>
+                  filtered.map((trainer, index) => (
+                    <Fragment key={trainer.id}>
+                    <tr>
+                      <td data-sno>{index + 1}</td>
                       <td><strong>{trainer.trainer_name}</strong></td>
                       <td>{trainer.email || "—"}</td>
                       <td>{trainer.phone || "—"}</td>
@@ -270,8 +271,21 @@ export default function TrainersPage() {
                         </span>
                       </td>
                       <td><span className={styles.status}>{trainer.status}</span></td>
-                      <td>
-                        <div className={styles.actions}>
+                      <td className={styles.actionCell}>
+                        <button type="button" className={styles.actionToggle}
+                          aria-expanded={expandedTrainerId === trainer.id}
+                          aria-controls={`trainer-actions-${trainer.id}`}
+                          onClick={() => setExpandedTrainerId(current => current === trainer.id ? null : trainer.id)}>
+                          Actions <span aria-hidden="true">{expandedTrainerId === trainer.id ? "▴" : "▾"}</span>
+                        </button>
+                      </td>
+                    </tr>
+                    {expandedTrainerId === trainer.id && (
+                      <tr id={`trainer-actions-${trainer.id}`} className={styles.expandedActions}>
+                        <td colSpan={9}>
+                          <div className={styles.expandedActionsContent}>
+                            <span>Actions for {trainer.trainer_name}</span>
+                            <div className={styles.actions}>
                           <button onClick={() => router.push(`/reports?trainer=${trainer.id}`)}>
                             Report
                           </button>
@@ -284,8 +298,11 @@ export default function TrainersPage() {
                             </>
                           )}
                         </div>
-                      </td>
-                    </tr>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    </Fragment>
                   ))
                 )}
               </tbody>

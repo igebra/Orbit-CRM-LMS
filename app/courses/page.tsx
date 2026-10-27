@@ -56,8 +56,8 @@ const COURSES: Course[] = [
     description:
       "AI-first learning pathway that progresses from AI foundations to generative AI, machine learning, LLMs, agentic AI and advanced AI systems.",
     brochure: "/brochures/aiedge-brochure.pdf",
-    priceLabel: "$499 / Level",
-    pricing: ["$499 per level"],
+    priceLabel: "$499 / 5-month programme",
+    pricing: ["US website: $499 for the advertised five-month programme; confirm the level quotation with Sales"],
     audience: "Grades 4–10",
     levels: "3 levels per school group",
     classes: "20 classes per level",
@@ -208,8 +208,8 @@ const COURSES: Course[] = [
     description:
       "Coding-first pathway beginning with Python foundations and progressing through data, machine learning, deep learning, generative AI and applied projects.",
     brochure: "/brochures/coding4ai-brochure.pdf",
-    priceLabel: "$499 / Level",
-    pricing: ["$499 per level"],
+    priceLabel: "$499 / 5-month programme",
+    pricing: ["US website: $499 for the advertised five-month programme; confirm the level quotation with Sales"],
     audience: "Grades 4–10",
     levels: "3 levels per school group",
     classes: "20 classes per level",
@@ -405,7 +405,7 @@ const COURSES: Course[] = [
   },
   {
     id: "math",
-    name: "Math",
+    name: "US Math",
     tagline: "School Math + Concept Clarity + Exam Confidence",
     description:
       "Year-long school mathematics support with curriculum-aligned teaching, revision support, PTMs and supplementary live classes.",
@@ -413,8 +413,8 @@ const COURSES: Course[] = [
     priceLabel: "From $129 / Month",
     pricing: [
       "$129 / month — Grades 1–4",
-      "$169 / month — Grades 5–8",
-      "$199 / month — Grades 7–10 (as listed in brochure)",
+      "$149 / month — Grades 5–8 (website FAQ)",
+      "$199 / month — higher-grade Math (website FAQ; grade bands overlap)",
     ],
     audience: "Grades 1–10 + advanced high-school mathematics",
     levels: "Grade / subject based",
@@ -430,7 +430,7 @@ const COURSES: Course[] = [
       "Regular PTMs",
     ],
     note:
-      "Pricing note: the brochure lists Grades 5–8 at $169/month and Grades 7–10 at $199/month, so Grades 7–8 overlap. Orbit displays the brochure wording until the pricing band is confirmed.",
+      "Public website FAQ and older brochure show different Math pricing for some grades. Current US FAQ lists $129 (Grades 1–4), $149 (Grades 5–8) and $199 (higher grades), with overlapping grade ranges. Confirm quote before enrolment.",
     tracks: [
       { title: "Grade 1", topics: ["Number & Place Value","Addition & Subtraction","Measurement & Data Handling","Geometry"] },
       { title: "Grade 2", topics: ["Number Systems","Addition & Subtraction","Multiplication & Division","Geometry","Measurement & Data Handling"] },
@@ -451,8 +451,89 @@ const COURSES: Course[] = [
 ];
 
 
+/** Public igebra.ai listings. Informational CRM catalogue only: does not create
+ * LMS courses/batches or alter enrollment/payment permissions. */
+const ADDITIONAL_COURSES: Course[] = [
+  {
+    id: "accelerated-math",
+    name: "Accelerated Math",
+    tagline: "Go Beyond Grade Level. Build Strong Foundations.",
+    description:
+      "For students ready to advance through Algebra I, Geometry, Algebra II, Precalculus and AP mathematics. Readiness-led, structured online instruction.",
+    brochure: "https://www.igebra.ai/accelerated-math/",
+    priceLabel: "$199 / month",
+    pricing: ["US website: $199 per month"],
+    audience: "Students ready for advanced mathematics",
+    levels: "Algebra I to AP Calculus & AP Statistics",
+    classes: "Ongoing advanced mathematics pathway",
+    frequency: "1 class / week",
+    duration: "60 minutes / class",
+    format: [
+      "Live online classes, two students per batch",
+      "Readiness assessment and appropriate starting level",
+      "School standards-aligned with video backup",
+      "Supplementary math help and practice resources",
+      "Progress support and regular parent meetings",
+    ],
+    tracks: [
+      {title:"Algebra I",topics:["Expressions & Equations","Linear and Exponential Functions","Quadratic Functions","Modeling","Descriptive Statistics"]},
+      {title:"Geometry",topics:["Congruence & Proof","Similarity & Transformations","Coordinate Geometry","Trigonometry","Circles & Three-Dimensional Geometry"]},
+      {title:"Algebra II",topics:["Real & Complex Numbers","Functions & Transformations","Polynomials & Rational Expressions","Exponential & Logarithmic Functions","Sequences & Statistics"]},
+      {title:"Precalculus",topics:["Functions & Graphs","Trigonometry","Exponential & Logarithmic Functions","Vectors, Matrices & Parametric Equations"]},
+      {title:"AP Calculus AB / BC",topics:["Limits & Continuity","Derivatives & Applications","Integration","Differential Equations","Parametric & Polar Functions","Series"]},
+      {title:"AP Statistics",topics:["Exploring Data","Collecting Data","Probability & Sampling Distributions","Statistical Inference","Regression"]},
+    ],
+    note:"US Accelerated Math offering. Always confirm placement and the latest quotation before enrollment.",
+  },
+  {
+    id: "math-plus",
+    name: "Math++",
+    tagline: "School Math + Data Thinking + AI Readiness.",
+    description:
+      "An expanded school-aligned mathematics track that connects core concepts with data, computational thinking and applications in AI.",
+    brochure: "https://www.igebra.ai/courses-offered/",
+    priceLabel: "CA$199 / month · regional",
+    pricing: [
+      "Regional igebra.ai courses-offered page: CA$199/month",
+      "Not the same as USD pricing for US Math or Accelerated Math",
+    ],
+    audience: "Grades 4–10",
+    levels: "Grade-level math + data thinking",
+    classes: "Year-long regional listing",
+    frequency: "1 class / week",
+    duration: "Check current regional schedule",
+    format: [
+      "School-aligned mathematics with advanced topics",
+      "Math reasoning, data thinking and problem-solving",
+      "Connections to real-world data and AI applications",
+      "Regional course listing; confirm active availability",
+    ],
+    tracks: [
+      {title:"School Math",topics:["Grade-level numerical foundations","Algebraic thinking","Geometry","Measurement & Data"]},
+      {title:"Data & AI Readiness",topics:["Patterns & Logic","Working with Data","Algorithmic Thinking","Quantitative Reasoning","Applications to AI"]},
+    ],
+    note:"Math++ appears on a separate regional courses-offered page; the current US FAQ lists Accelerated Math instead. Verify programme availability, market and pricing before quoting or enrolling.",
+  },
+];
+
+const COURSE_WEBSITE_LINKS: Record<string, string> = {
+  math:"https://www.igebra.ai/courses/math/",
+  "accelerated-math":"https://www.igebra.ai/accelerated-math/",
+  "math-plus":"https://www.igebra.ai/courses-offered/",
+  aiedge:"https://www.igebra.ai/courses/ai-edge/",
+  coding4ai:"https://www.igebra.ai/courses/coding4ai/",
+};
+
+const SITE_COURSES: Course[] = [
+  COURSES.find(c=>c.id==="math")!,
+  ADDITIONAL_COURSES[0],
+  COURSES.find(c=>c.id==="coding4ai")!,
+  COURSES.find(c=>c.id==="aiedge")!,
+  ADDITIONAL_COURSES[1],
+];
+
 function CourseIcon3D({ courseId }: { courseId: string }) {
-  if (courseId === "math") {
+  if (courseId === "math" || courseId === "accelerated-math" || courseId === "math-plus") {
     return (
       <span className={`${styles.courseNameIcon} ${styles.mathCourseIcon}`} aria-hidden="true">
         <svg viewBox="0 0 56 56">
@@ -584,7 +665,7 @@ export default function CoursesPage() {
   }, [router]);
 
   const displayCourses = useMemo(() => {
-    return COURSES.map((course) => {
+    return SITE_COURSES.map((course) => {
       const override = overrides.find((row) => row.course_id === course.id);
       if (!override) return course;
 
@@ -689,13 +770,16 @@ export default function CoursesPage() {
       <main className={styles.main}>
         <header className={styles.header}>
           <div>
-            <p className={styles.kicker}>LMS · COURSE CATALOGUE</p>
+            <p className={styles.kicker}>CRM · COURSE CATALOGUE</p>
             <h1>Courses</h1>
             <p>
-              Program structure, pricing, levels, curriculum and official brochures.
+              Programme catalogue from igebra.ai · eligibility, pricing and course details.
             </p>
           </div>
-          <div className={styles.courseCount}>3 Courses</div>
+          <div className={styles.headerTools}>
+            <img src="/orbit-mascot-approved.svg" alt="" className={styles.headerMascot} width={52} height={68} />
+            <div className={styles.courseCount}>5 website listings</div>
+          </div>
         </header>
 
         {message && <div className={styles.courseMessage}>{message}</div>}
@@ -704,7 +788,7 @@ export default function CoursesPage() {
           {displayCourses.map((course) => (
             <article className={styles.courseCard} key={course.id}>
               <div className={`${styles.courseTop} ${styles[course.id]}`}>
-                <span className={styles.courseType}>igebra Program</span>
+                <span className={styles.courseType}>{course.id==="math-plus"?"Regional website listing":"igebra Programme"}</span>
                 <div className={styles.courseTitleRow}>
                   <CourseIcon3D courseId={course.id} />
                   <h2>{course.name}</h2>
@@ -723,15 +807,18 @@ export default function CoursesPage() {
                 </div>
 
                 <div className={styles.price}>{course.priceLabel}</div>
+                {course.id==="math-plus" && <p className={styles.regionNotice}>Regional listing · confirm market and availability</p>}
+                <a href={COURSE_WEBSITE_LINKS[course.id]} target="_blank" rel="noopener noreferrer"
+                  className={styles.websiteSource}>Official course page ↗</a>
 
                 <div className={styles.actions}>
                   <button className={styles.primary} onClick={() => openCourse(course)}>
                     View Course Details
                   </button>
-                  <a href={course.brochure} target="_blank" rel="noreferrer" className={styles.secondary}>
-                    View Brochure
+                  <a href={course.brochure} target="_blank" rel="noopener noreferrer" className={styles.secondary}>
+                    {course.id==="accelerated-math" || course.id==="math-plus"?"Website":"Brochure"}
                   </a>
-                  {canEditCourse && (
+                  {canEditCourse && ["math","aiedge","coding4ai"].includes(course.id) && (
                     <button className={styles.secondary} onClick={() => openEditCourse(course)}>
                       Edit Course
                     </button>
@@ -742,22 +829,11 @@ export default function CoursesPage() {
           ))}
         </section>
 
-        <section className={styles.quickSummary}>
-          <div>
-            <span>AiEdge</span>
-            <strong>3 Groups × 3 Levels</strong>
-            <small>20 classes / level · $499 / level</small>
-          </div>
-          <div>
-            <span>Coding4AI</span>
-            <strong>3 Groups × 3 Levels</strong>
-            <small>20 classes / level · $499 / level</small>
-          </div>
-          <div>
-            <span>Math</span>
-            <strong>Year-long</strong>
-            <small>Grades 1–10 + advanced math · from $129/month</small>
-          </div>
+        <section className={styles.catalogueNote} aria-label="Catalogue information">
+          <strong>Website catalogue · informational</strong>
+          <span>The current US programme list includes US Math, Accelerated Math, Coding4AI and AiEdge.
+            Math++ is shown separately as a regional website listing. Fees and availability should be
+            confirmed before enrolling a student; this page does not automatically add LMS programmes.</span>
         </section>
       </main>
 
@@ -804,10 +880,10 @@ export default function CoursesPage() {
                 <div className={styles.curriculumHeader}>
                   <div>
                     <h3>Curriculum</h3>
-                    <p>Major topics from the current official brochure.</p>
+                    <p>Programme topics from existing course materials and the official website.</p>
                   </div>
 
-                  {selectedCourse.id !== "math" && (
+                  {(selectedCourse.id === "aiedge" || selectedCourse.id === "coding4ai") && (
                     <select value={trackFilter} onChange={(e) => setTrackFilter(e.target.value)}>
                       <option>All</option>
                       <option>Elementary</option>
@@ -837,8 +913,8 @@ export default function CoursesPage() {
             </div>
 
             <div className={styles.modalFooter}>
-              <a href={selectedCourse.brochure} target="_blank" rel="noreferrer" className={styles.primary}>
-                View Official Brochure
+              <a href={COURSE_WEBSITE_LINKS[selectedCourse.id]} target="_blank" rel="noopener noreferrer" className={styles.primary}>
+                View Official Course Page
               </a>
               <button className={styles.secondary} onClick={() => setSelectedCourse(null)}>
                 Close

@@ -972,3 +972,138 @@ button.statCard {
     border-bottom: 1px solid #e3ecea;
   }
 }
+
+/* BRAND-007: Approved CRM page density and type – no feature or permission changes. */
+.shell{grid-template-columns:248px minmax(0,1fr);background:#F8FAFB;color:#263D46;}
+.main{min-width:0;padding:24px 27px 38px;background:#F8FAFB;overflow-x:hidden;}
+.header{align-items:center;margin-bottom:17px;gap:16px;}
+.kicker{margin:0 0 5px;font:600 11px var(--font-orbit-body),sans-serif!important;color:#286F7A;letter-spacing:.07em;}
+.header h1{font:700 28px/1.25 var(--font-orbit-heading),sans-serif;color:#263D46;letter-spacing:-.02em;}
+.subtitle{margin:5px 0 0;color:#52656F;font:400 14px/1.4 var(--font-orbit-body),sans-serif;}
+.headerActions{gap:9px;}
+.primaryButton,.secondaryButton,.cancelButton,.refreshButton,.deleteSelected{
+  border-radius:10px;font:600 14px var(--font-orbit-body),sans-serif;
+  min-height:39px;padding:9px 13px;box-shadow:none;
+}
+.primaryButton{background:#286F7A;border:1px solid #286F7A;color:#fff;}
+.primaryButton:hover{background:#225F69;border-color:#225F69;}
+.primaryButton:active{transform:none;box-shadow:none;}
+.secondaryButton,.cancelButton,.refreshButton{background:#fff;border:1px solid #DCE5E8;color:#286F7A;}
+.statsGrid{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:16px;}
+.statCard{padding:12px 14px;border:1px solid #DCE5E8;border-radius:14px;min-height:88px;background:#fff;box-shadow:0 3px 13px rgba(38,61,70,.035);}
+.statCard span{font:500 12px var(--font-orbit-body),sans-serif;color:#52656F;margin:0 0 6px;}
+.statCard strong{font:700 24px/1.2 var(--font-orbit-heading),sans-serif;color:#263D46;}
+.statCard:nth-child(1){border-top:2px solid #B6DEE5;}
+.statCard:nth-child(2){border-top:2px solid #DDD0E7;}
+.statCard:nth-child(3){border-top:2px solid #CDE4D7;}
+.statCard:nth-child(4){border-top:2px solid #E8C4D9;}
+.statCard:nth-child(5){border-top:2px solid #F5E8B8;}
+.tableCard{border:1px solid #DCE5E8;border-radius:17px;background:#fff;box-shadow:0 3px 14px rgba(38,61,70,.04);}
+.toolbar{padding:12px 14px;gap:9px;background:#fff;}
+.toolbar input[type="search"],.toolbar select{font:400 13px var(--font-orbit-body),sans-serif;height:39px;border-color:#DCE5E8;border-radius:9px;}
+.toolbar input[type="search"]{min-width:210px;}
+.tableWrap{overflow-x:auto;max-width:100%;}
+.tableWrap table{min-width:1050px;width:100%;table-layout:auto;}
+.tableWrap th{padding:10px 9px;font:600 12px var(--font-orbit-body),sans-serif;background:#F0F4F5;color:#263D46;white-space:nowrap;}
+.tableWrap td{padding:11px 9px;font:400 13px/1.35 var(--font-orbit-body),sans-serif;color:#263D46;border-color:#edf2f3;vertical-align:middle;}
+.tableWrap td strong{font-weight:500!important;}
+.tableWrap td small{font:400 11px/1.4 var(--font-orbit-body),sans-serif;color:#52656F;margin-top:3px;}
+.rowActions{gap:6px;flex-wrap:wrap;}
+.rowActions button{min-height:30px;padding:5px 8px;font:600 12px var(--font-orbit-body),sans-serif;border-radius:8px;}
+.stageBadge{font:600 11px var(--font-orbit-body),sans-serif;}
+.modal{background:#fff;border-radius:18px;max-height:90dvh;}
+.modal h2{font:600 20px var(--font-orbit-heading),sans-serif;}
+.modal input,.modal select,.modal textarea,.modal button{font-family:var(--font-orbit-body),sans-serif;}
+.modalBackdrop{background:rgba(38,61,70,.34);}
+@media(max-width:1450px){.statsGrid{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media(max-width:1130px){.statsGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:900px){.shell{grid-template-columns:248px minmax(0,1fr)}.main{padding:20px;}.statsGrid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+
+/* UI-LEADS-004 — Flat, full-width Leads table; eliminate horizontal scrolling on desktop.
+   All operations stay accessible in an expandable row, not boxed into every cell. */
+.tableCard{
+  border:0;box-shadow:none;border-radius:0;background:transparent;
+  width:100%;max-width:100%;min-width:0;
+}
+.toolbar{
+  padding:9px 0 13px;border:0;background:transparent;
+}
+.tableWrap{
+  width:100%;max-width:100%;min-width:0;
+  overflow-x:visible;overflow-y:visible;background:#fff;
+}
+.tableWrap table{
+  width:100%;min-width:0;max-width:100%;table-layout:fixed;
+}
+.tableWrap th,.tableWrap td{
+  box-sizing:border-box;padding:10px 6px;vertical-align:middle;
+  font-family:var(--font-orbit-body),sans-serif;
+  overflow-wrap:anywhere;word-break:normal;
+}
+.tableWrap th{
+  height:40px;font-size:12px;white-space:normal;
+  background:#F0F4F5;
+}
+.tableWrap td{min-height:48px;font-size:12px;line-height:1.4}
+.tableWrap td strong{font-size:12px;line-height:1.4;overflow-wrap:anywhere}
+.tableWrap td small{font-size:11px;overflow-wrap:anywhere}
+.tableWrap th:nth-child(1){width:4%}
+.tableWrap th:nth-child(2){width:5%}
+.tableWrap th:nth-child(3){width:14%}
+.tableWrap th:nth-child(4){width:13%}
+.tableWrap th:nth-child(5){width:14%}
+.tableWrap th:nth-child(6){width:18%}
+.tableWrap th:nth-child(7){width:11%}
+.tableWrap th:nth-child(8){width:12%}
+.tableWrap th:nth-child(9){width:9%}
+.tableWrap .stageBadge{max-width:100%;white-space:normal;text-align:center;overflow-wrap:break-word;}
+.tableWrap input[type="checkbox"]{width:15px;height:15px;max-width:100%;accent-color:#286F7A}
+.actionsColumn{white-space:nowrap;}
+.actionToggle{
+  display:inline-flex;align-items:center;justify-content:center;gap:3px;
+  min-width:0;max-width:100%;min-height:32px;padding:2px 1px;
+  color:#286F7A!important;background:none!important;border:0!important;
+  border-radius:6px;box-shadow:none!important;
+  font:600 12px var(--font-orbit-body),sans-serif;cursor:pointer;
+}
+.actionToggle:hover{text-decoration:underline}
+.actionToggle:focus-visible{outline:2px solid #286F7A;outline-offset:2px}
+.actionToggle>span{font:600 12px var(--font-orbit-body),sans-serif;display:inline}
+.expandedActionRow{background:#F8FAFB}
+.expandedActionRow:hover{background:#F8FAFB}
+.expandedActionRow>td{padding:10px 15px!important;border-bottom:1px solid #DCE5E8}
+.expandedActionContent{display:flex;align-items:center;justify-content:flex-start;gap:16px;flex-wrap:wrap}
+.expandedActionLabel{color:#52656F;font:500 12px var(--font-orbit-body),sans-serif}
+.expandedActionContent .rowActions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.expandedActionContent .rowActions button{
+  border:0!important;border-radius:6px;background:none!important;
+  box-shadow:none!important;min-height:32px;padding:5px 4px;
+  font:600 12px var(--font-orbit-body),sans-serif;color:#286F7A!important;
+  cursor:pointer;
+}
+.expandedActionContent .rowActions button:hover{text-decoration:underline;background:#EAF3F5!important}
+.expandedActionContent .rowActions button:focus-visible{outline:2px solid #286F7A;outline-offset:2px}
+.expandedActionContent .rowActions button:disabled{opacity:.5;cursor:not-allowed}
+.expandedActionContent .rowActions .deleteButton{color:#A43936!important}
+@media(max-width:1120px){
+  .tableWrap th,.tableWrap td{padding:9px 4px;font-size:11px}
+  .actionToggle{font-size:11px}
+}
+
+
+/* BRAND-008 final Leads consistency: flat rows, clean forms, no boxed labels. */
+.primaryButton,.secondaryButton,.cancelButton,.refreshButton{min-height:40px;height:auto;border-radius:10px;font:600 13px var(--font-orbit-body),sans-serif;box-shadow:none;}
+.statCard{min-height:86px;padding:12px 14px;border-radius:14px;}
+.toolbar :is(input[type="search"],select){height:40px;min-height:40px;font:400 13px var(--font-orbit-body),sans-serif;border-radius:10px;border:1px solid #DCE5E8;color:#263D46;}
+.tableWrap{background:transparent;}
+.tableWrap table{border-collapse:collapse;}
+.tableWrap th{font:600 11px/1.45 var(--font-orbit-body),sans-serif;color:#263D46;white-space:normal;text-transform:none;letter-spacing:0;}
+.tableWrap td{font:400 12px/1.45 var(--font-orbit-body),sans-serif;}
+.tableWrap tbody tr:hover{background:#F8FAFB;}
+.tableWrap .stageBadge{display:inline;background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:0!important;font:600 11px/1.4 var(--font-orbit-body),sans-serif;}
+.selectionBar{border:1px solid #DCE5E8;border-radius:12px;background:#F0F4F5;box-shadow:none;}
+.message{font:500 12px/1.4 var(--font-orbit-body),sans-serif;border:1px solid #E5D69B;border-radius:10px;color:#70571F;background:#F9F3DF;}
+.modal input,.modal select,.modal textarea{border:1px solid #DCE5E8;border-radius:10px;color:#263D46;font:400 13px var(--font-orbit-body),sans-serif;}
+.modal :is(input,select){min-height:40px;}
+.modalHeader h2{font:600 20px var(--font-orbit-heading),sans-serif;color:#263D46;}
+.main :is(button,input,select,textarea):focus-visible{outline:2px solid #286F7A;outline-offset:2px;}

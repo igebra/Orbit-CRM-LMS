@@ -1,10 +1,12 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import OrbitSidebar from "../../components/OrbitSidebar";
 import SmartLeadImport from "./SmartLeadImport";
+import OrbitDeleteButton from "../../components/ui/OrbitDeleteButton";
+import OrbitNavIcon from "../../components/OrbitNavIcon";
 import styles from "./leads.module.css";
 
 const supabase = createClient(
@@ -296,6 +298,7 @@ export default function LeadsPage() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [expandedLeadId, setExpandedLeadId] = useState<string | null>(null);
   const [importModalOpen, setImportModalOpen] = useState(false);
 
   const [followUpOpen, setFollowUpOpen] = useState(false);
@@ -1042,7 +1045,7 @@ export default function LeadsPage() {
                 className={styles.selectionDelete}
                 onClick={bulkDelete}
               >
-                Delete Selected
+                <OrbitNavIcon name="trash" /> Delete Selected
               </button>
               <button
                 className={styles.clearSelection}
@@ -1058,7 +1061,7 @@ export default function LeadsPage() {
           <div className={styles.toolbar}>
             <input
               type="search"
-              placeholder="Search parent, child, email, phone, course..."
+              placeholder="Search student, parent, email, phone, course..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
@@ -1109,150 +1112,82 @@ export default function LeadsPage() {
               <thead>
                 <tr>
                   <th>
-                    <input
-                      type="checkbox"
-                      aria-label="Select all visible leads"
-                      checked={
-                        filteredLeads.length > 0 &&
-                        filteredLeads.every((lead) => selected.has(lead.id))
-                      }
-                      onChange={toggleAllVisible}
-                      disabled={!canManageCrm}
-                    />
+                    <input type="checkbox" aria-label="Select all visible leads"
+                      checked={filteredLeads.length > 0 && filteredLeads.every((lead) => selected.has(lead.id))}
+                      onChange={toggleAllVisible} disabled={!canManageCrm} />
                   </th>
-                  <th>Parent</th>
-                  <th>Child</th>
-                  <th>Contact</th>
-                  <th>Source</th>
+                  <th>S.No</th>
                   <th>Course</th>
-                  <th>Owner</th>
+                  <th>Student</th>
+                  <th>Parent</th>
+                  <th>Contact</th>
                   <th>Stage</th>
-                  <th>Demo</th>
                   <th>Follow-up</th>
-                  <th>Created</th>
                   <th>Actions</th>
                 </tr>
               </thead>
-
               <tbody>
                 {loading ? (
-                  <tr>
-                    <td colSpan={12} className={styles.empty}>
-                      Loading leads...
-                    </td>
-                  </tr>
+                  <tr><td colSpan={9} className={styles.empty}>Loading leads...</td></tr>
                 ) : filteredLeads.length === 0 ? (
-                  <tr>
-                    <td colSpan={12} className={styles.empty}>
-                      No leads found.
-                    </td>
-                  </tr>
+                  <tr><td colSpan={9} className={styles.empty}>No leads found.</td></tr>
                 ) : (
-                  filteredLeads.map((lead) => (
-                    <tr
-                      key={lead.id}
-                      className={lead.is_duplicate ? styles.duplicateRow : ""}
-                    >
+                  filteredLeads.map((lead, index) => (
+                    <Fragment key={lead.id}>
+                    <tr className={lead.is_duplicate ? styles.duplicateRow : ""}>
                       <td>
-                        <input
-                          type="checkbox"
+                        <input type="checkbox" aria-label={`Select lead for ${lead.child_name}`}
                           checked={selected.has(lead.id)}
                           onChange={() => toggleSelected(lead.id)}
-                          disabled={!canManageCrm}
-                        />
+                          disabled={!canManageCrm} />
                       </td>
-
-                      <td>
-                        <strong>
-                          {lead.parent_first_name} {lead.parent_last_name || ""}
-                        </strong>
-                        {lead.is_duplicate && (
-                          <span className={styles.duplicateBadge}>
-                            Duplicate ×{lead.duplicate_count}
-                          </span>
-                        )}
-                      </td>
-
+                      <td>{index + 1}</td>
+                      <td>{lead.course_interested || "—"}</td>
                       <td>
                         <strong>{lead.child_name}</strong>
                         <small>{lead.grade || "—"}</small>
                       </td>
-
+                      <td>
+                        <strong>{lead.parent_first_name} {lead.parent_last_name || ""}</strong>
+                        {lead.is_duplicate && <span className={styles.duplicateBadge}>Duplicate ×{lead.duplicate_count}</span>}
+                      </td>
                       <td>
                         <span>{lead.email || "—"}</span>
-                        <small>
-                          {lead.phone_number
-                            ? `${lead.phone_country_code} ${lead.phone_number}`
-                            : "—"}
-                        </small>
+                        <small>{lead.phone_number ? `${lead.phone_country_code} ${lead.phone_number}` : "—"}</small>
                       </td>
-
                       <td>
-                        <span>{lead.lead_source || "—"}</span>
-                        {lead.lead_source === "Partners" && lead.partner_name && (
-                          <small>{lead.partner_name}</small>
-                        )}
-                      </td>
-                      <td>{lead.course_interested || "—"}</td>
-                      <td>{lead.assigned_to || "—"}</td>
-
-                      <td>
-                        <span
-                          className={`${styles.stageBadge} ${
-                            styles[
-                              `stage${lead.lead_stage.replaceAll(" ", "")}` as keyof typeof styles
-                            ] || ""
-                          }`}
-                        >
+                        <span className={`${styles.stageBadge} ${styles[`stage${lead.lead_stage.replaceAll(" ", "")}` as keyof typeof styles] || ""}`}>
                           {lead.lead_stage}
                         </span>
                       </td>
-
-                      <td>
-                        {lead.demo_attended ? (
-                          <>
-                            <span className={styles.stageBadge}>✓ Attended</span>
-                            <small>{lead.demo_attended_course || "Demo"}</small>
-                            {lead.demo_attended_at && (
-                              <small>{new Date(lead.demo_attended_at).toLocaleDateString()}</small>
-                            )}
-                          </>
-                        ) : lead.demo_scheduled_at ? (
-                          <>
-                            <span>
-                              {new Date(lead.demo_scheduled_at).toLocaleDateString()}
-                            </span>
-                            <small>
-                              {new Date(lead.demo_scheduled_at).toLocaleTimeString(
-                                [],
-                                { hour: "2-digit", minute: "2-digit" }
-                              )}
-                            </small>
-                          </>
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-
                       <td>
                         {lead.next_follow_up_date ? (
                           <span className={`${styles.followUpDate} ${followUpClass(lead.next_follow_up_date)}`}>
-                            {new Date(
-                              `${lead.next_follow_up_date}T00:00:00`
-                            ).toLocaleDateString()}
+                            {new Date(`${lead.next_follow_up_date}T00:00:00`).toLocaleDateString()}
                           </span>
-                        ) : (
-                          "—"
-                        )}
+                        ) : "—"}
                         {lead.next_action && <small>{lead.next_action}</small>}
                       </td>
-
-                      <td>
-                        {new Date(lead.created_at).toLocaleDateString()}
+                      <td className={styles.actionsColumn}>
+                        {(canManageCrm || lead.converted_student_id || (canConvertLead && lead.lead_stage !== "Lost")) ? (
+                          <button
+                            type="button"
+                            className={styles.actionToggle}
+                            aria-expanded={expandedLeadId === lead.id}
+                            aria-controls={`lead-actions-${lead.id}`}
+                            onClick={() => setExpandedLeadId((current) => current === lead.id ? null : lead.id)}
+                          >
+                            Actions <span aria-hidden="true">{expandedLeadId === lead.id ? "▴" : "▾"}</span>
+                          </button>
+                        ) : "—"}
                       </td>
-
-                      <td>
-                        <div className={styles.rowActions}>
+                    </tr>
+                    {expandedLeadId === lead.id && (
+                      <tr id={`lead-actions-${lead.id}`} className={styles.expandedActionRow}>
+                        <td colSpan={9}>
+                          <div className={styles.expandedActionContent}>
+                            <span className={styles.expandedActionLabel}>Actions for {lead.child_name}</span>
+                            <div className={styles.rowActions}>
                           {canManageCrm && (
                             <button onClick={() => editLead(lead)}>Edit</button>
                           )}
@@ -1281,16 +1216,14 @@ export default function LeadsPage() {
                           ) : null}
 
                           {canManageCrm && (
-                            <button
-                              className={styles.deleteButton}
-                              onClick={() => deleteLead(lead.id)}
-                            >
-                              Delete
-                            </button>
+                            <OrbitDeleteButton label={`Delete lead for ${lead.child_name}`} onClick={() => deleteLead(lead.id)}/>
                           )}
                         </div>
-                      </td>
-                    </tr>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    </Fragment>
                   ))
                 )}
               </tbody>

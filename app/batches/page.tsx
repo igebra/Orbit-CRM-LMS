@@ -4,8 +4,10 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import OrbitSidebar from "../components/OrbitSidebar";
+import OrbitDeleteButton from "../components/ui/OrbitDeleteButton";
 import { COURSE_OPTIONS, courseDefaults } from "../lib/orbitCourses";
 import styles from "../lms.module.css";
+import visual from "./batches-visual.module.css";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -202,6 +204,27 @@ export default function BatchesPage() {
     setLoading(false);
   }
 
+  // Running means a batch marked Active. A batch with both weekday and
+  // weekend classes is counted in both schedule groups; unknown days are
+  // excluded from those two groups, but retained in Running.
+  const batchSummary = useMemo(() => {
+    const running = batches.filter(b => b.status?.toLowerCase() === "active");
+    let weekday = 0;
+    let weekend = 0;
+    let both = 0;
+    let unscheduled = 0;
+    for (const batch of running) {
+      const days = (batch.class_days || []).map(day => day.trim().slice(0, 3).toLowerCase());
+      const onWeekday = days.some(day => ["mon","tue","wed","thu","fri"].includes(day));
+      const onWeekend = days.some(day => ["sat","sun"].includes(day));
+      if (onWeekday) weekday++;
+      if (onWeekend) weekend++;
+      if (onWeekday && onWeekend) both++;
+      if (!onWeekday && !onWeekend) unscheduled++;
+    }
+    return {total:batches.length,running:running.length,weekday,weekend,both,unscheduled};
+  }, [batches]);
+
   const studentNamesByBatch = useMemo(() => {
     const studentMap = new Map(students.map((student) => [student.id, student.student_name]));
     const batchMap = new Map<string, string[]>();
@@ -346,13 +369,13 @@ export default function BatchesPage() {
   }
 
   return (
-    <div className={styles.shell}>
+    <div className={`${styles.shell} ${visual.shell}`}>
       <OrbitSidebar email={email} active="batches" />
 
-      <main className={styles.main}>
-        <header className={styles.header}>
+      <main className={`${styles.main} ${visual.main}`}>
+        <header className={`${styles.header} ${visual.header}`}>
           <div>
-            <p className={styles.kicker}>LMS · BATCHES</p>
+            <p className={styles.kicker}>CRM · BATCHES</p>
             <h1>Batches</h1>
             <p className={styles.subtitle}>Manage trainers, schedules, students and class operations.</p>
           </div>
@@ -366,13 +389,27 @@ export default function BatchesPage() {
           )}
         </header>
 
+        <section className={visual.batchStats} aria-label="Batch operations summary">
+          <div className={visual.allBatches}><span>Total Batches</span><strong>{loading ? "—" : batchSummary.total}</strong><small>All statuses</small></div>
+          <div className={visual.runningBatches}><span>Running Batches</span><strong>{loading ? "—" : batchSummary.running}</strong><small>Currently active</small></div>
+          <div className={visual.weekdayBatches}><span>Weekday Batches</span><strong>{loading ? "—" : batchSummary.weekday}</strong><small>Active · Monday–Friday</small></div>
+          <div className={visual.weekendBatches}><span>Weekend Batches</span><strong>{loading ? "—" : batchSummary.weekend}</strong><small>Active · Saturday–Sunday</small></div>
+        </section>
+        {!loading && (batchSummary.both > 0 || batchSummary.unscheduled > 0) && (
+          <p className={visual.scheduleNote}>
+            {batchSummary.both > 0 ? `${batchSummary.both} active ${batchSummary.both === 1 ? "batch runs" : "batches run"} on both weekdays and weekends (included in both counts).` : ""}
+            {batchSummary.unscheduled > 0 ? ` ${batchSummary.unscheduled} active ${batchSummary.unscheduled === 1 ? "batch has" : "batches have"} no class days configured.` : ""}
+          </p>
+        )}
+
         {message && <div className={styles.message}>{message}</div>}
 
-        <section className={styles.card}>
-          <div className={styles.tableWrap}>
-            <table>
+        <section className={`${styles.card} ${visual.list}`}>
+          <div className={`${styles.tableWrap} ${visual.tableWrap}`}>
+            <table aria-label="Batch directory">
               <thead>
                 <tr>
+                  <th data-sno>S.No</th>
                   <th>Batch</th>
                   <th>Course</th>
                   <th>Trainer</th>
@@ -381,16 +418,17 @@ export default function BatchesPage() {
                   <th className={styles.batchClassesMonth}>Classes / Month</th>
                   <th>Students</th>
                   <th>Status</th>
-                  <th></th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={9} className={styles.empty}>Loading batches...</td></tr>
+                  <tr><td colSpan={10} className={styles.empty}>Loading batches...</td></tr>
                 ) : batches.length === 0 ? (
-                  <tr><td colSpan={9} className={styles.empty}>No batches found.</td></tr>
-                ) : batches.map((b) => (
+                  <tr><td colSpan={10} className={styles.empty}>No batches found.</td></tr>
+                ) : batches.map((b, index) => (
                   <tr key={b.id}>
+                    <td data-sno>{index + 1}</td>
                     <td>{b.batch_name}</td>
                     <td>{b.course_name}</td>
                     <td>{b.trainer_name || "—"}</td>
@@ -420,17 +458,7 @@ export default function BatchesPage() {
                         </button>
 
                         {canDelete && (
-                          <button
-                            type="button"
-                            className={styles.iconDeleteButton}
-                            onClick={() => deleteBatch(b)}
-                            title={`Delete ${b.batch_name}`}
-                            aria-label={`Delete ${b.batch_name}`}
-                          >
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                              <path d="M8 8v9m4-9v9m4-9v9M5 6h14M9 6V4h6v2m3 0-1 14H7L6 6" />
-                            </svg>
-                          </button>
+                          <OrbitDeleteButton label={`Delete ${b.batch_name}`} onClick={() => deleteBatch(b)}/>
                         )}
                       </div>
                     </td>
