@@ -16,6 +16,7 @@ const paths = {
   aqmatics: "M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2L12 2z",
   refresh: "M20 11a8 8 0 0 0-14.9-4 M4 4v4h4 M4 13a8 8 0 0 0 14.9 4 M20 20v-4h-4",
   plus: "M12 5v14 M5 12h14",
+  trash: "M3 6h18 M8 6V4h8v2 M6 6l1 15h10l1-15 M10 10v8 M14 10v8",
   close: "M18 6 6 18 M6 6l12 12"
 } as const;
 
