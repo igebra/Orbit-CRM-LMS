@@ -1132,3 +1132,29 @@
 @media(max-width:1450px){.statsGrid{grid-template-columns:repeat(5,minmax(0,1fr))}}
 @media(max-width:1130px){.statsGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:900px){.shell{grid-template-columns:248px minmax(0,1fr)}.main{padding:20px;}.statsGrid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+
+
+/* BRAND-008 final Demo Schedule: shared actions and table treatment. */
+.primaryButton,.secondaryButton,.cancelButton,.refreshButton,.smallPrimary{min-height:40px;height:auto;border-radius:10px;font:600 13px var(--font-orbit-body),sans-serif;box-shadow:none;}
+.smallPrimary{background:#286F7A;border:1px solid #286F7A;color:white;}
+.statCard{min-height:86px;padding:12px 14px;border-radius:14px;}
+.scheduleCard{border:0!important;background:transparent!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important;}
+.toolbar{padding:10px 0 12px;border:0;background:transparent;}
+.toolbar :is(input[type="search"],select){height:40px;min-height:40px;font:400 13px var(--font-orbit-body),sans-serif;color:#263D46;border:1px solid #DCE5E8;border-radius:10px;}
+.tableWrap{min-width:0;max-width:100%;overflow-x:auto;scrollbar-width:thin;}
+.tableWrap table{table-layout:fixed;width:100%;min-width:1150px;border-collapse:collapse;}
+.tableWrap th,.tableWrap td{padding:10px 6px;overflow-wrap:anywhere;white-space:normal;vertical-align:middle;}
+.tableWrap th{font:600 11px/1.4 var(--font-orbit-body),sans-serif;color:#263D46;background:#F0F4F5;text-transform:none;letter-spacing:0;}
+.tableWrap td{font:400 11px/1.45 var(--font-orbit-body),sans-serif;color:#263D46;}
+.tableWrap th[data-sno],.tableWrap td[data-sno]{width:42px;min-width:36px;max-width:48px;text-align:center;}
+.tableWrap tbody tr:hover{background:#F8FAFB;}
+.statusBadge{display:inline;border:0!important;border-radius:0!important;padding:0!important;background:none!important;box-shadow:none!important;font:600 11px var(--font-orbit-body),sans-serif;}
+.rowActions{gap:7px;}
+.rowActions button{min-height:32px;padding:5px;border:0!important;background:transparent!important;border-radius:6px;box-shadow:none!important;color:#286F7A;font:600 11px var(--font-orbit-body),sans-serif;}
+.rowActions button:hover{text-decoration:underline;background:#EAF3F5!important;}
+.rowActions .deleteButton{color:#A43936;}
+.modal :is(input,select,textarea){border-radius:10px;border-color:#DCE5E8;font:400 13px var(--font-orbit-body),sans-serif;}
+.modal :is(input,select){min-height:40px;}
+.modalHeader h2{font:600 20px var(--font-orbit-heading),sans-serif;color:#263D46;}
+.main :is(button,input,select,textarea):focus-visible{outline:2px solid #286F7A;outline-offset:2px;}
+@media(max-width:1300px){.tableWrap{overflow-x:auto;}}
