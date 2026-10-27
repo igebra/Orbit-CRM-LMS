@@ -1546,7 +1546,7 @@ export default function DemoSchedulePage() {
                         <select value={attendee.attendance_status} onChange={(event) => updateAttendance(attendee.temp_id, event.target.value)}>
                           {ATTENDANCE_OPTIONS.map((status) => <option key={status}>{status}</option>)}
                         </select>
-                        <button type="button" className={styles.removeStudent} onClick={() => removeAttendee(attendee.temp_id)}>Remove</button>
+                        <OrbitDeleteButton label={`Remove ${attendee.student_name} from this demo`} onClick={() => removeAttendee(attendee.temp_id)}/>
                       </div>
                     ))
                   )}
