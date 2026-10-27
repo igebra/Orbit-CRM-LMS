@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useParams, useRouter } from "next/navigation";
 import OrbitSidebar from "../../components/OrbitSidebar";
+import OrbitDeleteButton from "../../components/ui/OrbitDeleteButton";
 import styles from "../../lms.module.css";
 
 const supabase = createClient(
@@ -488,7 +489,7 @@ export default function BatchDetailPage() {
                 {roster.length===0?<div className={styles.empty}>No students assigned.</div>:roster.map(x=>(
                   <div className={styles.rosterRow} key={x.id}>
                     <button className={styles.rosterStudentButton} onClick={()=>router.push(`/students/${x.id}`)}><strong>{x.student_name}</strong><small>{x.grade||"—"} · {x.email||x.phone||"No contact"}</small></button>
-                    {canAdmin && <button className={styles.danger} onClick={()=>removeStudent(x.id)}>Remove</button>}
+                    {canAdmin && <OrbitDeleteButton label={`Remove ${x.student_name} from batch`} onClick={()=>removeStudent(x.id)}/>}
                   </div>
                 ))}
               </div>
