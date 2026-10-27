@@ -3,6 +3,8 @@
 import { FormEvent, useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
+import FinalLoginPanel from "./components/FinalLoginPanel";
+import styles from "./login-final.module.css";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -323,139 +325,30 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="login-shell">
-      <section className="login-panel">
-        <div className="login-content">
-          <div className="brand-lockup">
-            <div className="orbit-mark" aria-hidden="true">
-              <span className="orbit-dot orbit-dot-teal" />
-              <span className="orbit-dot orbit-dot-orange" />
-            </div>
-
-            <div>
-              <div className="brand-name">Orbit</div>
-              <div className="brand-sub">
-                by <strong>igebra.ai</strong>
-              </div>
-            </div>
-          </div>
-
-          <div className="login-stage">
+    <main className={styles.shell}>
+      <section className={styles.formSide} aria-label="Orbit secure sign in">
+        <div className={styles.card}>
+          <img className={styles.logo} src="/orbit-logo.svg" alt="Orbit by igebra.ai" />
+          <div className={styles.stage}>
             {!requestOpen && !activateOpen && (
-              <div className="login-view login-view-enter">
-                <div className="login-copy">
-                  <h1>Welcome back</h1>
-                  <p>Sign in to continue to your Orbit workspace.</p>
-                </div>
-
-                <form onSubmit={signIn} className="login-form">
-                  <label>
-                    <span>User ID / Email</span>
-                    <div className="input-3d">
-                      <span className="field-icon">◯</span>
-                      <input
-                        type="email"
-                        autoComplete="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Enter your email or user ID"
-                      />
-                    </div>
-                  </label>
-
-                  <label>
-                    <span>Password</span>
-                    <div className="input-3d">
-                      <span className="field-icon">▣</span>
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        autoComplete="current-password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Enter your password"
-                      />
-
-                      <button
-                        type="button"
-                        className="show-password"
-                        onClick={() => setShowPassword((value) => !value)}
-                      >
-                        {showPassword ? "Hide" : "Show"}
-                      </button>
-                    </div>
-                  </label>
-
-                  <div className="form-row">
-                    <label className="remember-row">
-                      <input
-                        type="checkbox"
-                        checked={remember}
-                        onChange={(e) => setRemember(e.target.checked)}
-                      />
-                      <span>Remember me</span>
-                    </label>
-
-                    <button
-                      type="button"
-                      className="text-link"
-                      onClick={forgotPassword}
-                    >
-                      Forgot password?
-                    </button>
-                  </div>
-
-                  {message && <div className="login-message">{message}</div>}
-
-                  {needsConfirmation && (
-                    <button
-                      type="button"
-                      className="auth-helper-button"
-                      onClick={() => resendConfirmation(email)}
-                    >
-                      Resend confirmation email
-                    </button>
-                  )}
-
-                  <button className="signin-button" type="submit" disabled={loading}>
-                    <span>{loading ? "Signing in..." : "Sign in"}</span>
-                    <span className="signin-arrow">→</span>
-                  </button>
-                </form>
-
-                <div className="login-mode-actions">
-                  <button
-                    type="button"
-                    className="login-mode-card"
-                    onClick={() => {
-                      setRequestOpen(true);
-                      setActivateOpen(false);
-                      setRequestMessage("");
-                    }}
-                  >
-                    <span className="login-mode-icon">+</span>
-                    <span>
-                      <strong>Request Access</strong>
-                      <small>New to Orbit</small>
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="login-mode-card login-mode-card-accent"
-                    onClick={() => {
-                      setActivateOpen(true);
-                      setRequestOpen(false);
-                      setActivateMessage("");
-                    }}
-                  >
-                    <span className="login-mode-icon">✓</span>
-                    <span>
-                      <strong>Activate Access</strong>
-                      <small>Already approved</small>
-                    </span>
-                  </button>
-                </div>
-              </div>
+              <FinalLoginPanel
+                email={email}
+                password={password}
+                remember={remember}
+                showPassword={showPassword}
+                loading={loading}
+                message={message}
+                onEmail={setEmail}
+                onPassword={setPassword}
+                onRemember={setRemember}
+                onTogglePassword={() => setShowPassword(current=>!current)}
+                onSignIn={signIn}
+                onForgotPassword={forgotPassword}
+                onSignUp={() => {setRequestOpen(true);setActivateOpen(false);setRequestMessage("");}}
+                onActivate={() => {setActivateOpen(true);setRequestOpen(false);setActivateMessage("");}}
+                afterMessage={needsConfirmation ? <button type="button" className={styles.link}
+                  onClick={() => resendConfirmation(email)}>Resend confirmation email</button> : null}
+              />
             )}
 
             {requestOpen && (
@@ -653,16 +546,10 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <img
-          className="brand-characters"
-          src="/igebra-characters.png"
-          alt="igebra brand characters"
-        />
       </section>
-
-      <section className="hero-panel" aria-label="Orbit education technology visual">
-        <div className="hero-image" />
-        <div className="hero-vignette" />
+      <section className={styles.artwork} aria-label="Orbit mascots exploring Quantum, AI, Math and Coding">
+        <img className={styles.hero} src="/orbit-login-final-art.svg"
+          alt="3D Orbit learning mascots exploring Quantum, AI, Math and Coding" />
       </section>
     </main>
   );
