@@ -204,11 +204,13 @@ export default function TrainersPage() {
             <p>Simple trainer directory used for batch and class assignment.</p>
           </div>
 
-          {canManage && (
-            <button className={styles.primary} onClick={openAdd}>
+          <div className={styles.headerTools}>
+            <img src="/orbit-mascot-approved.svg" alt="" className={styles.headerMascot}
+              width={44} height={58}/>
+            {canManage && <button className={styles.primary} onClick={openAdd}>
               + Add Trainer
-            </button>
-          )}
+            </button>}
+          </div>
         </header>
 
         {message && <div className={styles.message}>{message}</div>}
@@ -232,6 +234,7 @@ export default function TrainersPage() {
 
           <div className={styles.tableWrap}>
             <table aria-label="Trainer directory">
+              <colgroup>{[5,12,16,11,10,20,9,7,10].map((width,i)=><col key={i} style={{width:`${width}%`}}/>)}</colgroup>
               <thead>
                 <tr>
                   <th data-sno>S.No</th>
