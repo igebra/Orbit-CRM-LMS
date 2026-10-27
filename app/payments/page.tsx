@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import OrbitSidebar from "../components/OrbitSidebar";
+import OrbitDeleteButton from "../components/ui/OrbitDeleteButton";
 import styles from "./payments.module.css";
 import view from "./payments-workspace.module.css";
 
@@ -1043,7 +1044,7 @@ export default function PaymentsPage() {
                       <td>{row.payment_mode}</td><td>{row.reference||"—"}</td>
                       {canManageFinance&&<td className={view.inlineActions}>
                         <button type="button" onClick={()=>openEditPayment(row)}>Edit</button>
-                        <button type="button" onClick={()=>openDeletePayment(row)}>Delete</button>
+                        <OrbitDeleteButton label={`Delete payment for ${row.student_name}`} onClick={()=>openDeletePayment(row)}/>
                       </td>}</tr>)}</tbody>
                   </table>
                 </div>
