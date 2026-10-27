@@ -83,3 +83,23 @@
 .tableWrap th:nth-child(7){width:10%}
 .tableWrap th:nth-child(8){width:8%}
 .tableWrap th:nth-child(9){width:6%}
+
+
+/* UI-015: Correct narrow S.No and Actions; stable table margins. */
+.headerTools{display:flex;align-items:center;gap:13px;flex:none;}
+.headerMascot{height:58px;width:44px;object-fit:contain;pointer-events:none;}
+.tableWrap{width:100%;max-width:100%;min-width:0;overflow-x:auto;}
+.tableWrap table{table-layout:fixed;width:100%;min-width:1000px;}
+.tableWrap th,.tableWrap td{padding:13px 10px!important;vertical-align:middle;white-space:normal;overflow-wrap:anywhere;word-break:normal;}
+.tableWrap th{font:600 12px/1.4 var(--font-orbit-body),sans-serif;text-transform:none;letter-spacing:0;white-space:nowrap;}
+.tableWrap td{font:400 12px/1.5 var(--font-orbit-body),sans-serif;}
+.tableWrap th[data-sno],.tableWrap td[data-sno]{width:50px;min-width:45px;max-width:60px;white-space:nowrap!important;overflow-wrap:normal!important;text-align:center!important;}
+.tableWrap :is(th,td):last-child{min-width:105px;white-space:nowrap!important;overflow-wrap:normal!important;}
+.tableWrap .actionCell{min-width:105px;white-space:nowrap!important;}
+.actionToggle{display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap!important;word-break:keep-all!important;text-decoration:none;}
+.actionToggle span{display:inline-block;white-space:nowrap;}
+.tableWrap .status,.tableWrap .accessNo,.tableWrap .accessYes{padding:0;border:0;border-radius:0;background:none;font:600 12px var(--font-orbit-body),sans-serif;}
+.tableWrap .accessNo{color:#52656F;}
+.tableWrap tr{min-height:58px;}
+.tableWrap tbody tr:hover{background:#F8FAFB;}
+@media(max-width:1230px){.tableWrap table{min-width:1030px;}}
