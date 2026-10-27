@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import OrbitSidebar from "../components/OrbitSidebar";
+import OrbitNavIcon from "../components/OrbitNavIcon";
 import styles from "./access.module.css";
 
 const supabase = createClient(
@@ -177,6 +178,19 @@ export default function AccessPage() {
     setLoading(false);
   }
 
+  // Legacy approvals were created without full_name. Prefer persisted profile
+  // names. When no verified name exists, show an explicitly marked email handle.
+  const profileNameByEmail = useMemo(() => new Map(
+    users.filter(user => Boolean(user.full_name?.trim()) && Boolean(user.email))
+      .map(user => [user.email!.trim().toLowerCase(), user.full_name!.trim()])
+  ), [users]);
+  function requestDisplayName(request: RequestRow) {
+    const saved = request.full_name?.trim()
+      || profileNameByEmail.get(request.email.trim().toLowerCase());
+    return {label: saved || request.email.split("@")[0] || "Name unavailable",
+      inferred: !saved};
+  }
+
   const filteredRequests = useMemo(() => {
     const q = search.trim().toLowerCase();
 
@@ -188,6 +202,7 @@ export default function AccessPage() {
         !q ||
         [
           request.full_name,
+          profileNameByEmail.get(request.email.trim().toLowerCase()),
           request.email,
           request.requested_role,
           request.approved_role,
@@ -200,7 +215,7 @@ export default function AccessPage() {
 
       return statusMatches && searchMatches;
     });
-  }, [requests, search, statusFilter]);
+  }, [requests, search, statusFilter, profileNameByEmail]);
 
   const filteredUsers = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -573,7 +588,13 @@ export default function AccessPage() {
                     filteredRequests.map((request, index) => (
                       <tr key={request.request_id}>
                         <td data-sno>{index + 1}</td>
-                        <td><strong>{request.full_name || "—"}</strong></td>
+                        <td>
+                          <strong title={requestDisplayName(request).inferred
+                            ? "Name not recorded; displaying the email username" : undefined}>
+                            {requestDisplayName(request).label}
+                          </strong>
+                          {requestDisplayName(request).inferred && <small className={styles.nameHint}>Name not provided</small>}
+                        </td>
                         <td>{request.email}</td>
                         <td>{request.requested_role}</td>
                         <td>{new Date(request.created_at).toLocaleDateString()}</td>
@@ -715,7 +736,8 @@ export default function AccessPage() {
                       return (
                         <tr key={user.user_id}>
                           <td data-sno>{index + 1}</td>
-                          <td><strong>{user.full_name || "Orbit User"}</strong></td>
+                          <td><strong>{user.full_name?.trim() || user.email?.split("@")[0] || "Orbit User"}</strong>
+                            {!user.full_name?.trim() && <small className={styles.nameHint}>Name not provided</small>}</td>
                           <td>{user.email || "—"}</td>
                           <td>{displayRole(user.role)}</td>
                           <td>
