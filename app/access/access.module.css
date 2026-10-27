@@ -141,3 +141,26 @@
 .main :is(button,input,select):focus-visible{outline:2px solid #286F7A;outline-offset:2px;}
 @media(max-width:1200px){.tableWrap th,.tableWrap td{padding:9px 4px;font-size:10px;}.tableWrap table{table-layout:auto;}}
 @media(max-width:900px){.main{padding:19px}.stats{grid-template-columns:repeat(3,minmax(0,1fr));}.toolbar{align-items:stretch}.tableWrap{overflow-x:auto}.tableWrap table{min-width:900px;}}
+
+
+/* UI-015: Legacy display names, readable email / Actions table. */
+.headerTools{display:flex;align-items:center;gap:12px;flex:none;}
+.headerMascot{width:42px;height:56px;object-fit:contain;pointer-events:none;}
+.nameHint{display:block;margin-top:3px;color:#8B9BA1;font:400 10px/1.3 var(--font-orbit-body),sans-serif;}
+.tableWrap table{table-layout:fixed;}
+.tableWrap th,.tableWrap td{overflow-wrap:break-word;word-break:normal;}
+.tableWrap :is(th,td)[data-sno]{width:44px;max-width:48px;white-space:nowrap;overflow-wrap:normal;text-align:center;}
+.tableWrap table:has(th[data-sno]) th:nth-child(1){width:5%;}
+.tableWrap table:has(th[data-sno]) th:nth-child(2){width:12%;}
+.tableWrap table:has(th[data-sno]) th:nth-child(3){width:20%;}
+.tableWrap table:has(th[data-sno]) th:nth-child(4){width:10%;}
+.tableWrap table:has(th[data-sno]) th:nth-child(5){width:11%;}
+.tableWrap table:has(th[data-sno]) th:nth-child(6){width:8%;}
+.tableWrap table:has(th[data-sno]) th:nth-child(7){width:11%;}
+.tableWrap table:has(th[data-sno]) th:nth-child(8){width:11%;}
+.tableWrap table:has(th[data-sno]) th:nth-child(9){width:12%;}
+.emailCell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis!important;overflow-wrap:normal!important;word-break:normal!important;}
+.tableWrap td .nameHint{white-space:normal;}
+.actions,.userActions{align-items:center;gap:6px;flex-wrap:nowrap;justify-content:flex-start;}
+.tableWrap tr td:last-child{white-space:nowrap;}
+@media(max-width:1220px){.tableWrap table{min-width:1060px;}.tableWrap th,.tableWrap td{white-space:normal;}.emailCell{white-space:nowrap!important;}}
