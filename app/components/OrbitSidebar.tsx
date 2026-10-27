@@ -15,6 +15,7 @@ const supabase = createClient(
 // Each Orbit page currently remounts the Sidebar. Without this cache,
 // role-based menu items briefly disappear while Supabase is queried again.
 let cachedRole = "";
+let cachedUserId = "";
 let cachedPendingAccess = 0;
 let cachedEmail = "";
 
@@ -58,7 +59,10 @@ export default function OrbitSidebar({ email, active }: Props) {
     active === "crm-leads" || active === "crm-demos"
   );
 
-  const [role, setRole] = useState("");
+  const [role, setRole] = useState(() =>
+    cachedEmail && email && cachedEmail.toLowerCase() === email.toLowerCase()
+      ? cachedRole : ""
+  );
   const [pendingAccess, setPendingAccess] = useState(cachedPendingAccess);
 
   const displayEmail = email || cachedEmail;
@@ -80,7 +84,17 @@ export default function OrbitSidebar({ email, active }: Props) {
       const { data: sessionData } = await supabase.auth.getSession();
       const user = sessionData.session?.user;
 
-      if (!user || cancelled) return;
+      if (cancelled) return;
+      if (!user) {
+        cachedRole = ""; cachedUserId = ""; cachedEmail = "";
+        setRole(""); setPendingAccess(0);
+        return;
+      }
+      if (cachedUserId && cachedUserId !== user.id) {
+        cachedRole = ""; cachedPendingAccess = 0;
+        setRole(""); setPendingAccess(0);
+      }
+      cachedUserId = user.id;
 
       if (!cachedEmail && user.email) {
         cachedEmail = user.email;
@@ -125,6 +139,7 @@ export default function OrbitSidebar({ email, active }: Props) {
 
   async function signOut() {
     cachedRole = "";
+    cachedUserId = "";
     cachedPendingAccess = 0;
     cachedEmail = "";
 
