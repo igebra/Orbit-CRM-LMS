@@ -83,3 +83,61 @@
   opacity:.55;
   cursor:not-allowed;
 }
+
+
+/* BRAND-008 · CRM Access Management final desktop styling.
+   Admin functions, approval decisions and policies remain untouched. */
+.shell{grid-template-columns:248px minmax(0,1fr);background:#F8FAFB;color:#263D46;}
+.main{min-width:0;max-width:100%;padding:24px 27px 44px;background:#F8FAFB;overflow-x:hidden;}
+.header{align-items:center;justify-content:space-between;gap:20px;margin-bottom:18px;}
+.header h1{font:700 28px/1.25 var(--font-orbit-heading),sans-serif;color:#263D46;margin:4px 0 5px;}
+.header p{font:400 14px/1.45 var(--font-orbit-body),sans-serif;color:#52656F;}
+.kicker{font:600 11px/1.5 var(--font-orbit-body),sans-serif!important;letter-spacing:.07em;color:#286F7A!important;}
+.primary,.secondary{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 16px;border-radius:10px;box-shadow:none;font:600 13px/1.2 var(--font-orbit-body),sans-serif;cursor:pointer;}
+.primary{background:#286F7A;border:1px solid #286F7A;color:#fff;}
+.primary:hover:not(:disabled){background:#225E68;}
+.secondary{background:#fff;border:1px solid #DCE5E8;color:#286F7A;}
+.secondary:hover:not(:disabled){background:#F0F4F5;}
+.stats{gap:12px;margin-bottom:17px;}
+.stats>div{min-height:99px;min-width:0;padding:14px 16px;border:1px solid #DCE5E8;border-top:3px solid #B6DEE5;border-radius:14px;background:#fff;box-shadow:0 4px 16px rgba(38,61,70,.035);}
+.stats>div:nth-child(2){border-top-color:#DDD0E7;}
+.stats>div:nth-child(3){border-top-color:#CDE4D7;}
+.stats span{color:#52656F;font:600 12px/1.4 var(--font-orbit-body),sans-serif;}
+.stats strong{color:#263D46;font:700 27px/1.15 var(--font-orbit-heading),sans-serif;margin-top:8px;}
+.card{background:transparent;border:0;box-shadow:none;border-radius:0;overflow:visible;}
+.tabs{display:flex;gap:20px;width:100%;padding:0;border:0;border-bottom:1px solid #DCE5E8;background:transparent;overflow-x:auto;}
+.tabs button{min-height:41px;padding:9px 3px;background:none;border:0;border-bottom:2px solid transparent;font:500 13px/1.3 var(--font-orbit-body),sans-serif;color:#52656F;border-radius:0;cursor:pointer;white-space:nowrap;}
+.tabs button.activeTab{color:#263D46;border-bottom-color:#286F7A;background:none;font-weight:700;}
+.toolbar{border:0;padding:14px 0 13px;background:transparent;align-items:center;flex-wrap:wrap;}
+.toolbar input{width:min(440px,100%);}
+.toolbar :is(input,select),.tableWrap select{height:40px;border:1px solid #DCE5E8;border-radius:10px;background:#fff;color:#263D46;font:400 13px var(--font-orbit-body),sans-serif;padding:0 10px;}
+.tableWrap{max-width:100%;min-width:0;overflow-x:auto;scrollbar-width:thin;}
+.tableWrap table{max-width:100%;width:100%;min-width:0;table-layout:fixed;border-collapse:collapse;background:transparent;}
+.tableWrap th,.tableWrap td{padding:10px 6px;border-bottom:1px solid #E8EFF1;vertical-align:middle;overflow-wrap:anywhere;text-align:left;}
+.tableWrap th{min-height:40px;font:600 11px/1.4 var(--font-orbit-body),sans-serif;color:#263D46;background:#F0F4F5;text-transform:none;letter-spacing:0;white-space:normal;}
+.tableWrap td{font:400 11px/1.45 var(--font-orbit-body),sans-serif;color:#263D46;}
+.tableWrap td strong{font-weight:600;font-size:11px;}
+.tableWrap tbody tr:hover{background:#F8FAFB;}
+.tableWrap :is(th,td)[data-sno]{width:43px;min-width:37px;max-width:46px;text-align:center;}
+.status,.accountState{display:inline;color:#286F7A;background:transparent;border:0;border-radius:0;box-shadow:none;padding:0;font:600 11px/1.4 var(--font-orbit-body),sans-serif;}
+.pending{color:#956A24}.approved{color:#26785B}.rejected{color:#A43936}
+.accountState{color:#52656F}
+.actions,.userActions{display:flex;align-items:center;flex-wrap:wrap;gap:6px;}
+.tableWrap :is(.approveButton,.rejectButton,.deleteRequestButton,.editButton,.resetButton,.removeButton){display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:4px 5px;border:0!important;background:transparent!important;border-radius:6px;box-shadow:none;color:#286F7A;font:600 11px/1.3 var(--font-orbit-body),sans-serif;cursor:pointer;}
+.tableWrap :is(.rejectButton,.deleteRequestButton,.removeButton){color:#A43936;}
+.tableWrap :is(.approveButton,.rejectButton,.deleteRequestButton,.editButton,.resetButton,.removeButton):hover{background:#EAF3F5!important;text-decoration:underline;}
+.tableWrap :is(.approveButton,.rejectButton,.deleteRequestButton,.editButton,.resetButton,.removeButton):disabled{opacity:.5;cursor:not-allowed;}
+.help{padding:12px 14px;border:1px solid #DCE5E8;background:#F0F4F5;border-radius:12px;color:#52656F;font:400 12px/1.5 var(--font-orbit-body),sans-serif;}
+.message{border-color:#E5D69B;background:#F9F3DF;color:#70571F;font:500 12px/1.5 var(--font-orbit-body),sans-serif;}
+.modal{border-radius:18px;max-height:90vh;overflow-y:auto;}
+.modalHeader{padding:16px 19px;border-bottom-color:#E8EFF1;}
+.modalHeader h2{font:650 20px/1.3 var(--font-orbit-heading),sans-serif;color:#263D46;}
+.modalHeader p{font:400 12px var(--font-orbit-body),sans-serif;color:#52656F;}
+.modalHeader button{height:40px;width:40px;border-radius:10px;background:#F0F4F5;color:#263D46;}
+.formGrid{gap:13px;padding:18px 19px;}
+.formGrid label span{font:500 12px/1.4 var(--font-orbit-body),sans-serif;color:#263D46;margin-bottom:6px;}
+.formGrid :is(input,select){height:40px;border:1px solid #DCE5E8;border-radius:10px;font:400 13px var(--font-orbit-body),sans-serif;background:#fff;color:#263D46;}
+.modalFooter{padding:13px 19px;border-top-color:#E8EFF1;}
+.main :is(button,input,select):focus-visible{outline:2px solid #286F7A;outline-offset:2px;}
+@media(max-width:1200px){.tableWrap th,.tableWrap td{padding:9px 4px;font-size:10px;}.tableWrap table{table-layout:auto;}}
+@media(max-width:900px){.main{padding:19px}.stats{grid-template-columns:repeat(3,minmax(0,1fr));}.toolbar{align-items:stretch}.tableWrap{overflow-x:auto}.tableWrap table{min-width:900px;}}
