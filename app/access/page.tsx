@@ -659,7 +659,7 @@ export default function AccessPage() {
                               >
                                 Reject
                               </button>
-                              <OrbitDeleteButton label={`Remove ${request.status === "Approved" ? "approval" : "request"} for ${request.email}`} disabled={saving} onClick={() => deleteRequest(request)}/>
+                              <OrbitDeleteButton label={`Remove access request / approval for ${request.email}`} disabled={saving} onClick={() => deleteRequest(request)}/>
                             </div>
                           ) : request.status === "Rejected" ? (
                             <div className={styles.actions}>
@@ -669,11 +669,11 @@ export default function AccessPage() {
                               >
                                 Approve Again
                               </button>
-                              <OrbitDeleteButton label={`Remove ${request.status === "Approved" ? "approval" : "request"} for ${request.email}`} disabled={saving} onClick={() => deleteRequest(request)}/>
+                              <OrbitDeleteButton label={`Remove access request / approval for ${request.email}`} disabled={saving} onClick={() => deleteRequest(request)}/>
                             </div>
                           ) : accountState(request) === "Waiting Activation" ? (
                             <div className={styles.actions}>
-                              <OrbitDeleteButton label={`Remove ${request.status === "Approved" ? "approval" : "request"} for ${request.email}`} disabled={saving} onClick={() => deleteRequest(request)}/>
+                              <OrbitDeleteButton label={`Remove access request / approval for ${request.email}`} disabled={saving} onClick={() => deleteRequest(request)}/>
                             </div>
                           ) : (
                             <div className={styles.actions}>
