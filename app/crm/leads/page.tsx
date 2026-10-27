@@ -5,6 +5,8 @@ import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import OrbitSidebar from "../../components/OrbitSidebar";
 import SmartLeadImport from "./SmartLeadImport";
+import OrbitDeleteButton from "../../components/ui/OrbitDeleteButton";
+import OrbitNavIcon from "../../components/OrbitNavIcon";
 import styles from "./leads.module.css";
 
 const supabase = createClient(
@@ -1043,7 +1045,7 @@ export default function LeadsPage() {
                 className={styles.selectionDelete}
                 onClick={bulkDelete}
               >
-                Delete Selected
+                <OrbitNavIcon name="trash" /> Delete Selected
               </button>
               <button
                 className={styles.clearSelection}
@@ -1214,12 +1216,7 @@ export default function LeadsPage() {
                           ) : null}
 
                           {canManageCrm && (
-                            <button
-                              className={styles.deleteButton}
-                              onClick={() => deleteLead(lead.id)}
-                            >
-                              Delete
-                            </button>
+                            <OrbitDeleteButton label={`Delete lead for ${lead.child_name}`} onClick={() => deleteLead(lead.id)}/>
                           )}
                         </div>
                           </div>
