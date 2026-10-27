@@ -1,1 +1,55 @@
 .shell{min-height:100vh;display:grid;grid-template-columns:270px minmax(0,1fr);background:linear-gradient(135deg,#f7f7f4,#edf5f4);color:#183032}.main{min-width:0;padding:28px}.header{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:15px}.header h1{margin:0;font-size:32px}.header p{margin:6px 0 0;color:#6b7b7c}.kicker{color:#d9853b!important;font-size:10px!important;font-weight:900!important;letter-spacing:.08em}.headerActions{display:flex;gap:8px}.primary,.secondary,.danger{border-radius:9px;padding:9px 12px;font-weight:800;cursor:pointer}.primary{border:1px solid #c77830;background:#d9853b;color:#fff}.secondary{border:1px solid #cbdad7;background:#fff;color:#0f5e61}.danger{border:1px solid #e6c1c1;background:#fff8f8;color:#a23e3e}.message{margin-bottom:12px;padding:10px 12px;border:1px solid #efd0a9;border-radius:9px;background:#fff7ed;color:#7b4a20;font-size:10px}.tabs{display:flex;gap:4px;width:max-content;margin-bottom:12px;padding:4px;border:1px solid #d9e5e3;border-radius:11px;background:#fff}.tabs button{border:0;border-radius:8px;padding:8px 12px;background:transparent;color:#657775;font-weight:800;cursor:pointer}.tabs .active{background:#0f5e61;color:#fff}.card{border:1px solid #d9e5e3;border-radius:14px;background:#fff;overflow:hidden;margin-bottom:13px}.cardHead{padding:13px 15px;border-bottom:1px solid #e8eeec;display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.cardHead h2{margin:0;font-size:16px}.cardHead p{margin:4px 0 0;color:#748381;font-size:10px}.form{padding:14px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.form label>span{display:block;margin-bottom:5px;color:#58706f;font-size:9px;font-weight:850;text-transform:uppercase}.form input,.form select{width:100%;height:39px;border:1px solid #ccd9d6;border-radius:8px;background:#fff;padding:0 9px}.full{grid-column:1/-1}.formActions{grid-column:1/-1;display:flex;justify-content:flex-end}.toolbar{padding:11px;display:flex;gap:8px;border-bottom:1px solid #e8eeec}.toolbar input,.toolbar select{height:38px;border:1px solid #ccd9d6;border-radius:8px;background:#fff;padding:0 9px}.toolbar input{flex:1}.tableWrap{overflow:auto}.tableWrap table{width:100%;border-collapse:collapse;min-width:900px}.tableWrap th,.tableWrap td{padding:9px 10px;border-bottom:1px solid #edf1f0;text-align:left;vertical-align:top;font-size:10px}.tableWrap th{background:#f6f9f8;color:#5c706e;font-size:8.5px;text-transform:uppercase}.tableWrap td strong,.tableWrap td small{display:block}.tableWrap td small{margin-top:3px;color:#7c8b89}.badge{display:inline-block;padding:4px 7px;border-radius:999px;background:#eef4f3;color:#4e6664;font-size:8.5px;font-weight:850}.activeBadge{background:#e4f4e8;color:#26733d}.waiting{background:#fff0e5;color:#a35625}.visibilitySelect{height:32px;border:1px solid #ccd9d6;border-radius:7px;background:#fff;padding:0 7px;color:#183032;font-size:9px}.empty{padding:28px!important;text-align:center!important;color:#7d8c8a!important}.help{padding:12px 14px;border:1px solid #d8e5e2;border-radius:12px;background:#eef7f5;color:#476563;font-size:10px;line-height:1.55;margin-bottom:12px}@media(max-width:900px){.shell{grid-template-columns:1fr}.main{padding:18px}.header{flex-direction:column}.form{grid-template-columns:1fr}.full,.formActions{grid-column:auto}.toolbar{flex-direction:column}}
+
+/* BRAND-008 · CRM Portal Access final desktop styling.
+   Retains student/parent linkage, permissions and LMS content visibility logic. */
+.shell{grid-template-columns:248px minmax(0,1fr);background:#F8FAFB;color:#263D46;}
+.main{padding:24px 27px 44px;min-width:0;max-width:100%;background:#F8FAFB;overflow-x:hidden;}
+.header{align-items:center;gap:16px;margin-bottom:17px;}
+.header h1{font:700 28px/1.25 var(--font-orbit-heading),sans-serif;color:#263D46;margin:4px 0;}
+.header p{font:400 14px/1.5 var(--font-orbit-body),sans-serif;color:#52656F;max-width:760px;}
+.kicker{font:600 11px/1.4 var(--font-orbit-body),sans-serif!important;letter-spacing:.07em;color:#286F7A!important;}
+.headerActions{gap:8px;}
+.primary,.secondary,.danger{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 16px;border-radius:10px;box-shadow:none;font:600 13px var(--font-orbit-body),sans-serif;cursor:pointer;}
+.primary{background:#286F7A;border:1px solid #286F7A;color:#fff;}
+.primary:hover:not(:disabled){background:#225E68;}
+.secondary{border:1px solid #DCE5E8;background:#fff;color:#286F7A;}
+.secondary:hover:not(:disabled){background:#F0F4F5;}
+.danger{background:#FFF7F6;border:1px solid #EBCAC7;color:#A43936;}
+.message{padding:10px 12px;border:1px solid #E5D69B;border-radius:10px;background:#F9F3DF;color:#70571F;font:500 12px var(--font-orbit-body),sans-serif;}
+.help{padding:12px 14px;border:1px solid #DCE5E8;background:#F0F4F5;border-radius:12px;color:#52656F;font:400 12px/1.55 var(--font-orbit-body),sans-serif;margin-bottom:16px;}
+.tabs{display:flex;gap:24px;width:100%;padding:0;margin-bottom:18px;border:0;border-bottom:1px solid #DCE5E8;border-radius:0;background:none;overflow-x:auto;}
+.tabs button{min-height:41px;padding:9px 3px;background:none;border:0;border-bottom:2px solid transparent;border-radius:0;color:#52656F;font:500 13px var(--font-orbit-body),sans-serif;white-space:nowrap;cursor:pointer;}
+.tabs button.active{background:none;color:#263D46;border-bottom:2px solid #286F7A;font-weight:700;}
+.card{border:1px solid #DCE5E8;background:#fff;border-radius:16px;box-shadow:0 4px 18px rgba(38,61,70,.035);margin-bottom:16px;overflow:hidden;}
+.cardHead{padding:14px 16px;border-color:#E8EFF1;gap:16px;}
+.cardHead h2{color:#263D46;font:600 16px/1.35 var(--font-orbit-heading),sans-serif;}
+.cardHead p{font:400 12px/1.45 var(--font-orbit-body),sans-serif;color:#52656F;}
+.form{gap:13px;padding:16px;}
+.form label>span{font:500 12px var(--font-orbit-body),sans-serif;color:#263D46;letter-spacing:0;text-transform:none;margin-bottom:6px;}
+.form :is(input,select){height:40px;padding:0 10px;border:1px solid #DCE5E8;border-radius:10px;background:#fff;color:#263D46;font:400 13px var(--font-orbit-body),sans-serif;}
+.formActions{gap:8px;}
+.toolbar{display:flex;align-items:center;gap:9px;padding:12px 14px;border-bottom:1px solid #E8EFF1;flex-wrap:wrap;}
+.toolbar :is(input,select){height:40px;border:1px solid #DCE5E8;border-radius:10px;background:#fff;color:#263D46;font:400 13px var(--font-orbit-body),sans-serif;}
+.toolbar input{flex:1 1 300px;min-width:160px;}
+/* Directory tables are flat. Access grant form remains a white card. */
+.card:has(> .tableWrap){background:transparent;border:0;border-radius:0;box-shadow:none;overflow:visible;}
+.card:has(> .tableWrap)>.cardHead{padding:13px 0;border:0;}
+.card:has(> .tableWrap)>.toolbar{padding:10px 0;background:transparent;border:0;}
+.tableWrap{width:100%;max-width:100%;min-width:0;overflow-x:auto;scrollbar-width:thin;}
+.tableWrap table{table-layout:fixed;width:100%;min-width:0;border-collapse:collapse;background:transparent;}
+.tableWrap th,.tableWrap td{vertical-align:middle;padding:10px 7px;border-bottom:1px solid #E8EFF1;overflow-wrap:anywhere;word-break:normal;text-align:left;}
+.tableWrap th{height:40px;background:#F0F4F5;color:#263D46;text-transform:none;letter-spacing:0;font:600 11px/1.4 var(--font-orbit-body),sans-serif;}
+.tableWrap td{color:#263D46;font:400 11px/1.45 var(--font-orbit-body),sans-serif;}
+.tableWrap td strong{font:600 11px/1.4 var(--font-orbit-body),sans-serif;}
+.tableWrap td small{color:#52656F;font:400 10px/1.4 var(--font-orbit-body),sans-serif;}
+.tableWrap tbody tr:hover{background:#F8FAFB;}
+.tableWrap :is(td,th)[data-sno]{text-align:center;width:43px;min-width:37px;max-width:47px;}
+.badge,.activeBadge,.waiting{display:inline;color:#286F7A;background:none;border:0;padding:0;border-radius:0;font:600 11px var(--font-orbit-body),sans-serif;}
+.waiting{color:#8A642D}
+.visibilitySelect{min-height:40px;max-width:100%;padding:0 8px;border:1px solid #DCE5E8;border-radius:9px;background:#fff;color:#263D46;font:400 11px var(--font-orbit-body),sans-serif;}
+.tableWrap button:not([role="switch"]){min-height:32px;padding:4px 6px;border:0;border-radius:6px;background:transparent;color:#286F7A;box-shadow:none;font:600 11px var(--font-orbit-body),sans-serif;cursor:pointer;}
+.tableWrap button:hover{background:#EAF3F5;text-decoration:underline;}
+.empty{padding:26px 12px!important;text-align:center!important;color:#52656F!important;font:400 12px var(--font-orbit-body),sans-serif!important;}
+.main :is(button,input,select):focus-visible{outline:2px solid #286F7A;outline-offset:2px;}
+@media(max-width:1100px){.tableWrap table{table-layout:auto;}.tableWrap th,.tableWrap td{padding:9px 5px;font-size:10px;}}
+@media(max-width:900px){.main{padding:19px}.header{flex-direction:column}.form{grid-template-columns:repeat(2,minmax(0,1fr))}.tableWrap{overflow-x:auto}.tableWrap table{min-width:830px;}}
