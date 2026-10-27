@@ -490,15 +490,19 @@ export default function AccessPage() {
             <p>Approve requests or grant Orbit access directly.</p>
           </div>
 
-          <button
-            className={styles.primary}
-            onClick={() => {
-              setGrantRole("trainer");
-              setGrantOpen(true);
-            }}
-          >
-            + Add User
-          </button>
+          <div className={styles.headerTools}>
+            <img src="/orbit-mascot-approved.svg" alt="" width={42} height={56}
+              className={styles.headerMascot}/>
+            <button
+              className={styles.primary}
+              onClick={() => {
+                setGrantRole("trainer");
+                setGrantOpen(true);
+              }}
+            >
+              + Add User
+            </button>
+          </div>
         </header>
 
         {message && <div className={styles.message}>{message}</div>}
@@ -595,7 +599,7 @@ export default function AccessPage() {
                           </strong>
                           {requestDisplayName(request).inferred && <small className={styles.nameHint}>Name not provided</small>}
                         </td>
-                        <td>{request.email}</td>
+                        <td className={styles.emailCell} title={request.email}>{request.email}</td>
                         <td>{request.requested_role}</td>
                         <td>{new Date(request.created_at).toLocaleDateString()}</td>
                         <td>
@@ -720,7 +724,7 @@ export default function AccessPage() {
                           <td data-sno>{index + 1}</td>
                           <td><strong>{user.full_name?.trim() || user.email?.split("@")[0] || "Orbit User"}</strong>
                             {!user.full_name?.trim() && <small className={styles.nameHint}>Name not provided</small>}</td>
-                          <td>{user.email || "—"}</td>
+                          <td className={styles.emailCell} title={user.email || ""}>{user.email || "—"}</td>
                           <td>{displayRole(user.role)}</td>
                           <td>
                             <span
