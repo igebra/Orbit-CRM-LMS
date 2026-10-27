@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import OrbitSidebar from "../components/OrbitSidebar";
+import OrbitDeleteButton from "../components/ui/OrbitDeleteButton";
 import styles from "./portal-access.module.css";
 
 const supabase = createClient(
@@ -517,12 +518,7 @@ export default function PortalAccessPage() {
                             </span>
                           </td>
                           <td>
-                            <button
-                              className={styles.danger}
-                              onClick={() => revoke(grantRow)}
-                            >
-                              Remove
-                            </button>
+                            <OrbitDeleteButton label={`Revoke portal access for ${grantRow.email}`} onClick={() => revoke(grantRow)}/>
                           </td>
                         </tr>
                       ))
