@@ -1089,3 +1089,21 @@ button.statCard {
   .tableWrap th,.tableWrap td{padding:9px 4px;font-size:11px}
   .actionToggle{font-size:11px}
 }
+
+
+/* BRAND-008 final Leads consistency: flat rows, clean forms, no boxed labels. */
+.primaryButton,.secondaryButton,.cancelButton,.refreshButton{min-height:40px;height:auto;border-radius:10px;font:600 13px var(--font-orbit-body),sans-serif;box-shadow:none;}
+.statCard{min-height:86px;padding:12px 14px;border-radius:14px;}
+.toolbar :is(input[type="search"],select){height:40px;min-height:40px;font:400 13px var(--font-orbit-body),sans-serif;border-radius:10px;border:1px solid #DCE5E8;color:#263D46;}
+.tableWrap{background:transparent;}
+.tableWrap table{border-collapse:collapse;}
+.tableWrap th{font:600 11px/1.45 var(--font-orbit-body),sans-serif;color:#263D46;white-space:normal;text-transform:none;letter-spacing:0;}
+.tableWrap td{font:400 12px/1.45 var(--font-orbit-body),sans-serif;}
+.tableWrap tbody tr:hover{background:#F8FAFB;}
+.tableWrap .stageBadge{display:inline;background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:0!important;font:600 11px/1.4 var(--font-orbit-body),sans-serif;}
+.selectionBar{border:1px solid #DCE5E8;border-radius:12px;background:#F0F4F5;box-shadow:none;}
+.message{font:500 12px/1.4 var(--font-orbit-body),sans-serif;border:1px solid #E5D69B;border-radius:10px;color:#70571F;background:#F9F3DF;}
+.modal input,.modal select,.modal textarea{border:1px solid #DCE5E8;border-radius:10px;color:#263D46;font:400 13px var(--font-orbit-body),sans-serif;}
+.modal :is(input,select){min-height:40px;}
+.modalHeader h2{font:600 20px var(--font-orbit-heading),sans-serif;color:#263D46;}
+.main :is(button,input,select,textarea):focus-visible{outline:2px solid #286F7A;outline-offset:2px;}
