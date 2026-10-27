@@ -972,3 +972,34 @@ button.statCard {
     border-bottom: 1px solid #e3ecea;
   }
 }
+
+/* ORBIT-20261019: compact, scrollable, CRM lead workspace. */
+.courseEnrollments{margin-bottom:16px;border:1px solid #dee6e9;background:#fff;border-radius:16px;padding:15px}
+.courseEnrollmentsHeading{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px}
+.courseEnrollmentsHeading strong{font-size:15px;font-weight:600;color:#273746}
+.courseEnrollmentsHeading button,.selectModeButton{background:#fff;border:1px solid #cbd6d8;border-radius:9px;padding:9px 13px;color:#273746;cursor:pointer;font-weight:550}
+.courseTiles{display:flex;gap:9px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
+.courseTile,.courseTileActive{flex:0 0 190px;text-align:left;border:1px solid #d9e4e7;background:#f8fafb;border-radius:12px;padding:11px;display:grid;gap:5px;cursor:pointer;color:#273746}
+.courseTileActive{border-color:#E9943A;background:#fff7ee;box-shadow:inset 0 0 0 1px #E9943A}
+.courseTile span,.courseTileActive span{font-size:12px;line-height:1.35;min-height:33px}
+.courseTile strong,.courseTileActive strong{font-size:19px;font-weight:650}
+.courseTile small,.courseTileActive small{font-size:11px;color:#7b888c}
+.tableCard{overflow:visible}
+.topScroll{overflow-x:auto;overflow-y:hidden;scrollbar-width:auto;height:17px;border-bottom:1px solid #e4eceb;background:#f7faf9;position:sticky;top:0;z-index:4}
+.tableWrap{overflow-x:auto;scrollbar-width:auto}
+.compactLeadsTable{min-width:1110px!important}
+.compactLeadsTable th{font-weight:600}
+.compactLeadsTable td{font-weight:400}
+.compactLeadsTable td strong{font-weight:500}
+.compactActions{display:flex;align-items:flex-start;gap:5px;flex-wrap:wrap}
+.compactActions>button,.moreInfo>summary{border:1px solid #d2dcdf;background:#fff;color:#273746;padding:6px 9px;border-radius:7px;cursor:pointer;font-size:11px;font-weight:500;white-space:nowrap}
+.moreInfo{position:relative;min-width:100px}
+.moreInfo>summary{list-style:none;display:inline-flex;align-items:center;justify-content:center}
+.moreInfo>summary::-webkit-details-marker{display:none}
+.moreInfo[open]{background:#fff;padding:5px 7px;border:1px solid #dee6e9;border-radius:10px;min-width:180px;box-shadow:0 8px 18px rgba(39,55,70,.09)}
+.moreInfo[open]>summary{margin-bottom:8px}
+.moreInfo>div{display:flex;justify-content:space-between;gap:10px;margin:5px 0;font-size:11px;color:#667b83}
+.moreInfo b{font-weight:600;color:#273746}
+.moreInfo .deleteInsideDetails{margin-top:8px;background:#fff8f8;color:#a23939;border:1px solid #eacaca;border-radius:8px;padding:7px 9px;cursor:pointer}
+.followUpDisabled{font-size:11px;color:#919b9d;background:#f2f4f4;padding:5px 7px;border-radius:8px}
+@media(max-width:650px){.courseTiles{padding-bottom:10px}.tableCard{overflow:visible}.topScroll{top:0}}

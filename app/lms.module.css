@@ -605,3 +605,733 @@
     flex:1 1 auto;
   }
 }
+
+/* ORBIT_CRM_PREMIUM_SIDEBAR_START */
+
+/* Match CRM sidebar visually to standalone LMS */
+.sidebar{
+  position:sticky;
+  top:0;
+  height:100vh;
+  min-height:100vh;
+  padding:22px 17px 18px!important;
+  overflow-y:auto;
+  background:
+    radial-gradient(circle at 12% 8%,rgba(35,180,168,.16),transparent 28%),
+    radial-gradient(circle at 90% 88%,rgba(30,117,145,.15),transparent 32%),
+    linear-gradient(180deg,#07545a 0%,#073e48 52%,#062f3d 100%)!important;
+  color:#fff!important;
+  box-shadow:10px 0 30px rgba(7,48,55,.08);
+}
+
+.brand{
+  min-height:78px;
+  margin-bottom:23px!important;
+  padding:8px 9px!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+  border-radius:18px!important;
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.025))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.09),
+    0 8px 22px rgba(0,0,0,.08)!important;
+  align-items:center!important;
+}
+
+.brandMascot{
+  width:48px!important;
+  height:58px!important;
+  object-fit:contain!important;
+}
+
+.brandCopy{
+  padding-bottom:0!important;
+}
+
+.brand strong{
+  display:block!important;
+  color:#fff!important;
+  font-size:24px!important;
+  font-weight:850!important;
+  line-height:1!important;
+  letter-spacing:-.02em!important;
+}
+
+.brand small{
+  display:block!important;
+  margin-top:5px!important;
+  color:rgba(255,255,255,.72)!important;
+  font-size:11px!important;
+}
+
+.nav{
+  display:grid!important;
+  gap:9px!important;
+}
+
+.nav>button,
+.crmGroup>button{
+  min-height:50px!important;
+  padding:7px 11px!important;
+  border:1px solid rgba(255,255,255,.105)!important;
+  border-radius:15px!important;
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.035))!important;
+  color:rgba(255,255,255,.92)!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 7px 16px rgba(0,0,0,.055)!important;
+  font-size:13px!important;
+  font-weight:650!important;
+  transition:
+    transform .14s ease,
+    background .14s ease,
+    border-color .14s ease,
+    box-shadow .14s ease!important;
+}
+
+.nav>button:hover,
+.crmGroup>button:hover{
+  transform:translateY(-1px);
+  border-color:rgba(142,235,224,.28)!important;
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.105),rgba(255,255,255,.05))!important;
+}
+
+.nav>button>span:first-child,
+.crmGroup>button>span:first-child{
+  width:31px!important;
+  height:31px!important;
+  flex:0 0 31px!important;
+  display:grid!important;
+  place-items:center!important;
+  border:1px solid rgba(255,255,255,.10)!important;
+  border-radius:10px!important;
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.045))!important;
+  color:#d9fffb!important;
+  font-size:14px!important;
+  font-weight:800!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 5px 12px rgba(0,0,0,.07)!important;
+}
+
+.navActive{
+  border-color:rgba(88,232,219,.75)!important;
+  background:
+    linear-gradient(135deg,rgba(33,186,176,.30),rgba(255,255,255,.07))!important;
+  color:#fff!important;
+  box-shadow:
+    0 0 0 1px rgba(89,233,220,.16),
+    0 10px 22px rgba(0,0,0,.10),
+    inset 0 1px 0 rgba(255,255,255,.14)!important;
+  font-weight:800!important;
+}
+
+.navActive>span:first-child{
+  background:
+    linear-gradient(145deg,rgba(52,221,205,.30),rgba(255,255,255,.08))!important;
+  border-color:rgba(113,247,233,.36)!important;
+  color:#fff!important;
+}
+
+.chevron{
+  margin-left:auto!important;
+  font-size:12px!important;
+  opacity:.82!important;
+}
+
+.crmGroup{
+  display:grid!important;
+  gap:4px!important;
+}
+
+.subNav{
+  margin:1px 0 2px 38px!important;
+  padding:4px 0 4px 10px!important;
+  border-left:1px solid rgba(255,255,255,.12)!important;
+  display:grid!important;
+  gap:5px!important;
+}
+
+.subNav button{
+  min-height:36px!important;
+  padding:6px 10px!important;
+  border:1px solid transparent!important;
+  border-radius:10px!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:rgba(255,255,255,.70)!important;
+  font-size:11px!important;
+}
+
+.subNav button:hover,
+.subNav .navActive{
+  border-color:rgba(255,255,255,.08)!important;
+  background:rgba(255,255,255,.055)!important;
+  color:#fff!important;
+}
+
+.soon{
+  margin-left:auto!important;
+  padding:3px 7px!important;
+  border-radius:999px!important;
+  color:#ffd2a5!important;
+  background:rgba(217,133,59,.18)!important;
+  font-size:9px!important;
+  font-weight:800!important;
+}
+
+.sidebarBottom{
+  margin-top:24px!important;
+  display:grid!important;
+  gap:10px!important;
+}
+
+.userBox{
+  padding:12px!important;
+  border:1px solid rgba(255,255,255,.09)!important;
+  border-radius:16px!important;
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.028))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08)!important;
+}
+
+.userBox strong{
+  color:#fff!important;
+}
+
+.userBox small{
+  color:rgba(255,255,255,.68)!important;
+}
+
+.avatar{
+  width:40px!important;
+  height:40px!important;
+  background:linear-gradient(145deg,#51c7bc,#278e8b)!important;
+  color:#fff!important;
+  box-shadow:0 6px 14px rgba(0,0,0,.10)!important;
+}
+
+.signOut{
+  min-height:42px!important;
+  border:1px solid rgba(255,255,255,.12)!important;
+  border-radius:13px!important;
+  background:rgba(255,255,255,.08)!important;
+  color:#fff!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08)!important;
+  font-weight:800!important;
+}
+
+.signOut:hover{
+  background:rgba(255,255,255,.12)!important;
+}
+
+@media(max-width:900px){
+  .sidebar{
+    position:relative!important;
+    height:auto!important;
+    min-height:auto!important;
+  }
+}
+
+/* ORBIT_CRM_PREMIUM_SIDEBAR_END */
+
+
+/* ORBIT_UNIFIED_SIDEBAR_V1 */
+
+/* Shared visual language with Orbit LMS */
+
+.sidebar {
+  --orbit-shell-teal: #07535a;
+  --orbit-shell-deep: #07343c;
+  --orbit-shell-accent: #63c5c1;
+  --orbit-shell-warm: #dd8b48;
+
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  padding: 22px 15px;
+  color: #ffffff;
+  background:
+    radial-gradient(
+      ellipse at 15% 0%,
+      rgba(56, 164, 160, .21),
+      transparent 55%
+    ),
+    linear-gradient(
+      165deg,
+      var(--orbit-shell-teal) 0%,
+      #07454c 47%,
+      var(--orbit-shell-deep) 100%
+    );
+
+  scrollbar-width: thin;
+  scrollbar-color: rgba(166, 222, 216, .3) transparent;
+}
+
+/* Brand card */
+
+.brand {
+  width: 100%;
+  min-height: 91px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 14px;
+  margin: 0 0 25px;
+  padding: 15px 13px;
+
+  border: 1px solid rgba(166, 230, 223, .15);
+  border-radius: 20px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(122, 215, 204, .14),
+      rgba(255, 255, 255, .045)
+    );
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.065);
+  text-align: left;
+  color: white;
+}
+
+.brand:hover {
+  background: rgba(117, 206, 199, .17);
+}
+
+.brandMascot {
+  display: block;
+  width: 48px;
+  height: 59px;
+  object-fit: contain;
+  object-position: center;
+  flex: 0 0 48px;
+}
+
+.brandCopy {
+  min-width: 0;
+  padding: 0;
+}
+
+.brand strong {
+  display: block;
+  font-size: 23px;
+  font-weight: 750;
+  line-height: 1.15;
+  letter-spacing: -.55px;
+  white-space: nowrap;
+}
+
+.brand small {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(225, 245, 241, .78);
+}
+
+/* Navigation cards */
+
+.nav {
+  display: grid;
+  gap: 9px;
+}
+
+.nav button {
+  width: 100%;
+  min-height: 55px;
+  padding: 8px 11px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  background: rgba(255,255,255,.055);
+  border: 1px solid rgba(163, 222, 218, .16);
+  border-radius: 16px;
+
+  color: #f5ffff;
+  text-align: left;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.25;
+
+  cursor: pointer;
+  transition:
+    background .18s ease,
+    border-color .18s ease,
+    box-shadow .18s ease,
+    transform .18s ease;
+}
+
+.nav button:hover {
+  background: rgba(95, 196, 189, .15);
+  border-color: rgba(116, 215, 206, .38);
+  transform: translateX(1px);
+}
+
+/* LMS-style icon containers */
+
+.nav button > span:first-child:not(.chevron) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+
+  border-radius: 11px;
+  border: 1px solid rgba(174, 234, 227, .16);
+  background:
+    linear-gradient(
+      140deg,
+      rgba(141, 225, 215, .16),
+      rgba(255,255,255,.055)
+    );
+
+  color: #e2fffa;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* Selected module */
+
+.nav button.navActive {
+  background:
+    linear-gradient(
+      105deg,
+      rgba(44, 181, 174, .3),
+      rgba(11, 103, 112, .43)
+    );
+  border-color: rgba(93, 216, 207, .8);
+
+  color: #ffffff;
+  box-shadow:
+    inset 0 0 0 1px rgba(95, 205, 198, .1),
+    0 0 15px rgba(51, 177, 171, .10);
+}
+
+.nav button.navActive > span:first-child {
+  background: rgba(60, 195, 187, .19);
+  border-color: rgba(136, 231, 223, .35);
+}
+
+.chevron {
+  margin-left: auto;
+  font-size: 14px;
+  color: rgba(231, 251, 245, .8);
+}
+
+/* Nested CRM navigation */
+
+.crmGroup {
+  display: grid;
+  gap: 6px;
+}
+
+.subNav {
+  display: grid;
+  gap: 5px;
+  margin: 0 0 2px 23px;
+  padding-left: 13px;
+  border-left: 1px solid rgba(160, 224, 215, .27);
+}
+
+.subNav button {
+  min-height: 39px;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  background: rgba(255,255,255,.025);
+}
+
+/* User profile footer */
+
+.sidebarBottom {
+  margin-top: 28px;
+  display: grid;
+  gap: 12px;
+}
+
+.userBox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 13px;
+  border: 1px solid rgba(165, 230, 222, .16);
+  border-radius: 17px;
+  background: rgba(255,255,255,.075);
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+
+  border-radius: 50%;
+  background: linear-gradient(145deg,#299f9b,#0c666c);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.userBox strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.userBox small {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(229, 247, 244, .72);
+}
+
+.signOut {
+  min-height: 41px;
+  padding: 9px 13px;
+  border-radius: 11px;
+  border: 1px solid rgba(180, 230, 226, .24);
+  background: rgba(255,255,255,.09);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.signOut:hover {
+  background: rgba(255,255,255,.16);
+}
+
+/* Small screens */
+@media (max-width: 900px) {
+  .sidebar {
+    position: relative;
+    height: auto;
+    min-height: auto;
+    overflow: visible;
+  }
+}
+
+
+/* CRM_UI_POLISH_V2 */
+
+.navButton {
+  width: 100%;
+  min-height: 55px;
+  padding: 8px 11px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+
+  background: rgba(255,255,255,.055);
+  border: 1px solid rgba(163, 222, 218, .16);
+  border-radius: 16px;
+  color: #f5ffff;
+
+  transition:
+    background .18s ease,
+    border-color .18s ease,
+    box-shadow .18s ease,
+    transform .18s ease;
+}
+
+.navButton:hover {
+  background: rgba(84, 158, 198, .16);
+  border-color: rgba(84, 158, 198, .55);
+  box-shadow: 0 0 0 1px rgba(84, 158, 198, .15);
+  transform: translateX(1px);
+}
+
+.navActive {
+  background:
+    linear-gradient(
+      105deg,
+      rgba(44, 181, 174, .3),
+      rgba(11, 103, 112, .43)
+    );
+  border-color: rgba(93, 216, 207, .8);
+  color: #ffffff;
+  box-shadow:
+    inset 0 0 0 1px rgba(95, 205, 198, .1),
+    0 0 15px rgba(51, 177, 171, .10);
+}
+
+.navIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+
+  border-radius: 11px;
+  border: 1px solid rgba(174, 234, 227, .16);
+  background:
+    linear-gradient(
+      140deg,
+      rgba(141, 225, 215, .16),
+      rgba(255,255,255,.055)
+    );
+
+  color: #e2fffa;
+}
+
+.navButton:hover .navIcon {
+  color: #d9efff;
+  border-color: rgba(84, 158, 198, .38);
+  background: rgba(84, 158, 198, .12);
+}
+
+.navActive .navIcon {
+  background: rgba(60, 195, 187, .19);
+  border-color: rgba(136, 231, 223, .35);
+}
+
+.navLabel {
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.soonBadge {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  height: 23px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: rgba(221, 139, 72, .22);
+  color: #ffd7b4;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.userBox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px;
+  border: 1px solid rgba(165, 230, 222, .16);
+  border-radius: 17px;
+  background: rgba(255,255,255,.075);
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 999px;
+  background: linear-gradient(145deg,#299f9b,#0c666c);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.userMeta strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.userMeta small {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: rgba(229, 247, 244, .72);
+}
+
+.pageEyebrow,
+.sectionEyebrow,
+.dashboardEyebrow,
+.smallOrangeHeading {
+  display: none !important;
+}
+
+.pageTitleBlock p {
+  margin-top: 8px;
+}
+
+
+/* ORBIT_CRM_SAFE_SIDEBAR_REPAIR */
+
+.nav button > span:first-child svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.nav button:hover {
+    background: rgba(84,158,198,.23) !important;
+    border-color: rgba(114,182,216,.65) !important;
+    box-shadow: 0 0 0 1px rgba(84,158,198,.12);
+}
+
+.nav button:hover > span:first-child {
+    background: rgba(84,158,198,.22);
+    border-color: rgba(154,208,231,.40);
+}
+
+/* Existing sidebar avatar must remain visible */
+.sidebar .avatar {
+    display: grid;
+    place-items: center;
+    min-width: 40px;
+    min-height: 40px;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 650;
+}
+
+
+/* ORBIT_CRM_PI_MASCOT_V1 */
+
+.brandMascot {
+    width: 51px;
+    height: 64px;
+    flex: 0 0 51px;
+    object-fit: contain;
+}
+
+.chevron svg {
+    display: block;
+}
+
+/* ORBIT-20261019: dedicated CRM slate + amber identity; no LMS palette changes. */
+.sidebar{background:linear-gradient(170deg,#273746 0%,#1b2937 100%);color:#f9fbfc}
+.nav button{font-weight:500}
+.nav button:hover{background:rgba(255,255,255,.10)!important}
+.nav .navActive,.navActive{background:rgba(240,161,70,.18)!important;color:#fff!important;box-shadow:inset 3px 0 0 #F0A146}
+.subNav button{font-weight:450}
+.brand strong{font-weight:650}
+.signOut{color:#273746;font-weight:600}
+.avatar{background:linear-gradient(145deg,#F0A146,#D4832F);font-weight:650}
+/* CRM cards and rows intentionally use lighter text weights. */
+.resourceBox strong,.panelHeader h2,.stat strong{font-weight:600}
+.tableWrap td strong,.rowActions button{font-weight:500}

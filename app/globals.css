@@ -733,3 +733,22 @@ button,input,select{font:inherit}
 .public-access-role-card small{margin-top:3px;color:#758684;font-size:8.8px;line-height:1.25}
 .public-access-role-note{display:block;margin-top:6px;color:#7b8a88;font-size:9px;line-height:1.35}
 @media(max-width:520px){.public-access-role-options{grid-template-columns:1fr}}
+
+
+/* ORBIT_BRAND_TOKENS_V1
+   Premium teal + restrained mascot accents.
+   Use accent colors sparingly. */
+
+:root {
+  --orbit-brand-deep: #073f45;
+  --orbit-brand-teal: #0b7478;
+  --orbit-brand-surface: #f5f8f7;
+  --orbit-brand-ink: #18383d;
+  --orbit-brand-border: #d9e6e3;
+
+  --orbit-accent-orange: #dd8b48;
+  --orbit-accent-blue: #549ec6;
+  --orbit-accent-violet: #9978b7;
+  --orbit-accent-rose: #bc7497;
+  --orbit-accent-gold: #deb35c;
+}

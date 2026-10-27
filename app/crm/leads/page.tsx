@@ -12,15 +12,28 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
 );
 
+// New taxonomy is displayed without overwriting historical stage data.
 const LEAD_STAGES = [
-  "Fresh Lead",
-  "Contacted",
-  "Demo Scheduled",
-  "Demo Completed",
-  "Interested",
-  "Enrolled",
-  "Lost",
+  "Need to call", "Awaiting response", "Email Sent", "Demo Scheduled",
+  "Demo Attended", "Enrolled", "No Response", "Not interested", "Lead not converted",
 ];
+function canonicalStage(stage: string) {
+  if (stage === "Fresh Lead" || stage === "New Lead") return "Need to call";
+  if (stage === "Contacted" || stage === "Interested") return "Awaiting response";
+  if (stage === "Demo Completed") return "Demo Attended";
+  if (stage === "Lost" || stage === "Closed – Not Converted") return "Lead not converted";
+  if (stage === "Not Interested") return "Not interested";
+  return stage || "Need to call";
+}
+const COURSE_FAMILIES = ["AiEdge", "Coding4AI", "Math"] as const;
+type CourseFamily = typeof COURSE_FAMILIES[number];
+function courseFamily(course: string | null): CourseFamily | null {
+  const name = (course || "").toLowerCase();
+  if (name.includes("aiedge") || name.includes("ai edge")) return "AiEdge";
+  if (name.includes("coding4ai") || name.includes("coding 4 ai")) return "Coding4AI";
+  if (/math|algebra|geometry|calculus/.test(name)) return "Math";
+  return null;
+}
 
 const LEAD_SOURCES = [
   "Internal Reference",
@@ -41,10 +54,8 @@ const PARTNERS = [
 ];
 
 const NEXT_ACTIONS = [
-  "Need to Call",
-  "Awaiting response",
-  "Called",
-  "Email sent",
+  "Need to Call", "Awaiting Response", "Email Sent", "Called",
+  "WhatsApp Sent", "No Response", "Call Scheduled", "Other",
 ];
 
 const GRADES = Array.from({ length: 10 }, (_, i) =>
@@ -91,14 +102,8 @@ const COUNTRIES = [
 
 
 const FOLLOW_UP_ACTIONS = [
-  "Called",
-  "Email sent",
-  "WhatsApp sent",
-  "Awaiting response",
-  "No answer",
-  "Interested",
-  "Not Interested",
-  "Other",
+  "Need to Call", "Awaiting Response", "Email Sent", "Called",
+  "WhatsApp Sent", "No Response", "Call Scheduled", "Other",
 ];
 
 type LeadActivity = {
@@ -196,7 +201,7 @@ const EMPTY_FORM: FormState = {
   course_interested: "",
   assigned_to: "",
   next_action: "Need to Call",
-  lead_stage: "Fresh Lead",
+  lead_stage: "Need to call",
   demo_scheduled_at: "",
   demo_trainer: "",
   demo_attended: false,
@@ -290,6 +295,13 @@ export default function LeadsPage() {
   const [stageFilter, setStageFilter] = useState("All stages");
   const [duplicateFilter, setDuplicateFilter] = useState(false);
   const [followUpFilter, setFollowUpFilter] = useState("All follow-ups");
+  const [selectMode, setSelectMode] = useState(false);
+  const [courseFilter, setCourseFilter] = useState("");
+  const [familyEnrollments, setFamilyEnrollments] = useState<Record<CourseFamily, number> | null>(null);
+  const [enrollmentError, setEnrollmentError] = useState(false);
+  const topScrollRef = useRef<HTMLDivElement>(null);
+  const bottomScrollRef = useRef<HTMLDivElement>(null);
+  const [tableScrollWidth, setTableScrollWidth] = useState(1200);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -381,6 +393,25 @@ export default function LeadsPage() {
   async function loadLeads() {
     setLoading(true);
     setMessage("");
+    // Source: CRM student_enrollments (read-only); do not misrepresent lead conversion
+    // counts as actual enrollments. LMS reconciliation remains separately pending.
+    const { data: enrollments, error: enrollmentFetchError } = await supabase
+      .from("student_enrollments").select("student_id,course_name,status");
+    setEnrollmentError(!!enrollmentFetchError);
+    if (enrollmentFetchError) setFamilyEnrollments(null);
+    else {
+      const counts: Record<CourseFamily, Set<string>> = {
+        AiEdge: new Set(), Coding4AI: new Set(), Math: new Set(),
+      };
+      (enrollments || []).forEach(enrollment => {
+        const family = courseFamily(String(enrollment.course_name || ""));
+        if (family && String(enrollment.status || "").toLowerCase() === "active") {
+          counts[family].add(String(enrollment.student_id));
+        }
+      });
+      setFamilyEnrollments({AiEdge:counts.AiEdge.size,Coding4AI:counts.Coding4AI.size,Math:counts.Math.size});
+    }
+
 
     const { data, error } = await supabase
       .from("leads_with_duplicate_status")
@@ -401,12 +432,15 @@ export default function LeadsPage() {
     const q = search.trim().toLowerCase();
 
     return leads.filter((lead) => {
-      if (stageFilter !== "All stages" && lead.lead_stage !== stageFilter) {
+      if (stageFilter !== "All stages" && canonicalStage(lead.lead_stage) !== stageFilter) {
         return false;
       }
 
+      if (courseFilter && courseFamily(lead.course_interested) !== courseFilter) return false;
       if (duplicateFilter && !lead.is_duplicate) return false;
 
+      // Enrolled records retain history but have no outstanding follow-up obligation.
+      if (followUpFilter !== "All follow-ups" && (lead.lead_stage === "Enrolled" || lead.converted_student_id)) return false;
       if (followUpFilter !== "All follow-ups") {
         const today = localTodayIso();
         const date = lead.next_follow_up_date;
@@ -440,12 +474,31 @@ export default function LeadsPage() {
 
       return haystack.includes(q);
     });
-  }, [leads, search, stageFilter, duplicateFilter, followUpFilter]);
+  }, [leads, search, stageFilter, duplicateFilter, followUpFilter, courseFilter]);
+
+  const courseEnrollmentCards = useMemo(() => {
+    return COURSE_FAMILIES.map(course => ({
+      course,
+      enrolled: familyEnrollments?.[course] ?? null,
+      enquiries: leads.filter(lead => courseFamily(lead.course_interested) === course).length,
+    }));
+  }, [familyEnrollments, leads]);
+
+  useEffect(() => {
+    const table = bottomScrollRef.current;
+    if (!table || typeof ResizeObserver === "undefined") return;
+    const update = () => setTableScrollWidth(table.scrollWidth);
+    const observer = new ResizeObserver(update);
+    observer.observe(table);
+    if (table.firstElementChild) observer.observe(table.firstElementChild);
+    update();
+    return () => observer.disconnect();
+  }, [loading, filteredLeads.length, selectMode]);
 
   const stats = useMemo(
     () => ({
       total: leads.length,
-      fresh: leads.filter((lead) => lead.lead_stage === "Fresh Lead").length,
+      fresh: leads.filter((lead) => canonicalStage(lead.lead_stage) === "Need to call").length,
       demos: leads.filter((lead) => lead.lead_stage === "Demo Scheduled").length,
       enrolled: leads.filter((lead) => lead.lead_stage === "Enrolled").length,
       duplicates: leads.filter((lead) => lead.is_duplicate).length,
@@ -476,7 +529,7 @@ export default function LeadsPage() {
       course_interested: lead.course_interested || "",
       assigned_to: lead.assigned_to || "",
       next_action: lead.next_action || "",
-      lead_stage: lead.lead_stage || "Fresh Lead",
+      lead_stage: canonicalStage(lead.lead_stage),
       demo_scheduled_at: dateTimeForInput(lead.demo_scheduled_at),
       demo_trainer: lead.demo_trainer || "",
       demo_attended: Boolean(lead.demo_attended),
@@ -501,7 +554,7 @@ export default function LeadsPage() {
     event.preventDefault();
 
     if (!form.parent_first_name.trim() || !form.child_name.trim()) {
-      setMessage("Parent / Guardian First Name and Child Name are required.");
+      setMessage("Parent / Guardian First Name and Student Name are required.");
       return;
     }
 
@@ -917,7 +970,7 @@ export default function LeadsPage() {
             assigned_to:
               pick(row, ["assigned_to", "owner_name", "owner"]) || null,
             next_action: pick(row, ["next_action"]) || "Need to Call",
-            lead_stage: pick(row, ["lead_stage", "stage"]) || "Fresh Lead",
+            lead_stage: canonicalStage(pick(row, ["lead_stage", "stage"]) || "Need to call"),
             next_follow_up_date:
               pick(row, ["next_follow_up_date", "follow_up_date"]) || null,
             notes: pick(row, ["notes"]) || null,
@@ -933,7 +986,7 @@ export default function LeadsPage() {
 
       if (payload.length === 0) {
         setMessage(
-          "No valid rows found. Parent First Name and Child Name are required."
+          "No valid rows found. Parent First Name and Student Name are required."
         );
         return;
       }
@@ -995,7 +1048,7 @@ export default function LeadsPage() {
             <strong>{stats.total}</strong>
           </div>
           <div className={styles.statCard}>
-            <span>Fresh Leads</span>
+            <span>New Leads</span>
             <strong>{stats.fresh}</strong>
           </div>
           <div className={styles.statCard}>
@@ -1015,6 +1068,24 @@ export default function LeadsPage() {
             <span>Duplicates</span>
             <strong className={styles.duplicateNumber}>{stats.duplicates}</strong>
           </button>
+        </section>
+
+        <section className={styles.courseEnrollments} aria-label="Course family enrollment overview">
+          <div className={styles.courseEnrollmentsHeading}>
+            <strong>Active CRM enrollments by programme</strong>
+            {courseFilter && <button onClick={() => setCourseFilter("")}>Clear programme filter ×</button>}
+          </div>
+          <div className={styles.courseTiles}>
+            {courseEnrollmentCards.map(({course,enrolled,enquiries}) => (
+              <button key={course} type="button" aria-pressed={courseFilter===course}
+                className={courseFilter===course ? styles.courseTileActive : styles.courseTile}
+                onClick={() => setCourseFilter(value => value===course?"":course)}>
+                <span>{course}</span><strong>{enrolled === null ? "—" : `${enrolled} enrolled`}</strong>
+                <small>{enquiries} enquiries</small>
+              </button>))}
+          </div>
+          {enrollmentError && <small>CRM enrollment totals unavailable. Check access to student_enrollments.</small>}
+          <small>CRM active-enrollment counts; LMS reconciliation is pending. Select a programme to filter enquiries.</small>
         </section>
 
         {message && <div className={styles.message}>{message}</div>}
@@ -1056,9 +1127,13 @@ export default function LeadsPage() {
 
         <section className={styles.tableCard}>
           <div className={styles.toolbar}>
+            {canManageCrm && <button type="button" className={styles.selectModeButton}
+              aria-pressed={selectMode} onClick={() => { setSelectMode(value => !value); setSelected(new Set()); }}>
+              {selectMode ? "Done selecting" : "Select leads"}
+            </button>}
             <input
               type="search"
-              placeholder="Search parent, child, email, phone, course..."
+              placeholder="Search parent, student, email, phone, course..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
@@ -1104,195 +1179,61 @@ export default function LeadsPage() {
             </button>
           </div>
 
-          <div className={styles.tableWrap}>
-            <table>
-              <thead>
-                <tr>
-                  <th>
-                    <input
-                      type="checkbox"
-                      aria-label="Select all visible leads"
-                      checked={
-                        filteredLeads.length > 0 &&
-                        filteredLeads.every((lead) => selected.has(lead.id))
-                      }
-                      onChange={toggleAllVisible}
-                      disabled={!canManageCrm}
-                    />
-                  </th>
-                  <th>Parent</th>
-                  <th>Child</th>
-                  <th>Contact</th>
-                  <th>Source</th>
-                  <th>Course</th>
-                  <th>Owner</th>
-                  <th>Stage</th>
-                  <th>Demo</th>
-                  <th>Follow-up</th>
-                  <th>Created</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-
+          <div className={styles.topScroll} ref={topScrollRef}
+            onScroll={event => { if (bottomScrollRef.current) bottomScrollRef.current.scrollLeft=event.currentTarget.scrollLeft; }}
+            aria-label="Horizontal scroll for leads table" tabIndex={0}>
+            <div style={{width:tableScrollWidth,height:1}} />
+          </div>
+          <div className={styles.tableWrap} ref={bottomScrollRef}
+            onScroll={event => { if (topScrollRef.current) topScrollRef.current.scrollLeft=event.currentTarget.scrollLeft; }}>
+            <table className={styles.compactLeadsTable}>
+              <thead><tr>
+                {selectMode && canManageCrm && <th><input type="checkbox" aria-label="Select all visible leads"
+                  checked={filteredLeads.length>0 && filteredLeads.every(lead=>selected.has(lead.id))}
+                  onChange={toggleAllVisible}/></th>}
+                <th>S.No</th><th>Course</th><th>Student</th><th>Parent</th><th>Contact</th>
+                <th>Stage</th><th>Follow-up</th><th>Actions</th>
+              </tr></thead>
               <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={12} className={styles.empty}>
-                      Loading leads...
-                    </td>
-                  </tr>
-                ) : filteredLeads.length === 0 ? (
-                  <tr>
-                    <td colSpan={12} className={styles.empty}>
-                      No leads found.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredLeads.map((lead) => (
-                    <tr
-                      key={lead.id}
-                      className={lead.is_duplicate ? styles.duplicateRow : ""}
-                    >
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={selected.has(lead.id)}
-                          onChange={() => toggleSelected(lead.id)}
-                          disabled={!canManageCrm}
-                        />
-                      </td>
-
-                      <td>
-                        <strong>
-                          {lead.parent_first_name} {lead.parent_last_name || ""}
-                        </strong>
-                        {lead.is_duplicate && (
-                          <span className={styles.duplicateBadge}>
-                            Duplicate ×{lead.duplicate_count}
-                          </span>
-                        )}
-                      </td>
-
-                      <td>
-                        <strong>{lead.child_name}</strong>
-                        <small>{lead.grade || "—"}</small>
-                      </td>
-
-                      <td>
-                        <span>{lead.email || "—"}</span>
-                        <small>
-                          {lead.phone_number
-                            ? `${lead.phone_country_code} ${lead.phone_number}`
-                            : "—"}
-                        </small>
-                      </td>
-
-                      <td>
-                        <span>{lead.lead_source || "—"}</span>
-                        {lead.lead_source === "Partners" && lead.partner_name && (
-                          <small>{lead.partner_name}</small>
-                        )}
-                      </td>
-                      <td>{lead.course_interested || "—"}</td>
-                      <td>{lead.assigned_to || "—"}</td>
-
-                      <td>
-                        <span
-                          className={`${styles.stageBadge} ${
-                            styles[
-                              `stage${lead.lead_stage.replaceAll(" ", "")}` as keyof typeof styles
-                            ] || ""
-                          }`}
-                        >
-                          {lead.lead_stage}
-                        </span>
-                      </td>
-
-                      <td>
-                        {lead.demo_attended ? (
-                          <>
-                            <span className={styles.stageBadge}>✓ Attended</span>
-                            <small>{lead.demo_attended_course || "Demo"}</small>
-                            {lead.demo_attended_at && (
-                              <small>{new Date(lead.demo_attended_at).toLocaleDateString()}</small>
-                            )}
-                          </>
-                        ) : lead.demo_scheduled_at ? (
-                          <>
-                            <span>
-                              {new Date(lead.demo_scheduled_at).toLocaleDateString()}
-                            </span>
-                            <small>
-                              {new Date(lead.demo_scheduled_at).toLocaleTimeString(
-                                [],
-                                { hour: "2-digit", minute: "2-digit" }
-                              )}
-                            </small>
-                          </>
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-
-                      <td>
-                        {lead.next_follow_up_date ? (
-                          <span className={`${styles.followUpDate} ${followUpClass(lead.next_follow_up_date)}`}>
-                            {new Date(
-                              `${lead.next_follow_up_date}T00:00:00`
-                            ).toLocaleDateString()}
-                          </span>
-                        ) : (
-                          "—"
-                        )}
+                {loading ? <tr><td colSpan={selectMode ? 9 : 8} className={styles.empty}>Loading leads...</td></tr>
+                : filteredLeads.length===0 ? <tr><td colSpan={selectMode ? 9 : 8} className={styles.empty}>No leads found.</td></tr>
+                : filteredLeads.map((lead,index)=>(
+                  <tr key={lead.id} className={lead.is_duplicate ? styles.duplicateRow : ""}>
+                    {selectMode && canManageCrm && <td><input type="checkbox" aria-label={`Select lead ${index+1}`}
+                      checked={selected.has(lead.id)} onChange={()=>toggleSelected(lead.id)}/></td>}
+                    <td>{index+1}</td>
+                    <td>{lead.course_interested || "—"}</td>
+                    <td><strong>{lead.child_name}</strong><small>{lead.grade || "—"}</small></td>
+                    <td><span>{lead.parent_first_name} {lead.parent_last_name||""}</span></td>
+                    <td><span>{lead.email || "—"}</span><small>{lead.phone_number ? `${lead.phone_country_code} ${lead.phone_number}` : "—"}</small></td>
+                    <td><span className={`${styles.stageBadge} ${styles[`stage${canonicalStage(lead.lead_stage).replaceAll(" ", "")}` as keyof typeof styles]||""}`}>
+                      {canonicalStage(lead.lead_stage)}</span></td>
+                    <td>{lead.lead_stage==="Enrolled" || !!lead.converted_student_id ?
+                      <span className={styles.followUpDisabled}>Closed · Enrolled</span> : <>
+                        <span>{lead.next_follow_up_date ? new Date(`${lead.next_follow_up_date}T00:00:00`).toLocaleDateString() : "—"}</span>
                         {lead.next_action && <small>{lead.next_action}</small>}
-                      </td>
-
-                      <td>
-                        {new Date(lead.created_at).toLocaleDateString()}
-                      </td>
-
-                      <td>
-                        <div className={styles.rowActions}>
-                          {canManageCrm && (
-                            <button onClick={() => editLead(lead)}>Edit</button>
-                          )}
-
-                          {canManageCrm && (
-                            <button
-                              className={styles.followUpButton}
-                              onClick={() => openFollowUp(lead)}
-                            >
-                              Follow-up
-                            </button>
-                          )}
-
-                          {lead.converted_student_id ? (
-                            <button onClick={() => router.push("/students")}>
-                              Student
-                            </button>
-                          ) : canConvertLead && lead.lead_stage !== "Lost" ? (
-                            <button
-                              className={styles.convertButton}
-                              disabled={convertingId === lead.id}
-                              onClick={() => convertLead(lead)}
-                            >
-                              {convertingId === lead.id ? "Converting..." : "Convert"}
-                            </button>
-                          ) : null}
-
-                          {canManageCrm && (
-                            <button
-                              className={styles.deleteButton}
-                              onClick={() => deleteLead(lead.id)}
-                            >
-                              Delete
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                      </>}
+                    </td>
+                    <td>
+                      <div className={styles.compactActions}>
+                        {canManageCrm && <button type="button" onClick={()=>editLead(lead)}>Edit</button>}
+                        {canManageCrm && lead.lead_stage!=="Enrolled" && !lead.converted_student_id &&
+                          <button type="button" onClick={()=>openFollowUp(lead)}>Follow-up</button>}
+                        {!lead.converted_student_id && canConvertLead && canonicalStage(lead.lead_stage)!=="Lead not converted" &&
+                          <button type="button" disabled={convertingId===lead.id} onClick={()=>convertLead(lead)}>Convert</button>}
+                        <details className={styles.moreInfo}>
+                          <summary>More Info</summary>
+                          <div><b>Source</b><span>{lead.lead_source||"—"}</span></div>
+                          <div><b>Owner</b><span>{lead.assigned_to||"—"}</span></div>
+                          <div><b>Created</b><span>{new Date(lead.created_at).toLocaleDateString()}</span></div>
+                          <div><b>Demo</b><span>{lead.demo_attended ? "Attended" : lead.demo_scheduled_at ? "Scheduled" : "Not scheduled"}</span></div>
+                          {canManageCrm && <button type="button" className={styles.deleteInsideDetails}
+                            onClick={()=>deleteLead(lead.id)}>Delete lead</button>}
+                        </details>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -1525,7 +1466,7 @@ export default function LeadsPage() {
                 </label>
 
                 <label>
-                  <span>Child Name *</span>
+                  <span>Student Name *</span>
                   <input
                     value={form.child_name}
                     onChange={(event) =>

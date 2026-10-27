@@ -44,12 +44,42 @@ const PREFETCH_ROUTES = [
   "/trainers",
   "/payments",
   "/courses",
-  "/lms",
   "/reports",
   "/access",
-  "/portal-access",
 ];
 
+function OrbitNavIcon({ name }: { name: string }) {
+  const paths: Record<string, string> = {
+    overview: "M3 10 12 3l9 7M5 9v12h14V9M9 21v-7h6v7",
+    crm: "M4 3h16v18H4zM8 8h8M8 12h8M8 16h5",
+    students: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75",
+    batches: "M3 5h18v16H3zM3 10h18M8 3v4M16 3v4",
+    trainers: "M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10M4 22a8 8 0 0 1 16 0",
+    payments: "M12 2v20M17 6H9a4 4 0 0 0 0 8h6a4 4 0 0 1 0 8H7",
+    courses: "M4 5h16v15H7a3 3 0 0 0-3 2V8a3 3 0 0 1 3-3M8 9h8M8 13h8",
+    lms: "M4 3h16v18H4zM8 8h8M8 12h8M8 16h6",
+    reports: "M4 20v-7M9 20V8M14 20V4M19 20v-10",
+    access: "M4 11h16v11H4zM8 11V7a4 4 0 0 1 8 0v4",
+    portal: "M3 12l9-9 9 9-9 9z",
+    aqmatics: "M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8"
+  };
+
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d={paths[name] || paths.overview} />
+    </svg>
+  );
+}
 export default function OrbitSidebar({ email, active }: Props) {
   const router = useRouter();
 
@@ -214,7 +244,7 @@ export default function OrbitSidebar({ email, active }: Props) {
           />
 
           <span className={styles.brandCopy}>
-            <strong>Orbit</strong>
+            <strong>Orbit CRM</strong>
             <small>by igebra.ai</small>
           </span>
         </button>
@@ -224,7 +254,7 @@ export default function OrbitSidebar({ email, active }: Props) {
             className={active === "overview" ? styles.navActive : ""}
             onClick={() => navigate("/dashboard")}
           >
-            <span>⌂</span> Overview
+            <span><OrbitNavIcon name="overview" /></span> Overview
           </button>
 
           {canSeeCrm && (
@@ -237,10 +267,15 @@ export default function OrbitSidebar({ email, active }: Props) {
                 }
                 onClick={() => setCrmOpen((value) => !value)}
               >
-                <span>◎</span> CRM
-                <span className={styles.chevron}>
-                  {crmOpen ? "▾" : "▸"}
-                </span>
+                <span><OrbitNavIcon name="crm" /></span> CRM
+                <span className={styles.chevron} aria-hidden="true">
+  <svg width="16" height="16" viewBox="0 0 24 24"
+    fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round"
+    strokeLinejoin="round">
+    <path d={crmOpen ? "M6 9l6 6 6-6" : "M9 6l6 6-6 6"} />
+  </svg>
+</span>
               </button>
 
               {crmOpen && (
@@ -272,7 +307,7 @@ export default function OrbitSidebar({ email, active }: Props) {
               className={active === "students" ? styles.navActive : ""}
               onClick={() => navigate("/students")}
             >
-              <span>◉</span> Students
+              <span><OrbitNavIcon name="students" /></span> Students
             </button>
           )}
 
@@ -285,7 +320,7 @@ export default function OrbitSidebar({ email, active }: Props) {
               }
               onClick={() => navigate("/batches")}
             >
-              <span>▣</span> Batches
+              <span><OrbitNavIcon name="batches" /></span> Batches
             </button>
           )}
 
@@ -294,7 +329,7 @@ export default function OrbitSidebar({ email, active }: Props) {
               className={active === "trainers" ? styles.navActive : ""}
               onClick={() => navigate("/trainers")}
             >
-              <span>♙</span> Trainers
+              <span><OrbitNavIcon name="trainers" /></span> Trainers
             </button>
           )}
 
@@ -303,7 +338,7 @@ export default function OrbitSidebar({ email, active }: Props) {
               className={active === "payments" ? styles.navActive : ""}
               onClick={() => navigate("/payments")}
             >
-              <span>$</span> Payments
+              <span><OrbitNavIcon name="payments" /></span> Payments
             </button>
           )}
 
@@ -312,16 +347,27 @@ export default function OrbitSidebar({ email, active }: Props) {
               className={active === "courses" ? styles.navActive : ""}
               onClick={() => navigate("/courses")}
             >
-              <span>✦</span> Courses
+              <span><OrbitNavIcon name="courses" /></span> Courses
             </button>
           )}
 
           {canSeeLms && (
             <button
               className={active === "lms" ? styles.navActive : ""}
-              onClick={() => navigate("/lms")}
+              onClick={() => {
+                const lmsUrl = process.env.NEXT_PUBLIC_ORBIT_LMS_URL?.trim();
+
+                if (!lmsUrl) {
+                  window.alert(
+                    "Standalone LMS URL is not configured. Add NEXT_PUBLIC_ORBIT_LMS_URL to the CRM .env.local file."
+                  );
+                  return;
+                }
+
+                window.location.assign(lmsUrl);
+              }}
             >
-              <span>▦</span> LMS
+              <span><OrbitNavIcon name="lms" /></span> LMS
             </button>
           )}
 
@@ -330,7 +376,7 @@ export default function OrbitSidebar({ email, active }: Props) {
               className={active === "reports" ? styles.navActive : ""}
               onClick={() => navigate("/reports")}
             >
-              <span>▤</span> Reports
+              <span><OrbitNavIcon name="reports" /></span> Reports
             </button>
           )}
 
@@ -339,7 +385,7 @@ export default function OrbitSidebar({ email, active }: Props) {
               className={active === "access" ? styles.navActive : ""}
               onClick={() => navigate("/access")}
             >
-              <span>⚙</span> Access
+              <span><OrbitNavIcon name="access" /></span> Access
 
               {pendingAccess > 0 && (
                 <span
@@ -366,18 +412,8 @@ export default function OrbitSidebar({ email, active }: Props) {
               )}
             </button>
           )}
-
-          {canSeeAccess && (
-            <button
-              className={active === "portal-access" ? styles.navActive : ""}
-              onClick={() => navigate("/portal-access")}
-            >
-              <span>◇</span> Portal Access
-            </button>
-          )}
-
-          <button type="button">
-            <span>◌</span> AQMATICS
+<button type="button">
+            <span><OrbitNavIcon name="aqmatics" /></span> AQMATICS
             <small className={styles.soon}>Soon</small>
           </button>
         </nav>
