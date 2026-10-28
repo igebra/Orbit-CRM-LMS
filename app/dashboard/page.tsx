@@ -55,6 +55,11 @@ function displayRole(role: string) {
   return map[role] || "Orbit User";
 }
 
+const CRM_ALLOWED_ROLES = new Set([
+  "super_admin", "admin", "sales", "sales_marketing",
+  "marketing", "accounts_finance", "viewer_management",
+]);
+
 export default function DashboardPage() {
   const router = useRouter();
 
@@ -98,13 +103,9 @@ export default function DashboardPage() {
 
       const currentRole = profile?.role || "";
 
-      if (currentRole === "student") {
-        router.replace("/student");
-        return;
-      }
-
-      if (currentRole === "parent") {
-        router.replace("/parent");
+      if (!CRM_ALLOWED_ROLES.has(currentRole)) {
+        await supabase.auth.signOut();
+        router.replace("/");
         return;
       }
 
