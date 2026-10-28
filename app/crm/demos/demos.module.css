@@ -770,7 +770,7 @@
   padding: 8px 10px;
   border-radius: 9px;
   background: #edf6f4;
-  color: #315b59;
+  color: #4D55A3;
   font-size: 12px;
   font-weight: 700;
 }
@@ -1100,7 +1100,7 @@
 .headerActions{gap:9px;}
 .primaryButton,.secondaryButton,.refreshButton{min-height:39px;padding:9px 13px;border-radius:10px;font:600 14px var(--font-orbit-body),sans-serif;box-shadow:none;}
 .primaryButton{background:#2459D6;border:1px solid #2459D6;color:#fff;}
-.primaryButton:hover{background:#225F69;border-color:#225F69;}
+.primaryButton:hover{background:#2459D6;border-color:#2459D6;}
 .primaryButton:active{transform:none;box-shadow:none;}
 .secondaryButton,.refreshButton{background:#fff;color:#2459D6;border:1px solid #DCE5E8;}
 .statsGrid{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:16px;}

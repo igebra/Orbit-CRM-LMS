@@ -335,7 +335,7 @@ button.statCard {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #31595a;
+  color: #4D55A3;
 }
 
 .selectionCount strong {
@@ -446,7 +446,7 @@ button.statCard {
 .tableWrap th {
   padding: 12px 10px;
   background: #f5f8f7;
-  color: #385657;
+  color: #52656F;
   font-size: 12px;
   font-weight: 700;
   text-align: left;
@@ -862,7 +862,7 @@ button.statCard {
 
 .followUpUpcoming {
   background: #eaf5f3;
-  color: #366c68;
+  color: #4D61AF;
 }
 
 .followUpModal {
@@ -903,7 +903,7 @@ button.statCard {
 }
 
 .activityHeading strong {
-  color: #143f40;
+  color: #263D46;
   font-size: 15px;
 }
 
@@ -986,7 +986,7 @@ button.statCard {
   min-height:39px;padding:9px 13px;box-shadow:none;
 }
 .primaryButton{background:#2459D6;border:1px solid #2459D6;color:#fff;}
-.primaryButton:hover{background:#225F69;border-color:#225F69;}
+.primaryButton:hover{background:#2459D6;border-color:#2459D6;}
 .primaryButton:active{transform:none;box-shadow:none;}
 .secondaryButton,.cancelButton,.refreshButton{background:#fff;border:1px solid #DCE5E8;color:#2459D6;}
 .statsGrid{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:16px;}

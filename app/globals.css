@@ -44,7 +44,7 @@ button,input,select{font:inherit}
 .remember-row{display:flex!important;align-items:center;gap:8px;font-size:12px}
 .remember-row input{width:15px;height:15px;accent-color:var(--orbit-teal-dark)}
 .login-message,.request-message{padding:7px 10px;border-radius:8px;background:#f7f2eb;border:1px solid rgba(217,133,59,.28);color:#825024;font-size:11px}
-.signin-button{height:52px;border:1px solid rgba(5,73,76,.7);border-radius:13px;padding:0 18px 0 24px;background:linear-gradient(180deg,#1c7474 0%,#0d5d60 56%,#084c50 100%);color:white;font-size:17px;font-weight:780;display:flex;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:0 5px 0 #1E408C,0 12px 20px rgba(14,78,78,.21),inset 0 2px 0 rgba(255,255,255,.25)}
+.signin-button{height:52px;border:1px solid rgba(5,73,76,.7);border-radius:13px;padding:0 18px 0 24px;background:linear-gradient(180deg,#2459D6 0%,#2459D6 56%,#1D46AB 100%);color:white;font-size:17px;font-weight:780;display:flex;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:0 5px 0 #1E408C,0 12px 20px rgba(14,78,78,.21),inset 0 2px 0 rgba(255,255,255,.25)}
 .signin-arrow{font-size:26px;color:#fff;transition:color .16s ease,transform .16s ease}
 .signin-button:hover .signin-arrow{color:var(--orbit-orange);transform:translateX(4px)}
 .request-access-block{width:100%;margin-top:17px}
@@ -57,7 +57,7 @@ button,input,select{font:inherit}
 .request-message{margin-top:8px}
 .request-submit{margin-top:8px;width:100%;height:36px;border:0;border-radius:8px;background:linear-gradient(180deg,#e2934c,var(--orbit-orange));color:white;font-weight:760;cursor:pointer;font-size:12px}
 .brand-characters{position:absolute;right:18px;left:auto;bottom:8px;width:clamp(150px,14vw,205px);max-height:82px;object-fit:contain;object-position:right bottom;pointer-events:none;z-index:1}
-.hero-panel{position:relative;height:100vh;overflow:hidden;background:#06484d}
+.hero-panel{position:relative;height:100vh;overflow:hidden;background:#1D46AB}
 .hero-image{position:absolute;inset:0;background-image:url("/orbit-hero-clean.jpg");background-size:cover;background-position:center;transform:scale(1.015)}
 .hero-vignette{position:absolute;inset:0;background:radial-gradient(circle at 86% 9%,rgba(217,133,59,.22),transparent 23%);pointer-events:none}
 
@@ -464,7 +464,7 @@ button,input,select{font:inherit}
 
 .login-mode-card:hover{
   transform:translateY(-1px);
-  border-color:#a9c8c4;
+  border-color:#E3E0ED;
   box-shadow:0 8px 20px rgba(31,78,75,.085);
 }
 
@@ -712,7 +712,7 @@ button,input,select{font:inherit}
 }
 .auth-helper-button:hover{
   background:#eaf6f4;
-  border-color:#8fb8b3;
+  border-color:#DDE9FF;
 }
 .auth-helper-button-access{
   margin:8px 0 0;
@@ -724,7 +724,7 @@ button,input,select{font:inherit}
 .public-access-role-label{display:block;margin-bottom:6px;color:#58706f;font-size:10px;font-weight:850;text-transform:uppercase}
 .public-access-role-options{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .public-access-role-card{min-height:58px;border:1px solid #d7e2df;border-radius:11px;padding:9px 10px;background:linear-gradient(145deg,#fff,#f7faf9);color:#263D46;display:flex;align-items:center;gap:9px;text-align:left;cursor:pointer;box-shadow:0 5px 14px rgba(31,78,75,.045);transition:transform .14s ease,border-color .14s ease,box-shadow .14s ease}
-.public-access-role-card:hover{transform:translateY(-1px);border-color:#a8c7c3;box-shadow:0 7px 17px rgba(31,78,75,.075)}
+.public-access-role-card:hover{transform:translateY(-1px);border-color:#E3E0ED;box-shadow:0 7px 17px rgba(31,78,75,.075)}
 .public-access-role-card-active{border-color:#6580D8;background:linear-gradient(145deg,#fff,#eaf5f3);box-shadow:0 0 0 2px rgba(85,140,137,.10),0 7px 17px rgba(31,78,75,.075)}
 .public-access-role-icon{width:31px;height:31px;flex:0 0 auto;display:grid;place-items:center;border-radius:9px;background:#e9f4f2;color:#2459D6;font-size:12px;font-weight:900}
 .public-access-role-card-active .public-access-role-icon{background:#6580D8;color:#fff}
