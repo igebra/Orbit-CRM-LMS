@@ -351,7 +351,21 @@ export default function LoginPage() {
                 onTogglePassword={() => setShowPassword(current=>!current)}
                 onSignIn={signIn}
                 onForgotPassword={forgotPassword}
-                onSignUp={() => {setRequestOpen(true);setActivateOpen(false);setRequestMessage("");}}
+                onSignUp={() => {
+                  // CRM is internal-only; public portal requests belong in the standalone LMS.
+                  const lmsBase = process.env.NEXT_PUBLIC_ORBIT_LMS_URL?.trim();
+                  if (!lmsBase) {
+                    setMessage("Student and Parent access requests are handled in Orbit LMS. Ask Superadmin for the LMS link.");
+                    return;
+                  }
+                  try {
+                    const target = new URL("/request-access", lmsBase);
+                    if (!["https:", "http:"].includes(target.protocol)) throw new Error("Invalid LMS address");
+                    window.location.assign(target.toString());
+                  } catch {
+                    setMessage("The LMS link is not configured correctly. Contact Superadmin.");
+                  }
+                }}
                 onActivate={() => {setActivateOpen(true);setRequestOpen(false);setActivateMessage("");}}
                 afterMessage={needsConfirmation ? <button type="button" className={styles.link}
                   onClick={() => resendConfirmation(email)}>Resend confirmation email</button> : null}
