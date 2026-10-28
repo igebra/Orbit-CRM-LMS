@@ -214,7 +214,7 @@ export default function OrbitSidebar({ email, active }: Props) {
     isManagement ||
     isTrainer;
 
-  const canSeeAccess = isSuperAdmin || isAdmin;
+  const canSeeAccess = isSuperAdmin;
 
   return (
     <aside className={styles.sidebar}>
