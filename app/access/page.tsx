@@ -107,7 +107,7 @@ export default function AccessPage() {
 
   const [saving, setSaving] = useState(false);
 
-  const canManage = role === "super_admin" || role === "admin";
+  const canManage = role === "super_admin";
   const isSuperAdmin = role === "super_admin";
 
   useEffect(() => {
@@ -131,7 +131,7 @@ export default function AccessPage() {
       const currentRole = profile?.role || "";
       setRole(currentRole);
 
-      if (!["super_admin", "admin"].includes(currentRole)) {
+      if (currentRole !== "super_admin") {
         setMessage("You do not have access to Access Management.");
         setLoading(false);
         return;

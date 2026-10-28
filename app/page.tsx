@@ -13,6 +13,12 @@ const supabase = createClient(
 
 const PUBLIC_ACCESS_ROLES = ["Student", "Parent"];
 
+// CRM authentication is internal-only. LMS roles must never enter the CRM dashboard.
+const CRM_ALLOWED_ROLES = new Set([
+  "super_admin", "admin", "sales", "sales_marketing",
+  "marketing", "accounts_finance", "viewer_management",
+]);
+
 export default function LoginPage() {
   const router = useRouter();
 
@@ -51,11 +57,8 @@ export default function LoginPage() {
         .eq("id", data.session.user.id)
         .single();
 
-      if (!profile?.is_active) return;
-
-      if (profile.role === "student") router.replace("/student");
-      else if (profile.role === "parent") router.replace("/parent");
-      else router.replace("/dashboard");
+      if (!profile?.is_active || !CRM_ALLOWED_ROLES.has(profile.role)) return;
+      router.replace("/dashboard");
     }
 
     checkSession();
@@ -132,15 +135,19 @@ export default function LoginPage() {
       return;
     }
 
+    if (!CRM_ALLOWED_ROLES.has(profile.role)) {
+      await supabase.auth.signOut();
+      setMessage("This account does not have CRM access. Please use Orbit LMS.");
+      return;
+    }
+
     if (remember) {
       localStorage.setItem("orbit_remember_email", email.trim());
     } else {
       localStorage.removeItem("orbit_remember_email");
     }
 
-    if (profile.role === "student") router.replace("/student");
-    else if (profile.role === "parent") router.replace("/parent");
-    else router.replace("/dashboard");
+    router.replace("/dashboard");
   }
 
   async function forgotPassword() {
@@ -344,7 +351,21 @@ export default function LoginPage() {
                 onTogglePassword={() => setShowPassword(current=>!current)}
                 onSignIn={signIn}
                 onForgotPassword={forgotPassword}
-                onSignUp={() => {setRequestOpen(true);setActivateOpen(false);setRequestMessage("");}}
+                onSignUp={() => {
+                  // CRM is internal-only; public portal requests belong in the standalone LMS.
+                  const lmsBase = process.env.NEXT_PUBLIC_ORBIT_LMS_URL?.trim();
+                  if (!lmsBase) {
+                    setMessage("Student and Parent access requests are handled in Orbit LMS. Ask Superadmin for the LMS link.");
+                    return;
+                  }
+                  try {
+                    const target = new URL("/request-access", lmsBase);
+                    if (!["https:", "http:"].includes(target.protocol)) throw new Error("Invalid LMS address");
+                    window.location.assign(target.toString());
+                  } catch {
+                    setMessage("The LMS link is not configured correctly. Contact Superadmin.");
+                  }
+                }}
                 onActivate={() => {setActivateOpen(true);setRequestOpen(false);setActivateMessage("");}}
                 afterMessage={needsConfirmation ? <button type="button" className={styles.link}
                   onClick={() => resendConfirmation(email)}>Resend confirmation email</button> : null}

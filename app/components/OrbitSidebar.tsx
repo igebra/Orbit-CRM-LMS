@@ -46,10 +46,8 @@ const PREFETCH_ROUTES = [
   "/trainers",
   "/payments",
   "/courses",
-  "/lms",
   "/reports",
   "/access",
-  "/portal-access",
 ];
 
 export default function OrbitSidebar({ email, active }: Props) {
@@ -206,15 +204,7 @@ export default function OrbitSidebar({ email, active }: Props) {
     isFinance ||
     isManagement;
 
-  const canSeeLms =
-    isSuperAdmin ||
-    isAdmin ||
-    isSales ||
-    isMarketing ||
-    isManagement ||
-    isTrainer;
-
-  const canSeeAccess = isSuperAdmin || isAdmin;
+  const canSeeAccess = isSuperAdmin;
 
   return (
     <aside className={styles.sidebar}>
@@ -328,15 +318,6 @@ export default function OrbitSidebar({ email, active }: Props) {
             </button>
           )}
 
-          {canSeeLms && (
-            <button
-              className={active === "lms" ? styles.navActive : ""}
-              onClick={() => navigate("/lms")}
-            >
-              <span className={styles.navIcon}><OrbitNavIcon name="lms" /></span> LMS
-            </button>
-          )}
-
           {canSeeReports && (
             <button
               className={active === "reports" ? styles.navActive : ""}
@@ -387,14 +368,6 @@ export default function OrbitSidebar({ email, active }: Props) {
                 </button>
               )}
     
-              {canSeeAccess && (
-                <button
-                  className={active === "portal-access" ? styles.navActive : ""}
-                  onClick={() => navigate("/portal-access")}
-                >
-                  <span className={styles.navIcon}><OrbitNavIcon name="portal" /></span> Portal Access
-                </button>
-              )}
             </div>
           )}
         </nav>
