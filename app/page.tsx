@@ -13,6 +13,12 @@ const supabase = createClient(
 
 const PUBLIC_ACCESS_ROLES = ["Student", "Parent"];
 
+// CRM authentication is internal-only. LMS roles must never enter the CRM dashboard.
+const CRM_ALLOWED_ROLES = new Set([
+  "super_admin", "admin", "sales", "sales_marketing",
+  "marketing", "accounts_finance", "viewer_management",
+]);
+
 export default function LoginPage() {
   const router = useRouter();
 
@@ -51,11 +57,8 @@ export default function LoginPage() {
         .eq("id", data.session.user.id)
         .single();
 
-      if (!profile?.is_active) return;
-
-      if (profile.role === "student") router.replace("/student");
-      else if (profile.role === "parent") router.replace("/parent");
-      else router.replace("/dashboard");
+      if (!profile?.is_active || !CRM_ALLOWED_ROLES.has(profile.role)) return;
+      router.replace("/dashboard");
     }
 
     checkSession();
@@ -132,15 +135,19 @@ export default function LoginPage() {
       return;
     }
 
+    if (!CRM_ALLOWED_ROLES.has(profile.role)) {
+      await supabase.auth.signOut();
+      setMessage("This account does not have CRM access. Please use Orbit LMS.");
+      return;
+    }
+
     if (remember) {
       localStorage.setItem("orbit_remember_email", email.trim());
     } else {
       localStorage.removeItem("orbit_remember_email");
     }
 
-    if (profile.role === "student") router.replace("/student");
-    else if (profile.role === "parent") router.replace("/parent");
-    else router.replace("/dashboard");
+    router.replace("/dashboard");
   }
 
   async function forgotPassword() {
