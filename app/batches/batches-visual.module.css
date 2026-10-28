@@ -4,9 +4,9 @@
 .header{align-items:center;gap:16px;margin-bottom:18px;}
 .header h1{font:700 28px/1.25 var(--font-orbit-heading),sans-serif;color:#263D46;}
 .header p{font-family:var(--font-orbit-body),sans-serif;}
-.header button{height:40px;min-height:40px;padding:0 16px;border:1px solid #286F7A;border-radius:10px;background:#286F7A;color:#fff;box-shadow:none;font:600 14px var(--font-orbit-body),sans-serif;cursor:pointer;}
-.header button:hover{background:#225E68;}
-.header button:focus-visible{outline:2px solid #286F7A;outline-offset:2px;}
+.header button{height:40px;min-height:40px;padding:0 16px;border:1px solid #2459D6;border-radius:10px;background:#2459D6;color:#fff;box-shadow:none;font:600 14px var(--font-orbit-body),sans-serif;cursor:pointer;}
+.header button:hover{background:#1D46AB;}
+.header button:focus-visible{outline:2px solid #2459D6;outline-offset:2px;}
 .list{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;}
 .tableWrap{width:100%;max-width:100%;min-width:0;overflow-x:auto;}
 .tableWrap table{table-layout:fixed;min-width:0!important;width:100%;border-collapse:collapse;}
@@ -22,13 +22,13 @@
 .tableWrap th:nth-child(8){width:8%}
 .tableWrap th:nth-child(9){width:9%}
 .tableWrap td:nth-child(7){text-align:center;}
-.tableWrap td:nth-child(9)>span{padding:0;border:0;background:none;border-radius:0;color:#286F7A;box-shadow:none;font:600 12px var(--font-orbit-body),sans-serif;}
+.tableWrap td:nth-child(9)>span{padding:0;border:0;background:none;border-radius:0;color:#2459D6;box-shadow:none;font:600 12px var(--font-orbit-body),sans-serif;}
 .tableWrap td:nth-child(10)>div{display:flex;gap:4px;align-items:center;flex-wrap:wrap;}
 .tableWrap td:nth-child(10) button{border:0!important;background:transparent!important;box-shadow:none!important;border-radius:6px;padding:4px;min-height:32px;cursor:pointer;font:600 12px var(--font-orbit-body),sans-serif;}
-.tableWrap td:nth-child(10) button:first-child{color:#286F7A!important;}
+.tableWrap td:nth-child(10) button:first-child{color:#2459D6!important;}
 .tableWrap td:nth-child(10) button:last-child{color:#A43936!important;}
-.tableWrap td:nth-child(10) button:hover{background:#EAF3F5!important;text-decoration:underline;}
-.tableWrap td:nth-child(10) button:focus-visible{outline:2px solid #286F7A;outline-offset:2px;}
+.tableWrap td:nth-child(10) button:hover{background:#F3EDFA!important;text-decoration:underline;}
+.tableWrap td:nth-child(10) button:focus-visible{outline:2px solid #2459D6;outline-offset:2px;}
 .tableWrap td:nth-child(8)>div{display:block;max-width:none;}
 .tableWrap td:nth-child(8) span{display:block;white-space:normal;font:500 12px/1.4 var(--font-orbit-body),sans-serif;padding:0;border:0;background:none;}
 @media(max-width:1090px){.tableWrap th,.tableWrap td{font-size:11px!important;padding:9px 4px!important;}}
@@ -44,10 +44,10 @@
 .batchStats span{font:600 12px/1.35 var(--font-orbit-body),Inter,sans-serif;color:#263D46;}
 .batchStats strong{display:block;margin:5px 0 3px;font:700 26px/1.15 var(--font-orbit-heading),sans-serif;color:#263D46;}
 .batchStats small{font:400 11px/1.35 var(--font-orbit-body),Inter,sans-serif;color:#52656F;}
-.batchStats .allBatches{border-top:3px solid #B6DEE5;background:linear-gradient(180deg,#F5FCFD,#fff 55%);}
-.batchStats .runningBatches{border-top:3px solid #CDE4D7;background:linear-gradient(180deg,#F7FCF9,#fff 55%);}
+.batchStats .allBatches{border-top:3px solid #DDE9FF;background:linear-gradient(180deg,#F5F8FF,#fff 55%);}
+.batchStats .runningBatches{border-top:3px solid #CDE4D7;background:linear-gradient(180deg,#FFF9EA,#fff 55%);}
 .batchStats .weekdayBatches{border-top:3px solid #DDD0E7;background:linear-gradient(180deg,#FBF8FE,#fff 55%);}
-.batchStats .weekendBatches{border-top:3px solid #F3D7C5;background:linear-gradient(180deg,#FFF9F4,#fff 55%);}
+.batchStats .weekendBatches{border-top:3px solid #F5E8B8;background:linear-gradient(180deg,#FFF9F4,#fff 55%);}
 .scheduleNote{margin:0 0 14px!important;color:#52656F!important;font:400 11px/1.45 var(--font-orbit-body),Inter,sans-serif!important;}
 @media(max-width:1100px){.batchStats{grid-template-columns:repeat(2,minmax(0,1fr));}}
 

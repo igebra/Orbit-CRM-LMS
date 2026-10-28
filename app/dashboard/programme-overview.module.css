@@ -2,15 +2,15 @@
 .panel{min-width:0;background:#fff;border:1px solid #DCE5E8;border-radius:17px;padding:17px;box-shadow:0 4px 18px rgba(38,61,70,.04)}
 .head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:14px}
 .head h2{font:600 16px var(--font-orbit-heading),sans-serif;color:#263D46;margin:0}
-.head button{background:none;border:0;color:#286F7A;font:600 12px var(--font-orbit-body),sans-serif;cursor:pointer}
+.head button{background:none;border:0;color:#2459D6;font:600 12px var(--font-orbit-body),sans-serif;cursor:pointer}
 .programmes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
-.programme{text-align:left;border:0;border-radius:12px;background:#FFF5EB;padding:15px 12px;cursor:pointer;display:flex;flex-direction:column;min-width:0}
-.programme:nth-child(2){background:#E8F6F6}.programme:nth-child(3){background:#F3EFFA}
-.programme span{font:600 13px var(--font-orbit-body),sans-serif;color:#286F7A}
+.programme{text-align:left;border:0;border-radius:12px;background:#FFF9EA;padding:15px 12px;cursor:pointer;display:flex;flex-direction:column;min-width:0}
+.programme:nth-child(2){background:#F9ECF4}.programme:nth-child(3){background:#F3EFFA}
+.programme span{font:600 13px var(--font-orbit-body),sans-serif;color:#2459D6}
 .programme strong{font:700 28px var(--font-orbit-heading),sans-serif;color:#263D46;margin:9px 0 0}
 .programme small{font:400 12px var(--font-orbit-body),sans-serif;color:#52656F}
 .track{height:7px;border-radius:9px;background:#e4e9ec;overflow:hidden;margin-top:15px}
-.track>div{height:100%;border-radius:9px;background:#E5A45E}.programme:nth-child(2) .track>div{background:#46ACA8}.programme:nth-child(3) .track>div{background:#A78AD5}
+.track>div{height:100%;border-radius:9px;background:#F4B82E}.programme:nth-child(2) .track>div{background:#EB4180}.programme:nth-child(3) .track>div{background:#A78AD5}
 .totals{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .totals div{background:#F8FAFB;border:1px solid #E6EDF0;border-radius:10px;padding:8px 12px;display:grid;gap:3px}
 .totals span{font-size:12px;color:#52656F}.totals strong{font:700 23px var(--font-orbit-heading),sans-serif;color:#263D46}

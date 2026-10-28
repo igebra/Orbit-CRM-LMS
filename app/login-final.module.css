@@ -1,7 +1,7 @@
 /* Approved teal login — the hero artwork is a fixed project asset, not UI markup.
    The Supabase sign-in, reset, request and activation handlers stay in app/page.tsx. */
-.shell{--login-ink:#142d38;--login-teal:#078e98;--login-deep:#05616a;min-height:100svh;display:grid;grid-template-columns:minmax(0,57.75%) minmax(440px,42.25%);background:#f6fcfc}
-.artwork{overflow:hidden;position:relative;background:#179eab;min-height:100svh}
+.shell{--login-ink:#142d38;--login-teal:#2459D6;--login-deep:#1D46AB;min-height:100svh;display:grid;grid-template-columns:minmax(0,57.75%) minmax(440px,42.25%);background:#f6fcfc}
+.artwork{overflow:hidden;position:relative;background:#2459D6;min-height:100svh}
 .hero{width:100%;height:100%;min-height:100svh;object-fit:cover;object-position:center center;display:block}
 .formSide{min-width:0;display:flex;align-items:center;justify-content:center;padding:24px clamp(20px,3.4vw,58px);background:radial-gradient(circle at right 5%,#e8fafb 0,transparent 32%),#f5fbfb}
 .card{width:100%;max-width:560px;max-height:calc(100svh - 30px);overflow-y:auto;background:#fff;border:1px solid #eaf0f0;border-radius:30px;padding:clamp(24px,3vw,48px);box-shadow:0 20px 70px rgba(12,75,84,.09);scrollbar-width:thin}
@@ -9,7 +9,7 @@
 .stage{width:100%}
 .intro{text-align:center;margin:0 0 28px}
 .intro h1{color:var(--login-ink);font-size:clamp(25px,2.2vw,34px);letter-spacing:-1px;line-height:1.22;margin:0 0 7px;font-weight:760}
-.intro h1 span{color:#078d97}
+.intro h1 span{color:#2459D6}
 .intro p{font-size:14px;color:#687c84;margin:0;line-height:1.55}
 .form{display:grid;gap:17px}
 .field{display:flex;flex-direction:column;gap:7px;color:#243b48;font-size:13px;font-weight:740}
@@ -22,10 +22,10 @@
 .options{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:-4px}
 .remember{display:flex;align-items:center;gap:8px;color:#667a80;font-size:12px;cursor:pointer}
 .remember input{accent-color:var(--login-deep);width:15px;height:15px}
-.link{background:none;border:0;color:#047883;padding:6px 0;font-size:12px;font-weight:720;cursor:pointer}
+.link{background:none;border:0;color:#2459D6;padding:6px 0;font-size:12px;font-weight:720;cursor:pointer}
 .link:hover,.secondary button:hover{text-decoration:underline}
-.submit{min-height:54px;border:0;border-radius:10px;background:linear-gradient(105deg,#129cab,#03636c);color:#fff;display:flex;align-items:center;justify-content:center;gap:12px;font-weight:770;font-size:15px;cursor:pointer;box-shadow:0 8px 18px rgba(0,95,103,.13)}
-.submit:hover{background:linear-gradient(105deg,#108b99,#02545d)}
+.submit{min-height:54px;border:0;border-radius:10px;background:linear-gradient(105deg,#2459D6,#1D46AB);color:#fff;display:flex;align-items:center;justify-content:center;gap:12px;font-weight:770;font-size:15px;cursor:pointer;box-shadow:0 8px 18px rgba(0,95,103,.13)}
+.submit:hover{background:linear-gradient(105deg,#2459D6,#1D46AB)}
 .submit:disabled{opacity:.6;cursor:wait}
 .message{background:#fff7eb;border:1px solid #ebd3b6;color:#714a32;padding:12px 14px;border-radius:10px;font-size:12px;line-height:1.5}
 .secondary{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:13px;margin-top:18px;color:#91a7aa;font-size:12px}

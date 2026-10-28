@@ -6,17 +6,17 @@
   transition:background-color .15s ease,border-color .15s ease,color .15s ease;
   box-shadow:none;
 }
-.button:focus-visible{outline:2px solid #286F7A;outline-offset:2px}
+.button:focus-visible{outline:2px solid #2459D6;outline-offset:2px}
 .button:disabled{opacity:.58;cursor:not-allowed;transform:none;box-shadow:none}
 .button:not(:disabled):active{transform:none}
 .sm{height:32px;min-height:32px;padding:0 12px;font-size:13px;border-radius:8px}
 .md{height:40px;min-height:40px}
 .lg{height:44px;min-height:44px;padding:0 20px}
-.primary{background:#286F7A;border-color:#286F7A;color:#fff}
-.primary:not(:disabled):hover{background:#225E68;border-color:#225E68}
-.secondary{background:#fff;color:#286F7A;border-color:#DCE5E8}
-.secondary:not(:disabled):hover{background:#F0F4F5;border-color:#B6DEE5}
-.ghost{background:transparent;color:#286F7A;border-color:transparent}
+.primary{background:#2459D6;border-color:#2459D6;color:#fff}
+.primary:not(:disabled):hover{background:#1D46AB;border-color:#1D46AB}
+.secondary{background:#fff;color:#2459D6;border-color:#DCE5E8}
+.secondary:not(:disabled):hover{background:#F0F4F5;border-color:#DDE9FF}
+.ghost{background:transparent;color:#2459D6;border-color:transparent}
 .ghost:not(:disabled):hover{background:#F0F4F5}
 .danger{background:#fff;color:#AB443E;border-color:#EBCAC7}
 .danger:not(:disabled):hover{background:#FFF3F1;border-color:#D78A84}

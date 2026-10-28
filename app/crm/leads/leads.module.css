@@ -2,14 +2,14 @@
   min-height: 100vh;
   display: grid;
   grid-template-columns: 270px minmax(0, 1fr);
-  background: linear-gradient(135deg, #f7f7f4 0%, #edf5f4 100%);
-  color: #183032;
+  background: linear-gradient(135deg, #f7f7f4 0%, #F4EFFB 100%);
+  color: #263D46;
 }
 
 .sidebar {
   min-height: 100vh;
   padding: 24px 18px;
-  background: linear-gradient(180deg, #0f5b5f 0%, #114548 100%);
+  background: linear-gradient(180deg, #2459D6 0%, #1D46AB 100%);
   color: #fff;
   display: flex;
   flex-direction: column;
@@ -48,7 +48,7 @@
   height: 42px;
   border-radius: 14px;
   background: linear-gradient(135deg, #fff 0%, #d8f3f1 100%);
-  color: #0f5e61;
+  color: #2459D6;
   display: grid;
   place-items: center;
   font-weight: 900;
@@ -164,7 +164,7 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #f4b16a, #d9853b);
+  background: linear-gradient(135deg, #BA96E7, #7C4BC7);
   font-weight: 800;
 }
 
@@ -174,7 +174,7 @@
   border-radius: 14px;
   padding: 11px 14px;
   background: #fff;
-  color: #0f5e61;
+  color: #2459D6;
   font-weight: 800;
   cursor: pointer;
 }
@@ -194,7 +194,7 @@
 
 .kicker {
   margin: 0 0 6px;
-  color: #d9853b;
+  color: #7C4BC7;
   font-size: 12px;
   font-weight: 850;
   letter-spacing: 1px;
@@ -242,22 +242,22 @@
 }
 
 .primaryButton {
-  border: 1px solid #c77830;
+  border: 1px solid #6238AB;
   color: #fff;
-  background: linear-gradient(180deg, #e3944c, #d9853b);
-  box-shadow: 0 4px 0 #a7632a;
+  background: linear-gradient(180deg, #A074DF, #7C4BC7);
+  box-shadow: 0 4px 0 #61369D;
 }
 
 .primaryButton:active {
   transform: translateY(3px);
-  box-shadow: 0 1px 0 #a7632a;
+  box-shadow: 0 1px 0 #61369D;
 }
 
 .secondaryButton,
 .cancelButton,
 .refreshButton {
-  border: 1px solid #cbdad7;
-  color: #0f5e61;
+  border: 1px solid #DDDCEB;
+  color: #2459D6;
   background: #fff;
 }
 
@@ -275,7 +275,7 @@
 }
 
 .statCard {
-  border: 1px solid #d9e5e3;
+  border: 1px solid #E3E0ED;
   border-radius: 18px;
   background: #fff;
   padding: 18px;
@@ -323,7 +323,7 @@ button.statCard {
   padding: 12px 14px;
   border: 1px solid #b8d4d0;
   border-radius: 15px;
-  background: #eef8f6;
+  background: #F4EFFB;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -345,7 +345,7 @@ button.statCard {
   border-radius: 999px;
   display: grid;
   place-items: center;
-  background: #0f5e61;
+  background: #2459D6;
   color: #fff;
 }
 
@@ -365,14 +365,14 @@ button.statCard {
   border-radius: 10px;
   padding: 9px 12px;
   background: #fff;
-  color: #0f5e61;
+  color: #2459D6;
   font-weight: 800;
   cursor: pointer;
 }
 
 .selectionActions .scheduleSelected {
-  border-color: #0f5e61;
-  background: #0f5e61;
+  border-color: #2459D6;
+  background: #2459D6;
   color: #fff;
 }
 
@@ -387,7 +387,7 @@ button.statCard {
 }
 
 .tableCard {
-  border: 1px solid #d9e5e3;
+  border: 1px solid #E3E0ED;
   border-radius: 20px;
   overflow: hidden;
   background: #fff;
@@ -407,7 +407,7 @@ button.statCard {
   min-width: 300px;
   flex: 1;
   height: 42px;
-  border: 1px solid #d4dfdc;
+  border: 1px solid #DDDCEB;
   border-radius: 10px;
   padding: 0 12px;
   outline: none;
@@ -415,7 +415,7 @@ button.statCard {
 
 .toolbar select {
   height: 42px;
-  border: 1px solid #d4dfdc;
+  border: 1px solid #DDDCEB;
   border-radius: 10px;
   background: #fff;
   padding: 0 10px;
@@ -500,8 +500,8 @@ button.statCard {
   width: fit-content;
   padding: 5px 8px;
   border-radius: 999px;
-  background: #e7f4f2;
-  color: #0f5e61;
+  background: #F3EDFA;
+  color: #2459D6;
   font-size: 11px;
   font-weight: 800;
   white-space: nowrap;
@@ -519,7 +519,7 @@ button.statCard {
 
 .stageDemoScheduled {
   background: #fff1df;
-  color: #a7632a;
+  color: #61369D;
 }
 
 .rowActions {
@@ -532,7 +532,7 @@ button.statCard {
   border-radius: 8px;
   background: #fff;
   padding: 6px 9px;
-  color: #0f5e61;
+  color: #2459D6;
   font-weight: 750;
   cursor: pointer;
 }
@@ -566,7 +566,7 @@ button.statCard {
 
 .importChoice {
   padding: 17px;
-  border: 1px solid #d9e5e3;
+  border: 1px solid #E3E0ED;
   border-radius: 15px;
   background: #f9fbfa;
   display: flex;
@@ -578,7 +578,7 @@ button.statCard {
 .importChoice strong {
   display: block;
   margin-bottom: 5px;
-  color: #183032;
+  color: #263D46;
 }
 
 .importChoice p {
@@ -636,7 +636,7 @@ button.statCard {
   border: 0;
   border-radius: 11px;
   background: #f0f4f3;
-  color: #183032;
+  color: #263D46;
   font-size: 25px;
   cursor: pointer;
 }
@@ -654,7 +654,7 @@ button.statCard {
 .formGrid label > span {
   display: block;
   margin-bottom: 7px;
-  color: #263f40;
+  color: #263D46;
   font-size: 12px;
   font-weight: 800;
 }
@@ -663,10 +663,10 @@ button.statCard {
 .formGrid select,
 .formGrid textarea {
   width: 100%;
-  border: 1px solid #d4dfdc;
+  border: 1px solid #DDDCEB;
   border-radius: 10px;
   background: #fff;
-  color: #183032;
+  color: #263D46;
   outline: none;
 }
 
@@ -684,13 +684,13 @@ button.statCard {
 .formGrid input:focus,
 .formGrid select:focus,
 .formGrid textarea:focus {
-  border-color: #74afad;
-  box-shadow: 0 0 0 3px rgba(116,175,173,.12);
+  border-color: #A78AD5;
+  box-shadow: 0 0 0 3px rgba(150,110,210,.12);
 }
 
 .phoneField {
   height: 44px;
-  border: 1px solid #d4dfdc;
+  border: 1px solid #DDDCEB;
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -703,9 +703,9 @@ button.statCard {
   display: grid;
   place-items: center;
   background: #f3f7f6;
-  border-right: 1px solid #d4dfdc;
+  border-right: 1px solid #DDDCEB;
   font-weight: 800;
-  color: #0f5e61;
+  color: #2459D6;
 }
 
 .phoneField input {
@@ -720,7 +720,7 @@ button.statCard {
 
 .checkboxRow {
   min-height: 44px;
-  border: 1px solid #d4dfdc;
+  border: 1px solid #DDDCEB;
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -731,7 +731,7 @@ button.statCard {
 .checkboxRow input {
   width: 17px;
   height: 17px;
-  accent-color: #0f5e61;
+  accent-color: #2459D6;
 }
 
 .checkboxRow span {
@@ -833,7 +833,7 @@ button.statCard {
 
 .rowActions .followUpButton {
   border-color: #b8d4d0;
-  background: #eef8f6;
+  background: #F4EFFB;
 }
 
 .rowActions .convertButton {
@@ -931,7 +931,7 @@ button.statCard {
 }
 
 .activityTop strong {
-  color: #0f5e61;
+  color: #2459D6;
   font-size: 12px;
 }
 
@@ -953,7 +953,7 @@ button.statCard {
 }
 
 .activityEmpty {
-  border: 1px dashed #cfddda;
+  border: 1px dashed #DDDCEB;
   border-radius: 12px;
   padding: 24px;
   color: #7a8988;
@@ -977,7 +977,7 @@ button.statCard {
 .shell{grid-template-columns:248px minmax(0,1fr);background:#F8FAFB;color:#263D46;}
 .main{min-width:0;padding:24px 27px 38px;background:#F8FAFB;overflow-x:hidden;}
 .header{align-items:center;margin-bottom:17px;gap:16px;}
-.kicker{margin:0 0 5px;font:600 11px var(--font-orbit-body),sans-serif!important;color:#286F7A;letter-spacing:.07em;}
+.kicker{margin:0 0 5px;font:600 11px var(--font-orbit-body),sans-serif!important;color:#2459D6;letter-spacing:.07em;}
 .header h1{font:700 28px/1.25 var(--font-orbit-heading),sans-serif;color:#263D46;letter-spacing:-.02em;}
 .subtitle{margin:5px 0 0;color:#52656F;font:400 14px/1.4 var(--font-orbit-body),sans-serif;}
 .headerActions{gap:9px;}
@@ -985,15 +985,15 @@ button.statCard {
   border-radius:10px;font:600 14px var(--font-orbit-body),sans-serif;
   min-height:39px;padding:9px 13px;box-shadow:none;
 }
-.primaryButton{background:#286F7A;border:1px solid #286F7A;color:#fff;}
+.primaryButton{background:#2459D6;border:1px solid #2459D6;color:#fff;}
 .primaryButton:hover{background:#225F69;border-color:#225F69;}
 .primaryButton:active{transform:none;box-shadow:none;}
-.secondaryButton,.cancelButton,.refreshButton{background:#fff;border:1px solid #DCE5E8;color:#286F7A;}
+.secondaryButton,.cancelButton,.refreshButton{background:#fff;border:1px solid #DCE5E8;color:#2459D6;}
 .statsGrid{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:16px;}
 .statCard{padding:12px 14px;border:1px solid #DCE5E8;border-radius:14px;min-height:88px;background:#fff;box-shadow:0 3px 13px rgba(38,61,70,.035);}
 .statCard span{font:500 12px var(--font-orbit-body),sans-serif;color:#52656F;margin:0 0 6px;}
 .statCard strong{font:700 24px/1.2 var(--font-orbit-heading),sans-serif;color:#263D46;}
-.statCard:nth-child(1){border-top:2px solid #B6DEE5;}
+.statCard:nth-child(1){border-top:2px solid #DDE9FF;}
 .statCard:nth-child(2){border-top:2px solid #DDD0E7;}
 .statCard:nth-child(3){border-top:2px solid #CDE4D7;}
 .statCard:nth-child(4){border-top:2px solid #E8C4D9;}
@@ -1057,17 +1057,17 @@ button.statCard {
 .tableWrap th:nth-child(8){width:12%}
 .tableWrap th:nth-child(9){width:9%}
 .tableWrap .stageBadge{max-width:100%;white-space:normal;text-align:center;overflow-wrap:break-word;}
-.tableWrap input[type="checkbox"]{width:15px;height:15px;max-width:100%;accent-color:#286F7A}
+.tableWrap input[type="checkbox"]{width:15px;height:15px;max-width:100%;accent-color:#2459D6}
 .actionsColumn{white-space:nowrap;}
 .actionToggle{
   display:inline-flex;align-items:center;justify-content:center;gap:3px;
   min-width:0;max-width:100%;min-height:32px;padding:2px 1px;
-  color:#286F7A!important;background:none!important;border:0!important;
+  color:#2459D6!important;background:none!important;border:0!important;
   border-radius:6px;box-shadow:none!important;
   font:600 12px var(--font-orbit-body),sans-serif;cursor:pointer;
 }
 .actionToggle:hover{text-decoration:underline}
-.actionToggle:focus-visible{outline:2px solid #286F7A;outline-offset:2px}
+.actionToggle:focus-visible{outline:2px solid #2459D6;outline-offset:2px}
 .actionToggle>span{font:600 12px var(--font-orbit-body),sans-serif;display:inline}
 .expandedActionRow{background:#F8FAFB}
 .expandedActionRow:hover{background:#F8FAFB}
@@ -1078,11 +1078,11 @@ button.statCard {
 .expandedActionContent .rowActions button{
   border:0!important;border-radius:6px;background:none!important;
   box-shadow:none!important;min-height:32px;padding:5px 4px;
-  font:600 12px var(--font-orbit-body),sans-serif;color:#286F7A!important;
+  font:600 12px var(--font-orbit-body),sans-serif;color:#2459D6!important;
   cursor:pointer;
 }
-.expandedActionContent .rowActions button:hover{text-decoration:underline;background:#EAF3F5!important}
-.expandedActionContent .rowActions button:focus-visible{outline:2px solid #286F7A;outline-offset:2px}
+.expandedActionContent .rowActions button:hover{text-decoration:underline;background:#F3EDFA!important}
+.expandedActionContent .rowActions button:focus-visible{outline:2px solid #2459D6;outline-offset:2px}
 .expandedActionContent .rowActions button:disabled{opacity:.5;cursor:not-allowed}
 .expandedActionContent .rowActions .deleteButton{color:#A43936!important}
 @media(max-width:1120px){
@@ -1106,4 +1106,4 @@ button.statCard {
 .modal input,.modal select,.modal textarea{border:1px solid #DCE5E8;border-radius:10px;color:#263D46;font:400 13px var(--font-orbit-body),sans-serif;}
 .modal :is(input,select){min-height:40px;}
 .modalHeader h2{font:600 20px var(--font-orbit-heading),sans-serif;color:#263D46;}
-.main :is(button,input,select,textarea):focus-visible{outline:2px solid #286F7A;outline-offset:2px;}
+.main :is(button,input,select,textarea):focus-visible{outline:2px solid #2459D6;outline-offset:2px;}
