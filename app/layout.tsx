@@ -15,8 +15,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${orbitHeading.variable} ${orbitBody.variable}`}>{children}</body>
+    <html lang="en" className={`${orbitHeading.variable} ${orbitBody.variable}`}>
+      <body>{children}</body>
     </html>
   );
 }
