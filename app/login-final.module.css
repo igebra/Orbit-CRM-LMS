@@ -236,3 +236,8 @@
 .signupFooter button{border:0;background:transparent;color:#2459D6;font-size:12px;font-weight:600;cursor:pointer;padding:3px;}
 .signupView button:focus-visible{outline:2px solid #2459D6;outline-offset:3px;}
 @media(max-width:590px){.signupGrid{grid-template-columns:1fr;gap:12px;}.signupTitle{margin-bottom:18px;}}
+
+/* Wider working space and single-column form when the CRM panel is narrow. */
+.card:has(.signupView){max-width:620px;}
+.card:has(.signupView) .logo{max-width:228px;margin-bottom:16px;}
+@media(max-width:1250px){.signupGrid{grid-template-columns:1fr;gap:14px;}}

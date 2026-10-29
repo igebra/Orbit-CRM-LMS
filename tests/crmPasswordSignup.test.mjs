@@ -34,3 +34,11 @@ test("Six clearly spaced signup fields; role selection retained only for Superad
  assert.match(access,/approve_access_request/);
  assert.match(access,/Choose a CRM role before approving/);
 });
+
+test("Existing unlinked Pending Team Member requests can be claimed by matching new Auth account",()=>{
+ const migration=readFileSync(new URL("../sql/migrations/202610290956_crm_link_legacy_pending.sql",import.meta.url),"utf8");
+ assert.match(migration,/ar\.auth_user_id is not null/);
+ assert.match(migration,/ar\.auth_user_id<>p_auth_user_id/);
+ assert.match(migration,/auth_user_id=p_auth_user_id/);
+ assert.match(migration,/where id=v_id and \(auth_user_id is null or auth_user_id=p_auth_user_id\)/);
+});
