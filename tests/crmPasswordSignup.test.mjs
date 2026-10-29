@@ -42,3 +42,11 @@ test("Existing unlinked Pending Team Member requests can be claimed by matching 
  assert.match(migration,/auth_user_id=p_auth_user_id/);
  assert.match(migration,/where id=v_id and \(auth_user_id is null or auth_user_id=p_auth_user_id\)/);
 });
+
+test("Superadmin cannot activate an unverified staff email",()=>{
+ const sql=readFileSync(new URL("../sql/migrations/202610290959_crm_confirm_email_before_approval.sql",import.meta.url),"utf8");
+ assert.match(sql,/au\.id=v_request\.auth_user_id/);
+ assert.match(sql,/au\.email_confirmed_at is not null/);
+ assert.match(sql,/Applicant must confirm their email/);
+ assert.match(sql,/public\.can_manage_access\(\)/);
+});
