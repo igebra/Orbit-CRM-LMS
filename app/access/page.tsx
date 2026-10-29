@@ -541,8 +541,8 @@ export default function AccessPage() {
           </div>
 
           <div className={styles.headerTools}>
-            <img src="/orbit-mascot-approved.svg" alt="" width={42} height={56}
-              className={styles.headerMascot}/>
+            <img src="/orbit-pi-pointing.webp" alt="" width={100} height={129}
+              className={styles.headerMascot} decoding="async"/>
             <button
               className={styles.primary}
               onClick={() => {
@@ -617,7 +617,12 @@ export default function AccessPage() {
             <div className={styles.empty}>Loading access...</div>
           ) : tab === "requests" ? (
             <div className={styles.tableWrap} ref={tableScrollRef}>
-              <table>
+              <table className={styles.requestsTable}>
+                <colgroup>
+                  {[66,213,245,133,180,138,135,135,150,185].map((width, index) => (
+                    <col key={index} style={{ width: `${width}px` }} />
+                  ))}
+                </colgroup>
                 <thead>
                   <tr>
                     <th data-sno>S.No</th>
@@ -643,7 +648,7 @@ export default function AccessPage() {
                     filteredRequests.map((request, index) => (
                       <tr key={request.request_id}>
                         <td data-sno>{index + 1}</td>
-                        <td>
+                        <td className={styles.nameCell}>
                           <strong title={requestDisplayName(request).inferred
                             ? "Name not recorded; displaying the email username" : undefined}>
                             {requestDisplayName(request).label}
@@ -659,18 +664,20 @@ export default function AccessPage() {
                           )}
                         </td>
                         <td>{new Date(request.created_at).toLocaleDateString()}</td>
-                        <td>
-                          <span
-                            className={`${styles.status} ${
-                              request.status === "Pending"
-                                ? styles.pending
-                                : request.status === "Approved"
-                                ? styles.approved
-                                : styles.rejected
-                            }`}
-                          >
-                            {request.status}
-                          </span>
+                        <td className={styles.statusCell}>
+                          {request.status === "Approved" ? (
+                            <span className={styles.approvedCheck} role="img" aria-label="Approved" title="Approved">
+                              <svg viewBox="0 0 20 20" width="20" height="20" focusable="false" aria-hidden="true">
+                                <circle cx="10" cy="10" r="9" fill="#24966D" />
+                                <path d="M5.8 10.1 8.7 12.9 14.5 7.3" stroke="#FFFFFF"
+                                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                              </svg>
+                            </span>
+                          ) : (
+                            <span className={`${styles.status} ${request.status === "Pending" ? styles.pending : styles.rejected}`}>
+                              {request.status}
+                            </span>
+                          )}
                         </td>
                         <td>
                           <span className={styles.accountState}>

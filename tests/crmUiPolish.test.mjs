@@ -26,3 +26,24 @@ test("International phone entry validates before account creation and is not tie
  assert.ok(signup.indexOf("const countryCode = requestCountryCode.trim()")<signup.indexOf("supabase.auth.signUp"));
  assert.match(signup,/supabase\.auth\.signInWithPassword/);
 });
+
+test("Approved Access status shows a centered green check without duplicate wording",()=>{
+ assert.match(access,/className=\{styles\.statusCell\}/);
+ assert.match(access,/request\.status === "Approved" \? \(/);
+ assert.match(access,/className=\{styles\.approvedCheck\}/);
+ assert.match(access,/aria-label="Approved"/);
+ assert.match(accessCss,/\.requestsTable :is\(th,td\):nth-child\(7\)\{text-align:center!important/);
+});
+test("Access requests use the approved fixed column widths",()=>{
+ assert.match(access,/className=\{styles\.requestsTable\}/);
+ assert.match(access,/\[66,213,245,133,180,138,135,135,150,185\]/);
+ assert.match(accessCss,/width:1580px!important;min-width:1580px!important/);
+ assert.match(accessCss,/td\.nameCell strong\{display:block;white-space:nowrap/);
+ assert.match(accessCss,/\.floatingScrollbar\{position:fixed/);
+});
+test("Access uses enlarged, high-resolution pointing mascot beside Add User",()=>{
+ assert.match(access,/orbit-pi-pointing\.webp/);
+ assert.match(access,/width=\{100\} height=\{129\}/);
+ assert.match(access,/\+ Add User/);
+ assert.match(accessCss,/\.headerMascot\{width:100px;height:129px/);
+});
