@@ -374,7 +374,7 @@ export default function LoginPage() {
                   </button>
                 </div>
               </section>
-            )
+            )}
           </div>
         </div>
 
