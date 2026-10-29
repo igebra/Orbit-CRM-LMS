@@ -7,7 +7,7 @@ const sql=readFileSync(new URL("../sql/migrations/202610290926_crm_team_access_r
 test("CRM signup opens its own access request, not external LMS",()=>{
  assert.match(page,/onSignUp=\{\(\) => \{\s*setRequestOpen\(true\)/);
  assert.doesNotMatch(page,/window\.location\.assign\(target\.toString\(\)\)/);
- assert.match(page,/submit_crm_team_access_request/);
+ assert.match(page,/submit_crm_password_signup_request/);
  assert.match(page,/p_department: requestDepartment/);
  assert.match(page,/p_phone: requestPhone\.trim\(\)/);
 });
@@ -30,13 +30,13 @@ test("Request access shows a concise form with no explanatory write-ups",()=>{
  assert.doesNotMatch(page,/Team Members can request CRM access here/);
  assert.doesNotMatch(page,/crm-approval-note/);
  assert.doesNotMatch(page,/Requesting access does not assign a CRM role/);
- assert.match(page,/<h1>Request access<\/h1>/);
+ assert.match(page,/<h1>Create your account<\/h1>/);
  assert.match(page,/submitAccessRequest/);
 });
-test("Phone starts with +91, remains fully editable, and resets to +91 after success",()=>{
+test("Phone starts with +91 and remains fully editable for international users",()=>{
  assert.match(page,/const \[requestPhone, setRequestPhone\] = useState\("\+91"\)/);
  assert.match(page,/value=\{requestPhone\}/);
- assert.match(page,/onChange=\{\(e\) => setRequestPhone\(e\.target\.value\)\}/);
+ assert.match(page,/onChange=\{e=>setRequestPhone\(e\.target\.value\)\}/);
  assert.match(page,/setRequestPhone\("\+91"\)/);
  assert.doesNotMatch(page,/setRequestPhone\(\s*\(v\)\s*=>\s*"\+91"/);
 });
