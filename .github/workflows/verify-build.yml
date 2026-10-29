@@ -28,6 +28,8 @@ jobs:
           cache: npm
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
+      - name: Run CRM onboarding regression checks
+        run: node --test tests/*.test.mjs
       - name: Validate TypeScript and generate Next.js production build
         run: npm run build
         env:

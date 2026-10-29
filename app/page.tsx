@@ -382,7 +382,7 @@ export default function LoginPage() {
                 <div className="login-copy login-copy-access">
                   <span className="login-view-eyebrow">ORBIT ACCESS</span>
                   <h1>Request access</h1>
-                  <p>Team Members can request CRM access here. A Superadmin reviews each request and assigns the actual role and module permissions.</p>
+                  <p>Team Members can request CRM access here. A Superadmin reviews each request and assigns the appropriate CRM role and access permissions.</p>
                 </div>
 
                 <form className="request-access-form access-standalone-form" onSubmit={submitAccessRequest}>
