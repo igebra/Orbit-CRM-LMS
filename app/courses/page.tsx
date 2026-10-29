@@ -540,12 +540,12 @@ function CourseIcon3D({ courseId }: { courseId: string }) {
           <defs>
             <linearGradient id="mathIconFace" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0%" stopColor="#fffaf4" />
-              <stop offset="100%" stopColor="#ffe3c7" />
+              <stop offset="100%" stopColor="#DDD0E7" />
             </linearGradient>
           </defs>
           <rect x="8" y="6" width="40" height="44" rx="11" fill="url(#mathIconFace)" />
-          <rect x="13" y="11" width="30" height="10" rx="4" fill="#D9853B" />
-          <path d="M17 31h10M22 26v10M33 27h8M33 35h8" stroke="#a65322" strokeWidth="3" strokeLinecap="round" />
+          <rect x="13" y="11" width="30" height="10" rx="4" fill="#7C4BC7" />
+          <path d="M17 31h10M22 26v10M33 27h8M33 35h8" stroke="#7C4BC7" strokeWidth="3" strokeLinecap="round" />
           <circle cx="39" cy="18" r="2" fill="#fff" opacity=".85" />
         </svg>
       </span>
@@ -585,7 +585,7 @@ function CourseIcon3D({ courseId }: { courseId: string }) {
         <circle cx="33" cy="20" r="4" fill="#74AFAD" />
         <circle cx="35" cy="35" r="5" fill="#3f817d" />
         <path d="M24 26l6-4M24 31l7 3M33 24l1 6" stroke="#356f6c" strokeWidth="2.6" strokeLinecap="round" />
-        <path d="M43 8l1.8 4.2L49 14l-4.2 1.8L43 20l-1.8-4.2L37 14l4.2-1.8L43 8z" fill="#D9853B" />
+        <path d="M43 8l1.8 4.2L49 14l-4.2 1.8L43 20l-1.8-4.2L37 14l4.2-1.8L43 8z" fill="#7C4BC7" />
       </svg>
     </span>
   );

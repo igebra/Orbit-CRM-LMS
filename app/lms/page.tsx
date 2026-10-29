@@ -134,8 +134,8 @@ function LibraryIcon3D() {
             <stop offset="100%" stopColor="#558C89" />
           </linearGradient>
           <linearGradient id="orbitLibraryOrange" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#f4b06f" />
-            <stop offset="100%" stopColor="#D9853B" />
+            <stop offset="0%" stopColor="#A78AD5" />
+            <stop offset="100%" stopColor="#7C4BC7" />
           </linearGradient>
         </defs>
         <rect x="9" y="13" width="13" height="38" rx="4" fill="url(#orbitLibraryTeal)" />
@@ -168,12 +168,12 @@ function LmsHeaderIcon3D() {
             <stop offset="100%" stopColor="#2F80ED" />
           </linearGradient>
           <linearGradient id="lmsOrange" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#f4b36f" />
-            <stop offset="100%" stopColor="#D9853B" />
+            <stop offset="0%" stopColor="#A78AD5" />
+            <stop offset="100%" stopColor="#7C4BC7" />
           </linearGradient>
           <linearGradient id="lmsGold" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#ffd889" />
-            <stop offset="100%" stopColor="#F5B041" />
+            <stop offset="0%" stopColor="#DDD0E7" />
+            <stop offset="100%" stopColor="#A78AD5" />
           </linearGradient>
         </defs>
 
@@ -200,7 +200,7 @@ function LmsHeaderIcon3D() {
               strokeLinecap="round" />
 
         <path d="M11 18l1.8 4.2L17 24l-4.2 1.8L11 30l-1.8-4.2L5 24l4.2-1.8L11 18z"
-              fill="#F5B041" />
+              fill="#A78AD5" />
       </svg>
     </span>
   );
@@ -218,7 +218,7 @@ function CurriculumIcon3D() {
         </defs>
         <rect x="12" y="9" width="40" height="46" rx="10" fill="url(#currPaper)" />
         <rect x="18" y="16" width="18" height="5" rx="2.5" fill="#558C89" />
-        <circle cx="21" cy="31" r="3" fill="#D9853B" />
+        <circle cx="21" cy="31" r="3" fill="#7C4BC7" />
         <circle cx="21" cy="41" r="3" fill="#74AFAD" />
         <path d="M28 31h15M28 41h12" stroke="#558C89" strokeWidth="3" strokeLinecap="round" />
         <path d="M42 11l6 6h-6z" fill="#b9d6d2" />
@@ -233,8 +233,8 @@ function CourseFamilyIcon({ family }: { family: CourseFamily }) {
       <span className={`${styles.courseIconShell} ${styles.mathIconShell}`} aria-hidden="true">
         <svg viewBox="0 0 48 48">
           <rect x="8" y="7" width="32" height="34" rx="9" fill="#fff7ef" />
-          <rect x="12" y="11" width="24" height="8" rx="3" fill="#D9853B" opacity=".92" />
-          <path d="M16 26h8M20 22v8M29 23h7M29 29h7" stroke="#a65e27" strokeWidth="2.5" strokeLinecap="round" />
+          <rect x="12" y="11" width="24" height="8" rx="3" fill="#7C4BC7" opacity=".92" />
+          <path d="M16 26h8M20 22v8M29 23h7M29 29h7" stroke="#7C4BC7" strokeWidth="2.5" strokeLinecap="round" />
         </svg>
       </span>
     );
@@ -260,7 +260,7 @@ function CourseFamilyIcon({ family }: { family: CourseFamily }) {
         <circle cx="29" cy="17" r="3.5" fill="#74AFAD" />
         <circle cx="30" cy="30" r="4" fill="#558C89" opacity=".88" />
         <path d="M21 20l5-2M21 24l6 4M29 21v5" stroke="#356f6c" strokeWidth="2.1" strokeLinecap="round" />
-        <path d="M36 9l1.4 3.4L41 14l-3.6 1.4L36 19l-1.4-3.6L31 14l3.6-1.6L36 9z" fill="#D9853B" />
+        <path d="M36 9l1.4 3.4L41 14l-3.6 1.4L36 19l-1.4-3.6L31 14l3.6-1.6L36 9z" fill="#7C4BC7" />
       </svg>
     </span>
   );
@@ -274,11 +274,11 @@ function UploadResourceIcon3D() {
         <defs>
           <linearGradient id="uploadFolderFace" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stopColor="#fff8f1" />
-            <stop offset="100%" stopColor="#f6d7b8" />
+            <stop offset="100%" stopColor="#DDD0E7" />
           </linearGradient>
           <linearGradient id="uploadOrange" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#f5b578" />
-            <stop offset="100%" stopColor="#D9853B" />
+            <stop offset="0%" stopColor="#A78AD5" />
+            <stop offset="100%" stopColor="#7C4BC7" />
           </linearGradient>
           <linearGradient id="uploadTeal" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stopColor="#8fc9c4" />
@@ -306,7 +306,7 @@ function UploadResourceIcon3D() {
         />
         <path
           d="M43 9l1.4 3.5L48 14l-3.6 1.5L43 19l-1.4-3.5L38 14l3.6-1.5L43 9z"
-          fill="#F5B041"
+          fill="#A78AD5"
         />
       </svg>
     </span>

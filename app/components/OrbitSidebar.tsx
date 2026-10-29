@@ -356,7 +356,7 @@ export default function OrbitSidebar({ email, active }: Props) {
                         display: "inline-flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        background: "#D9853B",
+                        background: "#7C4BC7",
                         color: "#fff",
                         fontSize: 10,
                         fontWeight: 900,
