@@ -27,7 +27,7 @@
 .submit{min-height:54px;border:0;border-radius:10px;background:linear-gradient(105deg,#2459D6,#1D46AB);color:#fff;display:flex;align-items:center;justify-content:center;gap:12px;font-weight:770;font-size:15px;cursor:pointer;box-shadow:0 8px 18px rgba(0,95,103,.13)}
 .submit:hover{background:linear-gradient(105deg,#2459D6,#1D46AB)}
 .submit:disabled{opacity:.6;cursor:wait}
-.message{background:#fff7eb;border:1px solid #ebd3b6;color:#714a32;padding:12px 14px;border-radius:10px;font-size:12px;line-height:1.5}
+.message{background:#fff7eb;border:1px solid #DDD0E7;color:#6238AB;padding:12px 14px;border-radius:10px;font-size:12px;line-height:1.5}
 .secondary{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:13px;margin-top:18px;color:#91a7aa;font-size:12px}
 .secondary button{background:transparent;color:#52656F;border:0;font-size:12px;cursor:pointer;padding:4px 0}
 .link:focus-visible,.showPassword:focus-visible,.submit:focus-visible,.secondary button:focus-visible{outline:3px solid #DDE9FF;outline-offset:3px;border-radius:5px}
@@ -155,8 +155,8 @@
 .activateLink{display:block;margin:9px auto 0;padding:6px 2px;
   border:0;background:transparent;color:#6D7FA5;cursor:pointer;text-align:center;
   font:500 11px var(--font-orbit-body),Inter,sans-serif;}
-.message{padding:10px 12px;background:#FFF8E9;border:1px solid #E8D3B1;border-radius:10px;
-  font:500 12px/1.45 var(--font-orbit-body),Inter,sans-serif;color:#805729;}
+.message{padding:10px 12px;background:#FFF8E9;border:1px solid #DDD0E7;border-radius:10px;
+  font:500 12px/1.45 var(--font-orbit-body),Inter,sans-serif;color:#6238AB;}
 .stage :global(.login-back){margin:0 0 16px;min-height:36px;border:1px solid #DDE7F5;
   border-radius:9px;padding:7px 12px;background:#F4F9FF;color:#225B96;
   font:600 12px var(--font-orbit-body),Inter,sans-serif;}
@@ -231,7 +231,7 @@
 .signupSubmit:disabled{opacity:.6;cursor:default;}
 .signupSuccess,.signupError{font-size:12px;line-height:1.5;border-radius:9px;padding:11px 13px;margin:0 0 14px;}
 .signupSuccess{background:#F0F8F3;border:1px solid #CDE5D6;color:#275F43;}
-.signupError{background:#FFF8F0;border:1px solid #F0D5B9;color:#845125;}
+.signupError{background:#FFF8F0;border:1px solid #DDD0E7;color:#6238AB;}
 .signupFooter{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:19px;font-size:12px;color:#8A98A5;}
 .signupFooter button{border:0;background:transparent;color:#2459D6;font-size:12px;font-weight:600;cursor:pointer;padding:3px;}
 .signupView button:focus-visible{outline:2px solid #2459D6;outline-offset:3px;}

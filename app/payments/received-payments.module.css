@@ -39,7 +39,7 @@
 .actionDanger{color:#A43936}.actions button:disabled{opacity:.45;cursor:default}
 .footer{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 18px;font-size:12px;color:#52656F}
 .note{margin:12px 0;color:#52656F;font-size:12px;line-height:1.5}
-.notice{margin:10px 0;padding:12px 15px;background:#FFF5E7;border:1px solid #F1D9B5;border-radius:10px;color:#80532E;font-size:13px}
+.notice{margin:10px 0;padding:12px 15px;background:#FFF5E7;border:1px solid #DDD0E7;border-radius:10px;color:#6238AB;font-size:13px}
 .reportGrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:17px 18px}
 .reportCard{padding:16px;border:1px solid #DCE5E8;border-radius:12px}
 .reportCard h3{margin:0 0 5px;font-size:16px}.reportCard p{margin:0 0 13px;color:#52656F;font-size:12px}
@@ -54,7 +54,7 @@
 .formGrid :is(input,select,textarea){width:100%;min-width:0}
 .formGrid textarea{min-height:75px;resize:vertical}.span2{grid-column:1/-1}
 .modalFooter{display:flex;gap:10px;align-items:center;justify-content:flex-end;padding:14px 22px;border-top:1px solid #E6EFF1}
-.modalMessage{margin:0 22px 14px;padding:11px 13px;background:#FFF5E7;color:#80532E;border-radius:8px;font-size:13px}
+.modalMessage{margin:0 22px 14px;padding:11px 13px;background:#FFF5E7;color:#6238AB;border-radius:8px;font-size:13px}
 @media(max-width:1050px){.reportGrid{grid-template-columns:1fr}.main{padding:20px 16px 44px}}
 @media(max-width:700px){.shell{grid-template-columns:248px minmax(0,1fr)}.summary{grid-template-columns:1fr}.formGrid{grid-template-columns:1fr}.span2{grid-column:auto}.modal{max-height:96vh}}
 
