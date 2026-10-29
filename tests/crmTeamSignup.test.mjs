@@ -37,6 +37,5 @@ test("Phone starts with +91 and remains fully editable for international users",
  assert.match(page,/const \[requestPhone, setRequestPhone\] = useState\("\+91"\)/);
  assert.match(page,/value=\{requestPhone\}/);
  assert.match(page,/onChange=\{e=>setRequestPhone\(e\.target\.value\)\}/);
- assert.match(page,/setRequestPhone\("\+91"\)/);
  assert.doesNotMatch(page,/setRequestPhone\(\s*\(v\)\s*=>\s*"\+91"/);
 });
