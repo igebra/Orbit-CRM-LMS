@@ -11,7 +11,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
 );
 
-const PUBLIC_ACCESS_ROLES = ["Student", "Parent"];
+const TEAM_DEPARTMENTS = ["Marketing", "Sales", "CX", "Admin", "Management", "Finance"];
 
 // CRM authentication is internal-only. LMS roles must never enter the CRM dashboard.
 const CRM_ALLOWED_ROLES = new Set([
@@ -33,7 +33,8 @@ export default function LoginPage() {
   const [activateOpen, setActivateOpen] = useState(false);
   const [requestName, setRequestName] = useState("");
   const [requestEmail, setRequestEmail] = useState("");
-  const [requestRole, setRequestRole] = useState("");
+  const [requestDepartment, setRequestDepartment] = useState("");
+  const [requestPhone, setRequestPhone] = useState("");
   const [requestLoading, setRequestLoading] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
 
@@ -208,17 +209,18 @@ export default function LoginPage() {
     event.preventDefault();
     setRequestMessage("");
 
-    if (!requestName.trim() || !requestEmail.trim() || !requestRole) {
-      setRequestMessage("Enter your name, email and choose Student or Parent.");
+    if (!requestName.trim() || !requestEmail.trim() || !requestPhone.trim() || !TEAM_DEPARTMENTS.includes(requestDepartment)) {
+      setRequestMessage("Enter your name, email, phone and work department.");
       return;
     }
 
     setRequestLoading(true);
 
-    const { error } = await supabase.rpc("submit_access_request", {
+    const { error } = await supabase.rpc("submit_crm_team_access_request", {
       p_full_name: requestName.trim(),
       p_email: requestEmail.trim().toLowerCase(),
-      p_requested_role: requestRole,
+      p_phone: requestPhone.trim(),
+      p_department: requestDepartment,
     });
 
     setRequestLoading(false);
@@ -229,11 +231,12 @@ export default function LoginPage() {
     }
 
     setRequestMessage(
-      "Access request submitted. An Admin will review it in Orbit."
+      "CRM access request submitted. Your request is pending Superadmin approval. You will not have CRM access until your account is approved and activated."
     );
     setRequestName("");
     setRequestEmail("");
-    setRequestRole("");
+    setRequestPhone("");
+    setRequestDepartment("");
   }
 
   async function activateApprovedAccess(event: FormEvent) {
@@ -352,19 +355,10 @@ export default function LoginPage() {
                 onSignIn={signIn}
                 onForgotPassword={forgotPassword}
                 onSignUp={() => {
-                  // CRM is internal-only; public portal requests belong in the standalone LMS.
-                  const lmsBase = process.env.NEXT_PUBLIC_ORBIT_LMS_URL?.trim();
-                  if (!lmsBase) {
-                    setMessage("Student and Parent access requests are handled in Orbit LMS. Ask Superadmin for the LMS link.");
-                    return;
-                  }
-                  try {
-                    const target = new URL("/request-access", lmsBase);
-                    if (!["https:", "http:"].includes(target.protocol)) throw new Error("Invalid LMS address");
-                    window.location.assign(target.toString());
-                  } catch {
-                    setMessage("The LMS link is not configured correctly. Contact Superadmin.");
-                  }
+                  setRequestOpen(true);
+                  setActivateOpen(false);
+                  setMessage("");
+                  setRequestMessage("");
                 }}
                 onActivate={() => {setActivateOpen(true);setRequestOpen(false);setActivateMessage("");}}
                 afterMessage={needsConfirmation ? <button type="button" className={styles.link}
@@ -388,7 +382,7 @@ export default function LoginPage() {
                 <div className="login-copy login-copy-access">
                   <span className="login-view-eyebrow">ORBIT ACCESS</span>
                   <h1>Request access</h1>
-                  <p>Student and parent portal access requests are reviewed by an Orbit administrator.</p>
+                  <p>Team Members can request CRM access here. A Superadmin reviews each request and assigns the actual role and module permissions.</p>
                 </div>
 
                 <form className="request-access-form access-standalone-form" onSubmit={submitAccessRequest}>
@@ -412,37 +406,34 @@ export default function LoginPage() {
                       />
                     </label>
 
-                    <div className="access-full public-access-role">
-                      <span className="public-access-role-label">Access for</span>
-                      <div className="public-access-role-options">
-                        {PUBLIC_ACCESS_ROLES.map((role) => (
-                          <button
-                            key={role}
-                            type="button"
-                            className={`public-access-role-card ${
-                              requestRole === role ? "public-access-role-card-active" : ""
-                            }`}
-                            onClick={() => setRequestRole(role)}
-                            aria-pressed={requestRole === role}
-                          >
-                            <span className="public-access-role-icon">
-                              {role === "Student" ? "S" : "P"}
-                            </span>
-                            <span>
-                              <strong>{role}</strong>
-                              <small>
-                                {role === "Student"
-                                  ? "Student portal access"
-                                  : "Parent / guardian portal access"}
-                              </small>
-                            </span>
-                          </button>
+
+                    <label>
+                      <span>Phone with country code</span>
+                      <input
+                        type="tel"
+                        required
+                        value={requestPhone}
+                        onChange={(e) => setRequestPhone(e.target.value)}
+                        placeholder="+91 98765 43210"
+                        autoComplete="tel"
+                      />
+                    </label>
+
+                    <label>
+                      <span>Department / Work area</span>
+                      <select required value={requestDepartment}
+                        onChange={(e) => setRequestDepartment(e.target.value)}>
+                        <option value="">Select your department</option>
+                        {TEAM_DEPARTMENTS.map((department) => (
+                          <option key={department} value={department}>{department}</option>
                         ))}
-                      </div>
-                      <small className="public-access-role-note">
-                        Internal team access is granted directly by an Orbit Admin.
-                      </small>
-                    </div>
+                      </select>
+                    </label>
+                    <p className="access-full crm-approval-note">
+                      Requesting access does not assign a CRM role. The Superadmin reviews
+                      your request and grants only the modules you are authorised to use.
+                      Students, Parents and Trainers use Orbit LMS instead.
+                    </p>
                   </div>
 
                   {requestMessage && (

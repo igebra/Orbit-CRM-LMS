@@ -16,7 +16,7 @@ const STANDARD_ROLES = [
   { value: "admin", label: "Admin" },
   { value: "sales", label: "Sales Admin" },
   { value: "marketing", label: "Marketing" },
-  { value: "trainer", label: "Trainer" },
+  { value: "viewer_management", label: "Viewer / Management" },
   { value: "accounts_finance", label: "Finance Admin" },
 ];
 
@@ -34,6 +34,8 @@ type RequestRow = {
   user_role: string | null;
   user_is_active: boolean | null;
 };
+
+type StaffRequestInfo = { request_id: string; phone: string | null; department: string | null };
 
 type UserRow = {
   user_id: string;
@@ -72,13 +74,14 @@ function roleFromRequest(requested: string) {
     value === "sales / marketing"
   ) return "sales";
   if (value === "marketing") return "marketing";
+  if (value === "management" || value === "viewer / management") return "viewer_management";
   if (value === "trainer") return "trainer";
   if (
     value === "finance admin" ||
     value === "accounts / finance"
   ) return "accounts_finance";
 
-  return "trainer";
+  return "";
 }
 
 export default function AccessPage() {
@@ -90,6 +93,7 @@ export default function AccessPage() {
   const [tab, setTab] = useState<"requests" | "users">("requests");
   const [requests, setRequests] = useState<RequestRow[]>([]);
   const [users, setUsers] = useState<UserRow[]>([]);
+  const [staffInfo, setStaffInfo] = useState<Record<string, StaffRequestInfo>>({});
   const [statusFilter, setStatusFilter] = useState("All");
   const [search, setSearch] = useState("");
   const [message, setMessage] = useState("");
@@ -103,7 +107,7 @@ export default function AccessPage() {
   const [grantOpen, setGrantOpen] = useState(false);
   const [grantName, setGrantName] = useState("");
   const [grantEmail, setGrantEmail] = useState("");
-  const [grantRole, setGrantRole] = useState("trainer");
+  const [grantRole, setGrantRole] = useState("marketing");
 
   const [saving, setSaving] = useState(false);
 
@@ -147,15 +151,17 @@ export default function AccessPage() {
     setLoading(true);
     setMessage("");
 
-    const [requestResult, userResult] = await Promise.all([
+    const [requestResult, userResult, staffResult] = await Promise.all([
       supabase.rpc("access_management_requests"),
       supabase.rpc("access_management_users"),
+      supabase.rpc("crm_team_request_details"),
     ]);
 
-    if (requestResult.error || userResult.error) {
+    if (requestResult.error || userResult.error || staffResult.error) {
       setMessage(
         requestResult.error?.message ||
           userResult.error?.message ||
+          staffResult.error?.message ||
           "Could not load access management."
       );
       setLoading(false);
@@ -167,6 +173,7 @@ export default function AccessPage() {
 
     setRequests(requestRows);
     setUsers(userRows);
+    setStaffInfo(Object.fromEntries(((staffResult.data || []) as StaffRequestInfo[]).map(row => [row.request_id, row])));
 
     const initialSelections: Record<string, string> = {};
     requestRows.forEach((request) => {
@@ -242,6 +249,11 @@ export default function AccessPage() {
   async function approve(request: RequestRow) {
     const selectedRole =
       roleSelections[request.request_id] || roleFromRequest(request.requested_role);
+
+    if (!roleOptions.some(option => option.value === selectedRole)) {
+      setMessage("Choose a CRM role before approving this request.");
+      return;
+    }
 
     if (!confirm(`Approve ${request.email} as ${displayRole(selectedRole)}?`)) {
       return;
@@ -352,7 +364,7 @@ export default function AccessPage() {
     setGrantOpen(false);
     setGrantName("");
     setGrantEmail("");
-    setGrantRole("trainer");
+    setGrantRole("marketing");
     setMessage(
       "Access granted. The user can now use Activate Approved Access on the Orbit login page."
     );
@@ -496,7 +508,7 @@ export default function AccessPage() {
             <button
               className={styles.primary}
               onClick={() => {
-                setGrantRole("trainer");
+                setGrantRole("marketing");
                 setGrantOpen(true);
               }}
             >
@@ -574,6 +586,7 @@ export default function AccessPage() {
                     <th>Name</th>
                     <th>Email</th>
                     <th>Requested</th>
+                    <th>Department / Phone</th>
                     <th>Requested On</th>
                     <th>Status</th>
                     <th>Account</th>
@@ -584,7 +597,7 @@ export default function AccessPage() {
                 <tbody>
                   {filteredRequests.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className={styles.empty}>
+                      <td colSpan={10} className={styles.empty}>
                         No access requests found.
                       </td>
                     </tr>
@@ -601,6 +614,12 @@ export default function AccessPage() {
                         </td>
                         <td className={styles.emailCell} title={request.email}>{request.email}</td>
                         <td>{request.requested_role}</td>
+                        <td>
+                          {staffInfo[request.request_id]?.department || "—"}
+                          {staffInfo[request.request_id]?.phone && (
+                            <small>{staffInfo[request.request_id].phone}</small>
+                          )}
+                        </td>
                         <td>{new Date(request.created_at).toLocaleDateString()}</td>
                         <td>
                           <span
@@ -634,6 +653,7 @@ export default function AccessPage() {
                                 })
                               }
                             >
+                              <option value="" disabled>Select CRM role</option>
                               {roleOptions.map((option) => (
                                 <option key={option.value} value={option.value}>
                                   {option.label}
