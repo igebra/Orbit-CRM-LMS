@@ -25,3 +25,18 @@ test("CRM excludes LMS roles from sign-in authorization",()=>{
  assert.match(page,/CRM_ALLOWED_ROLES = new Set/);
  assert.doesNotMatch(page,/CRM_ALLOWED_ROLES = new Set\(\[[^\]]*"(student|parent|trainer)"/s);
 });
+
+test("Request access shows a concise form with no explanatory write-ups",()=>{
+ assert.doesNotMatch(page,/Team Members can request CRM access here/);
+ assert.doesNotMatch(page,/crm-approval-note/);
+ assert.doesNotMatch(page,/Requesting access does not assign a CRM role/);
+ assert.match(page,/<h1>Request access<\/h1>/);
+ assert.match(page,/submitAccessRequest/);
+});
+test("Phone starts with +91, remains fully editable, and resets to +91 after success",()=>{
+ assert.match(page,/const \[requestPhone, setRequestPhone\] = useState\("\+91"\)/);
+ assert.match(page,/value=\{requestPhone\}/);
+ assert.match(page,/onChange=\{\(e\) => setRequestPhone\(e\.target\.value\)\}/);
+ assert.match(page,/setRequestPhone\("\+91"\)/);
+ assert.doesNotMatch(page,/setRequestPhone\(\s*\(v\)\s*=>\s*"\+91"/);
+});

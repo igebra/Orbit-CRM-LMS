@@ -201,14 +201,3 @@
 }
 @media(prefers-reduced-motion:reduce){.inputWrap{transition:none;}}
 
-/* CRM access request: restrained information note and matching typography. */
-.stage :global(.crm-approval-note) {
-  margin:0;
-  padding:12px 13px;
-  border:1px solid #D8E2EE;
-  border-radius:10px;
-  background:#F5F8FC;
-  color:#52656F;
-  font:400 12px/1.55 var(--font-orbit-body),Inter,sans-serif;
-}
-.stage :global(.request-grid) label span { font-weight:500; }

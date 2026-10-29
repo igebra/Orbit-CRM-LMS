@@ -34,7 +34,7 @@ export default function LoginPage() {
   const [requestName, setRequestName] = useState("");
   const [requestEmail, setRequestEmail] = useState("");
   const [requestDepartment, setRequestDepartment] = useState("");
-  const [requestPhone, setRequestPhone] = useState("");
+  const [requestPhone, setRequestPhone] = useState("+91");
   const [requestLoading, setRequestLoading] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
 
@@ -235,7 +235,7 @@ export default function LoginPage() {
     );
     setRequestName("");
     setRequestEmail("");
-    setRequestPhone("");
+    setRequestPhone("+91");
     setRequestDepartment("");
   }
 
@@ -382,7 +382,6 @@ export default function LoginPage() {
                 <div className="login-copy login-copy-access">
                   <span className="login-view-eyebrow">ORBIT ACCESS</span>
                   <h1>Request access</h1>
-                  <p>Team Members can request CRM access here. A Superadmin reviews each request and assigns the appropriate CRM role and access permissions.</p>
                 </div>
 
                 <form className="request-access-form access-standalone-form" onSubmit={submitAccessRequest}>
@@ -414,7 +413,7 @@ export default function LoginPage() {
                         required
                         value={requestPhone}
                         onChange={(e) => setRequestPhone(e.target.value)}
-                        placeholder="+91 98765 43210"
+                        placeholder="Country code and phone number"
                         autoComplete="tel"
                       />
                     </label>
@@ -429,11 +428,6 @@ export default function LoginPage() {
                         ))}
                       </select>
                     </label>
-                    <p className="access-full crm-approval-note">
-                      Requesting access does not assign a CRM role. The Superadmin reviews
-                      your request and grants only the modules you are authorised to use.
-                      Students, Parents and Trainers use Orbit LMS instead.
-                    </p>
                   </div>
 
                   {requestMessage && (
