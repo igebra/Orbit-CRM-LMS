@@ -507,9 +507,9 @@ async function saveStudentNotes() {
   style={{
     marginTop: 16,
     padding: 16,
-    border: "1px solid #efc99f",
+    border: "1px solid #DDD0E7",
     borderRadius: 14,
-    background: "#fffaf5",
+    background: "#F3EDFA",
   }}
 >
   <div style={{ marginBottom: 10 }}>

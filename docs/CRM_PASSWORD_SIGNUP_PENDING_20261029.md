@@ -27,3 +27,6 @@ A Supabase email confirmation SMTP provider and approved redirect must be config
 - Verify pending role inactive until Superadmin approval; verified email required if configured
 - Confirm neither CRM admin routes nor RLS grant access to inactive profiles
 - No changes to LMS or CRM sidebar/dashboard/module designs.
+
+## Signup phone validation and incomplete-account recovery (2026-10-29)
+Phone is two editable fields: +91 prefill (editable to +1, +44 or any valid dialling prefix) and the required national number. Validate both before `auth.signUp` to avoid an orphan Auth account. For historical incomplete requests, the employee can confirm their email then repeat the signup with the same credentials; after password verification the existing Auth ID is used for `submit_crm_password_signup_request`. Always sign out after the request, until Superadmin approval. No password is stored in the CRM request record.

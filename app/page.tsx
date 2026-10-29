@@ -246,16 +246,25 @@ export default function LoginPage() {
         options: { emailRedirectTo, data: { full_name: cleanName } },
       });
       if (signupError || !signup.user?.id || signup.user.identities?.length === 0) {
-        setRequestLoading(false);
-        setRequestMessage(signupError?.message ||
-          "This email may already have an account. Use Sign in or Forgot password.");
-        return;
+        // A previous failed request can leave a valid Auth account without an
+        // access request. Re-authenticate that SAME employee to recover safely.
+        const {data: existing, error: existingError} = await supabase.auth.signInWithPassword({
+          email: cleanEmail, password: signupPassword
+        });
+        if (existingError || !existing.user?.id) {
+          setRequestLoading(false);
+          setRequestMessage(
+            "An account may already exist. Confirm your email if requested, then retry with the same email and password. If it still fails, contact your Superadmin."
+          );
+          return;
+        }
+        authUserId = existing.user.id;
+      } else {
+        authUserId = signup.user.id;
       }
-      authUserId = signup.user.id;
       setSignupAccountId(authUserId);
       setSignupAccountEmail(cleanEmail);
-      // An unapproved user must never remain signed in after signup.
-      if (signup.session) await supabase.auth.signOut();
+      // A signup session is not a permission grant. It is cleared after RPC.
     }
     const { error: requestError } = await supabase.rpc("submit_crm_password_signup_request", {
       p_full_name: cleanName,
@@ -264,6 +273,8 @@ export default function LoginPage() {
       p_department: requestDepartment,
       p_auth_user_id: authUserId,
     });
+    // Pending applicants never keep an active browser session after signup.
+    await supabase.auth.signOut();
     setRequestLoading(false);
     if (requestError) {
       setRequestMessage("Account created, but the access request failed: " +

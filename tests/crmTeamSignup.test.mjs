@@ -9,7 +9,7 @@ test("CRM signup opens its own access request, not external LMS",()=>{
  assert.doesNotMatch(page,/window\.location\.assign\(target\.toString\(\)\)/);
  assert.match(page,/submit_crm_password_signup_request/);
  assert.match(page,/p_department: requestDepartment/);
- assert.match(page,/p_phone: requestPhone\.trim\(\)/);
+ assert.match(page,/p_phone: phone/);
 });
 test("No client-selected CRM role and separate role-safe Superadmin approval",()=>{
  assert.match(page,/TEAM_DEPARTMENTS/);
@@ -34,8 +34,11 @@ test("Request access shows a concise form with no explanatory write-ups",()=>{
  assert.match(page,/submitAccessRequest/);
 });
 test("Phone starts with +91 and remains fully editable for international users",()=>{
- assert.match(page,/const \[requestPhone, setRequestPhone\] = useState\("\+91"\)/);
+ assert.match(page,/const \[requestCountryCode, setRequestCountryCode\] = useState\("\+91"\)/);
+ assert.ok(page.includes('const [requestPhone, setRequestPhone] = useState("");'));
  assert.match(page,/value=\{requestPhone\}/);
  assert.match(page,/onChange=\{e=>setRequestPhone\(e\.target\.value\)\}/);
- assert.doesNotMatch(page,/setRequestPhone\(\s*\(v\)\s*=>\s*"\+91"/);
+ assert.match(page,/onChange=\{e=>setRequestCountryCode\(e.target.value\)\}/);
+ assert.match(page,/crm-country-codes/);
+ assert.ok(page.indexOf("const countryCode = requestCountryCode.trim()") < page.indexOf("supabase.auth.signUp"));
 });

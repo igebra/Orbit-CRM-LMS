@@ -844,9 +844,8 @@ export default function AccessPage() {
         <div
           ref={floatScrollRef}
           className={styles.floatingScrollbar}
-          role="scrollbar"
-          aria-label="Scroll the Access table horizontally"
-          aria-orientation="horizontal"
+          role="region"
+          aria-label="Floating horizontal scrollbar for the Access table"
           tabIndex={0}
           style={{left: floatingScroll.left, width: floatingScroll.width}}
           onScroll={(event) => {
