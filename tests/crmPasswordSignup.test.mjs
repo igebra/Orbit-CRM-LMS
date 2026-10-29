@@ -10,6 +10,11 @@ test("New staff creates password during signup without activation view",()=>{
  assert.match(page,/signupConfirmPassword/);
  assert.match(page,/supabase\.auth\.signUp/);
  assert.match(page,/p_auth_user_id: authUserId/);
+ assert.match(page,/requestCountryCode/);
+ assert.match(page,/crm-country-codes/);
+ assert.match(page,/nationalDigits/);
+ assert.ok(page.indexOf("const countryCode = requestCountryCode.trim()") < page.indexOf("supabase.auth.signUp"));
+ assert.match(page,/p_phone: phone/);
  assert.match(page,/submit_crm_password_signup_request/);
  assert.doesNotMatch(page,/activateApprovedAccess|activateOpen|Activate Access/);
  assert.doesNotMatch(login,/onActivate|Activate access/);

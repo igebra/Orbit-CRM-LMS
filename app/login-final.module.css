@@ -241,3 +241,7 @@
 .card:has(.signupView){max-width:620px;}
 .card:has(.signupView) .logo{max-width:228px;margin-bottom:16px;}
 @media(max-width:1250px){.signupGrid{grid-template-columns:1fr;gap:14px;}}
+
+.phonePair{display:grid;grid-template-columns:86px minmax(0,1fr);gap:9px;}
+.signupField .phonePair input{min-width:0;}
+.phoneHelp{font:400 11px/1.35 var(--font-orbit-body),sans-serif;color:#667789;margin-top:3px;}

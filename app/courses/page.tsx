@@ -594,33 +594,16 @@ function CourseIcon3D({ courseId }: { courseId: string }) {
 export default function CoursesPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
-  const [userId, setUserId] = useState("");
   const [role, setRole] = useState("");
   const [roleLoaded, setRoleLoaded] = useState(false);
   const [overrides, setOverrides] = useState<CourseOverride[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [trackFilter, setTrackFilter] = useState("All");
-  const [editCourse, setEditCourse] = useState<Course | null>(null);
-  const [editForm, setEditForm] = useState({
-    tagline: "",
-    description: "",
-    priceLabel: "",
-    audience: "",
-    levels: "",
-    classes: "",
-    frequency: "",
-    duration: "",
-  });
-  const [savingCourse, setSavingCourse] = useState(false);
   const [message, setMessage] = useState("");
 
   const canViewCourse = [
     "super_admin","admin","sales","sales_marketing",
     "marketing","accounts_finance","viewer_management"
-  ].includes(role);
-
-  const canEditCourse = [
-    "super_admin","admin","sales","sales_marketing","marketing"
   ].includes(role);
 
   useEffect(() => {
@@ -632,8 +615,7 @@ export default function CoursesPage() {
       }
 
       setEmail(data.user.email || "");
-      setUserId(data.user.id);
-
+  
       const { data: profile } = await supabase
         .from("user_profiles")
         .select("role")
@@ -682,76 +664,6 @@ export default function CoursesPage() {
       };
     });
   }, [overrides]);
-
-  function openEditCourse(course: Course) {
-    setEditCourse(course);
-    setEditForm({
-      tagline: course.tagline,
-      description: course.description,
-      priceLabel: course.priceLabel,
-      audience: course.audience,
-      levels: course.levels,
-      classes: course.classes,
-      frequency: course.frequency,
-      duration: course.duration,
-    });
-    setMessage("");
-  }
-
-  async function saveCourseDetails(event: React.FormEvent) {
-    event.preventDefault();
-    if (!editCourse || !canEditCourse) return;
-
-    setSavingCourse(true);
-    setMessage("");
-
-    const payload = {
-      course_id: editCourse.id,
-      tagline: editForm.tagline.trim() || null,
-      description: editForm.description.trim() || null,
-      price_label: editForm.priceLabel.trim() || null,
-      audience: editForm.audience.trim() || null,
-      levels: editForm.levels.trim() || null,
-      classes: editForm.classes.trim() || null,
-      frequency: editForm.frequency.trim() || null,
-      duration: editForm.duration.trim() || null,
-      updated_by: userId || null,
-      updated_at: new Date().toISOString(),
-    };
-
-    const { error } = await supabase
-      .from("course_catalog_overrides")
-      .upsert(payload, { onConflict: "course_id" });
-
-    setSavingCourse(false);
-
-    if (error) {
-      setMessage(error.message);
-      return;
-    }
-
-    setOverrides((rows) => {
-      const next: CourseOverride = {
-        course_id: editCourse.id,
-        tagline: payload.tagline,
-        description: payload.description,
-        price_label: payload.price_label,
-        audience: payload.audience,
-        levels: payload.levels,
-        classes: payload.classes,
-        frequency: payload.frequency,
-        duration: payload.duration,
-      };
-
-      const exists = rows.some((row) => row.course_id === editCourse.id);
-      return exists
-        ? rows.map((row) => row.course_id === editCourse.id ? next : row)
-        : [...rows, next];
-    });
-
-    setEditCourse(null);
-    setMessage("Course details updated.");
-  }
 
   const filteredTracks = useMemo(() => {
     if (!selectedCourse || trackFilter === "All") return selectedCourse?.tracks || [];
@@ -818,11 +730,6 @@ export default function CoursesPage() {
                   <a href={course.brochure} target="_blank" rel="noopener noreferrer" className={styles.secondary}>
                     {course.id==="accelerated-math" || course.id==="math-plus"?"Website":"Brochure"}
                   </a>
-                  {canEditCourse && ["math","aiedge","coding4ai"].includes(course.id) && (
-                    <button className={styles.secondary} onClick={() => openEditCourse(course)}>
-                      Edit Course
-                    </button>
-                  )}
                 </div>
               </div>
             </article>
@@ -924,98 +831,6 @@ export default function CoursesPage() {
         </div>
       )}
 
-      {editCourse && canEditCourse && (
-        <div className={styles.backdrop}>
-          <div className={styles.editModal}>
-            <div className={styles.modalHeader}>
-              <div>
-                <span className={styles.modalEyebrow}>EDIT COURSE</span>
-                <h2>{editCourse.name}</h2>
-                <p>Update the major course information shown in Orbit.</p>
-              </div>
-              <button className={styles.close} onClick={() => setEditCourse(null)}>×</button>
-            </div>
-
-            <form onSubmit={saveCourseDetails}>
-              <div className={styles.editGrid}>
-                <label className={styles.editFull}>
-                  <span>Tagline</span>
-                  <input
-                    value={editForm.tagline}
-                    onChange={(e) => setEditForm({ ...editForm, tagline: e.target.value })}
-                  />
-                </label>
-
-                <label className={styles.editFull}>
-                  <span>Description</span>
-                  <textarea
-                    value={editForm.description}
-                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                    rows={4}
-                  />
-                </label>
-
-                <label>
-                  <span>Price</span>
-                  <input
-                    value={editForm.priceLabel}
-                    onChange={(e) => setEditForm({ ...editForm, priceLabel: e.target.value })}
-                  />
-                </label>
-
-                <label>
-                  <span>Audience</span>
-                  <input
-                    value={editForm.audience}
-                    onChange={(e) => setEditForm({ ...editForm, audience: e.target.value })}
-                  />
-                </label>
-
-                <label>
-                  <span>Levels / Structure</span>
-                  <input
-                    value={editForm.levels}
-                    onChange={(e) => setEditForm({ ...editForm, levels: e.target.value })}
-                  />
-                </label>
-
-                <label>
-                  <span>Classes</span>
-                  <input
-                    value={editForm.classes}
-                    onChange={(e) => setEditForm({ ...editForm, classes: e.target.value })}
-                  />
-                </label>
-
-                <label>
-                  <span>Frequency</span>
-                  <input
-                    value={editForm.frequency}
-                    onChange={(e) => setEditForm({ ...editForm, frequency: e.target.value })}
-                  />
-                </label>
-
-                <label>
-                  <span>Class Duration</span>
-                  <input
-                    value={editForm.duration}
-                    onChange={(e) => setEditForm({ ...editForm, duration: e.target.value })}
-                  />
-                </label>
-              </div>
-
-              <div className={styles.modalFooter}>
-                <button type="button" className={styles.secondary} onClick={() => setEditCourse(null)}>
-                  Cancel
-                </button>
-                <button className={styles.primary} disabled={savingCourse}>
-                  {savingCourse ? "Saving..." : "Save Course"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

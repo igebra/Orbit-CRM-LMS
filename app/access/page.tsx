@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import OrbitSidebar from "../components/OrbitSidebar";
@@ -110,6 +110,11 @@ export default function AccessPage() {
   const [grantRole, setGrantRole] = useState("marketing");
 
   const [saving, setSaving] = useState(false);
+  const tableScrollRef = useRef<HTMLDivElement | null>(null);
+  const floatScrollRef = useRef<HTMLDivElement | null>(null);
+  const [floatingScroll, setFloatingScroll] = useState({
+    visible: false, left: 0, width: 0, scrollWidth: 0
+  });
 
   const canManage = role === "super_admin";
   const isSuperAdmin = role === "super_admin";
@@ -237,6 +242,39 @@ export default function AccessPage() {
         .includes(q)
     );
   }, [users, search]);
+
+  // Keep a thin horizontal scrollbar visible at the viewport bottom whenever
+  // the table continues below the fold. It mirrors the actual table scroll.
+  useEffect(() => {
+    const table = tableScrollRef.current;
+    if (!table || loading) return;
+    const update = () => {
+      const rect = table.getBoundingClientRect();
+      const width = table.clientWidth;
+      const scrollWidth = table.scrollWidth;
+      const bottom = window.innerHeight - 18;
+      const visible = scrollWidth > width + 2 && rect.top < bottom && rect.bottom > bottom;
+      setFloatingScroll({visible, left: rect.left, width, scrollWidth});
+      if (floatScrollRef.current) floatScrollRef.current.scrollLeft = table.scrollLeft;
+    };
+    const syncFromTable = () => {
+      if (floatScrollRef.current && floatScrollRef.current.scrollLeft !== table.scrollLeft)
+        floatScrollRef.current.scrollLeft = table.scrollLeft;
+    };
+    const observer = new ResizeObserver(update);
+    observer.observe(table);
+    if (table.firstElementChild) observer.observe(table.firstElementChild);
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, {passive: true});
+    table.addEventListener("scroll", syncFromTable, {passive: true});
+    update();
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update);
+      table.removeEventListener("scroll", syncFromTable);
+    };
+  }, [tab, loading, filteredRequests.length, filteredUsers.length]);
 
   const pending = requests.filter((request) => request.status === "Pending").length;
   const approved = requests.filter((request) => request.status === "Approved").length;
@@ -578,7 +616,7 @@ export default function AccessPage() {
           {loading ? (
             <div className={styles.empty}>Loading access...</div>
           ) : tab === "requests" ? (
-            <div className={styles.tableWrap}>
+            <div className={styles.tableWrap} ref={tableScrollRef}>
               <table>
                 <thead>
                   <tr>
@@ -713,7 +751,7 @@ export default function AccessPage() {
               </table>
             </div>
           ) : (
-            <div className={styles.tableWrap}>
+            <div className={styles.tableWrap} ref={tableScrollRef}>
               <table>
                 <thead>
                   <tr>
@@ -801,6 +839,24 @@ export default function AccessPage() {
           send a password reset link or remove the user&apos;s Orbit access.
         </div>
       </main>
+
+      {floatingScroll.visible && (
+        <div
+          ref={floatScrollRef}
+          className={styles.floatingScrollbar}
+          role="scrollbar"
+          aria-label="Scroll the Access table horizontally"
+          aria-orientation="horizontal"
+          tabIndex={0}
+          style={{left: floatingScroll.left, width: floatingScroll.width}}
+          onScroll={(event) => {
+            if (tableScrollRef.current)
+              tableScrollRef.current.scrollLeft = event.currentTarget.scrollLeft;
+          }}
+        >
+          <div style={{width: floatingScroll.scrollWidth, height: 1}} />
+        </div>
+      )}
 
       {grantOpen && (
         <div className={styles.backdrop}>

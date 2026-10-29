@@ -33,7 +33,8 @@ export default function LoginPage() {
   const [requestName, setRequestName] = useState("");
   const [requestEmail, setRequestEmail] = useState("");
   const [requestDepartment, setRequestDepartment] = useState("");
-  const [requestPhone, setRequestPhone] = useState("+91");
+  const [requestCountryCode, setRequestCountryCode] = useState("+91");
+  const [requestPhone, setRequestPhone] = useState("");
   const [requestLoading, setRequestLoading] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
 
@@ -210,9 +211,18 @@ export default function LoginPage() {
     setRequestMessage("");
     const cleanName = requestName.trim();
     const cleanEmail = requestEmail.trim().toLowerCase();
-    if (cleanName.length < 2 || !cleanEmail || !requestPhone.trim() ||
-        !TEAM_DEPARTMENTS.includes(requestDepartment)) {
-      setRequestMessage("Complete your name, email, phone and role.");
+    if (cleanName.length < 2 || !cleanEmail || !TEAM_DEPARTMENTS.includes(requestDepartment)) {
+      setRequestMessage("Complete your name, email and role.");
+      return;
+    }
+    // Do not create an Auth account if the phone is blank or just a dialling code.
+    const countryCode = requestCountryCode.trim();
+    const nationalDigits = requestPhone.replace(/[\s()-]/g, "");
+    const phone = countryCode + nationalDigits;
+    if (!/^\+[1-9][0-9]{0,3}$/.test(countryCode) ||
+        !/^[0-9]{6,14}$/.test(nationalDigits) ||
+        phone.replace(/\D/g, "").length > 15) {
+      setRequestMessage("Enter a valid phone number. You can change +91 to +1 (US) or another country code.");
       return;
     }
     if (signupPassword.length < 8) {
@@ -250,7 +260,7 @@ export default function LoginPage() {
     const { error: requestError } = await supabase.rpc("submit_crm_password_signup_request", {
       p_full_name: cleanName,
       p_email: cleanEmail,
-      p_phone: requestPhone.trim(),
+      p_phone: phone,
       p_department: requestDepartment,
       p_auth_user_id: authUserId,
     });
@@ -325,9 +335,24 @@ export default function LoginPage() {
                     </label>
                     <label className={styles.signupField}>
                       <span>Phone number</span>
-                      <input required type="tel" autoComplete="tel"
-                        value={requestPhone} disabled={requestSubmitted}
-                        onChange={e=>setRequestPhone(e.target.value)} placeholder="+91 98765 43210"/>
+                      <div className={styles.phonePair}>
+                        <input aria-label="Editable country calling code" title="Type any country code"
+                          required type="tel" inputMode="tel" list="crm-country-codes"
+                          value={requestCountryCode} disabled={requestSubmitted}
+                          onChange={e=>setRequestCountryCode(e.target.value)} placeholder="+91"/>
+                        <datalist id="crm-country-codes">
+                          <option value="+91">India</option>
+                          <option value="+1">US / Canada</option>
+                          <option value="+971">UAE</option>
+                          <option value="+44">UK</option>
+                          <option value="+966">Saudi Arabia</option>
+                          <option value="+974">Qatar</option>
+                        </datalist>
+                        <input required type="tel" autoComplete="tel-national" inputMode="tel"
+                          value={requestPhone} disabled={requestSubmitted}
+                          onChange={e=>setRequestPhone(e.target.value)} placeholder="Phone number"/>
+                      </div>
+                      <small className={styles.phoneHelp}>Country code is editable. Use +1 for US numbers.</small>
                     </label>
                     <label className={styles.signupField}>
                       <span>Your role</span>

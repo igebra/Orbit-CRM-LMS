@@ -164,3 +164,21 @@
 .actions,.userActions{align-items:center;gap:6px;flex-wrap:nowrap;justify-content:flex-start;}
 .tableWrap tr td:last-child{white-space:nowrap;}
 @media(max-width:1220px){.tableWrap table{min-width:1060px;}.tableWrap th,.tableWrap td{white-space:normal;}.emailCell{white-space:nowrap!important;}}
+
+/* Access table usability: no squeezed/vertical Actions header. */
+.tableWrap{width:100%;max-width:100%;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:#A78AD5 #F0F4F5;}
+.tableWrap table{table-layout:auto!important;min-width:1370px!important;width:100%;border-collapse:collapse;}
+.tableWrap th,.tableWrap td{overflow-wrap:normal;word-break:normal;}
+.tableWrap th{white-space:nowrap!important;}
+.tableWrap th:last-child,.tableWrap td:last-child{min-width:162px!important;width:162px!important;white-space:nowrap!important;}
+.tableWrap .actions,.tableWrap .userActions{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;white-space:nowrap;}
+.tableWrap td:last-child :is(button,span){white-space:nowrap;}
+.tableWrap th:nth-child(9){min-width:135px;}
+.tableWrap .emailCell{min-width:190px;}
+/* This mirrored scrollbar stays within the Access content pane, visible while
+   long tables extend below the viewport. The original native scrollbar remains. */
+.floatingScrollbar{position:fixed;bottom:12px;z-index:45;height:20px;overflow-x:auto;overflow-y:hidden;
+  border:1px solid #DDD0E7;background:#F3EDFA;box-shadow:0 5px 20px rgba(31,45,69,.13);
+  scrollbar-color:#7C4BC7 #E8E1F3;scrollbar-width:auto;border-radius:9px;}
+.floatingScrollbar>div{pointer-events:none;}
+@media(max-width:900px){.tableWrap table{min-width:1250px!important;}.floatingScrollbar{bottom:8px;}}
