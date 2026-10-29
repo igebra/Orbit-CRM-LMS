@@ -30,7 +30,6 @@ export default function LoginPage() {
   const [message, setMessage] = useState("");
 
   const [requestOpen, setRequestOpen] = useState(false);
-  const [activateOpen, setActivateOpen] = useState(false);
   const [requestName, setRequestName] = useState("");
   const [requestEmail, setRequestEmail] = useState("");
   const [requestDepartment, setRequestDepartment] = useState("");
@@ -38,11 +37,12 @@ export default function LoginPage() {
   const [requestLoading, setRequestLoading] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
 
-  const [activateEmail, setActivateEmail] = useState("");
-  const [activatePassword, setActivatePassword] = useState("");
-  const [activateConfirm, setActivateConfirm] = useState("");
-  const [activateLoading, setActivateLoading] = useState(false);
-  const [activateMessage, setActivateMessage] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [signupAccountId, setSignupAccountId] = useState("");
+  const [signupAccountEmail, setSignupAccountEmail] = useState("");
+  const [requestSubmitted, setRequestSubmitted] = useState(false);
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
 
   useEffect(() => {
@@ -177,7 +177,7 @@ export default function LoginPage() {
   }
 
   async function resendConfirmation(targetEmail?: string) {
-    const cleanEmail = (targetEmail || email || activateEmail).trim().toLowerCase();
+    const cleanEmail = (targetEmail || email).trim().toLowerCase();
 
     if (!cleanEmail) {
       setMessage("Enter the email address first.");
@@ -199,139 +199,73 @@ export default function LoginPage() {
       ? error.message
       : "Confirmation email sent again. Please use the newest email only.";
 
-    if (activateOpen) setActivateMessage(text);
-    else setMessage(text);
+    setMessage(text);
 
     if (!error) setNeedsConfirmation(true);
   }
 
-  async function submitAccessRequest(event: FormEvent) {
+  async function submitAccessRequest(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (requestLoading || requestSubmitted) return;
     setRequestMessage("");
-
-    if (!requestName.trim() || !requestEmail.trim() || !requestPhone.trim() || !TEAM_DEPARTMENTS.includes(requestDepartment)) {
-      setRequestMessage("Enter your name, email, phone and work department.");
+    const cleanName = requestName.trim();
+    const cleanEmail = requestEmail.trim().toLowerCase();
+    if (cleanName.length < 2 || !cleanEmail || !requestPhone.trim() ||
+        !TEAM_DEPARTMENTS.includes(requestDepartment)) {
+      setRequestMessage("Complete your name, email, phone and department.");
       return;
     }
-
+    if (signupPassword.length < 8) {
+      setRequestMessage("Password must contain at least 8 characters.");
+      return;
+    }
+    if (signupPassword !== signupConfirmPassword) {
+      setRequestMessage("The passwords do not match.");
+      return;
+    }
     setRequestLoading(true);
 
-    const { error } = await supabase.rpc("submit_crm_team_access_request", {
-      p_full_name: requestName.trim(),
-      p_email: requestEmail.trim().toLowerCase(),
+    // Retry after a transient access-request failure without attempting a
+    // second Supabase Auth signup for the same newly created user.
+    let authUserId = signupAccountEmail === cleanEmail ? signupAccountId : "";
+    if (!authUserId) {
+      const emailRedirectTo = window.location.origin + "/?confirmed=1";
+      const { data: signup, error: signupError } = await supabase.auth.signUp({
+        email: cleanEmail,
+        password: signupPassword,
+        options: { emailRedirectTo, data: { full_name: cleanName } },
+      });
+      if (signupError || !signup.user?.id || signup.user.identities?.length === 0) {
+        setRequestLoading(false);
+        setRequestMessage(signupError?.message ||
+          "This email may already have an account. Use Sign in or Forgot password.");
+        return;
+      }
+      authUserId = signup.user.id;
+      setSignupAccountId(authUserId);
+      setSignupAccountEmail(cleanEmail);
+      // An unapproved user must never remain signed in after signup.
+      if (signup.session) await supabase.auth.signOut();
+    }
+    const { error: requestError } = await supabase.rpc("submit_crm_password_signup_request", {
+      p_full_name: cleanName,
+      p_email: cleanEmail,
       p_phone: requestPhone.trim(),
       p_department: requestDepartment,
+      p_auth_user_id: authUserId,
     });
-
     setRequestLoading(false);
-
-    if (error) {
-      setRequestMessage(error.message);
+    if (requestError) {
+      setRequestMessage("Account created, but the access request failed: " +
+        requestError.message + ". Retry or contact your Superadmin.");
       return;
     }
-
+    setRequestSubmitted(true);
+    setSignupPassword("");
+    setSignupConfirmPassword("");
     setRequestMessage(
-      "CRM access request submitted. Your request is pending Superadmin approval. You will not have CRM access until your account is approved and activated."
+      "Account created. Confirm your email if prompted, then wait for Superadmin approval. Once approved, sign in with your password. No separate activation is needed."
     );
-    setRequestName("");
-    setRequestEmail("");
-    setRequestPhone("+91");
-    setRequestDepartment("");
-  }
-
-  async function activateApprovedAccess(event: FormEvent) {
-    event.preventDefault();
-    setActivateMessage("");
-
-    const cleanEmail = activateEmail.trim().toLowerCase();
-
-    if (!cleanEmail || !activatePassword || !activateConfirm) {
-      setActivateMessage("Enter your email and create a password.");
-      return;
-    }
-
-    if (activatePassword.length < 8) {
-      setActivateMessage("Password must be at least 8 characters.");
-      return;
-    }
-
-    if (activatePassword !== activateConfirm) {
-      setActivateMessage("Passwords do not match.");
-      return;
-    }
-
-    setActivateLoading(true);
-
-    const { data: approved, error: approvalError } = await supabase.rpc(
-      "approved_access_exists",
-      { p_email: cleanEmail }
-    );
-
-    if (approvalError) {
-      setActivateLoading(false);
-      setActivateMessage(approvalError.message);
-      return;
-    }
-
-    const { data: portalApproved, error: portalApprovalError } =
-      await supabase.rpc("portal_access_grant_exists", {
-        p_email: cleanEmail,
-      });
-
-    if (portalApprovalError) {
-      setActivateLoading(false);
-      setActivateMessage(portalApprovalError.message);
-      return;
-    }
-
-    if (!approved && !portalApproved) {
-      setActivateLoading(false);
-      setActivateMessage("Your access has not been approved yet.");
-      return;
-    }
-
-    const emailRedirectTo =
-      typeof window !== "undefined"
-        ? `${window.location.origin}/?confirmed=1`
-        : undefined;
-
-    const { data, error } = await supabase.auth.signUp({
-      email: cleanEmail,
-      password: activatePassword,
-      options: { emailRedirectTo },
-    });
-
-    setActivateLoading(false);
-
-    if (error) {
-      const lower = error.message.toLowerCase();
-      if (lower.includes("already") || lower.includes("registered")) {
-        setActivateMessage(
-          "An account already exists for this email. Use Sign in or Forgot password."
-        );
-      } else {
-        setActivateMessage(error.message);
-      }
-      return;
-    }
-
-    if (data.session) {
-      const { data: portalRole } = await supabase.rpc(
-        "activate_portal_access"
-      );
-
-      if (portalRole === "student") router.replace("/student");
-      else if (portalRole === "parent") router.replace("/parent");
-      else router.replace("/dashboard");
-      return;
-    }
-
-    setNeedsConfirmation(true);
-    setActivateMessage(
-      "Account created. Confirm your email using the newest confirmation email, then return to Orbit and sign in."
-    );
-    setActivatePassword("");
-    setActivateConfirm("");
   }
 
   return (
@@ -340,7 +274,7 @@ export default function LoginPage() {
         <div className={styles.card}>
           <img className={styles.logo} src="/orbit-logo.svg" alt="Orbit by igebra.ai" />
           <div className={styles.stage}>
-            {!requestOpen && !activateOpen && (
+            {!requestOpen && (
               <FinalLoginPanel
                 email={email}
                 password={password}
@@ -356,199 +290,91 @@ export default function LoginPage() {
                 onForgotPassword={forgotPassword}
                 onSignUp={() => {
                   setRequestOpen(true);
-                  setActivateOpen(false);
                   setMessage("");
                   setRequestMessage("");
                 }}
-                onActivate={() => {setActivateOpen(true);setRequestOpen(false);setActivateMessage("");}}
                 afterMessage={needsConfirmation ? <button type="button" className={styles.link}
                   onClick={() => resendConfirmation(email)}>Resend confirmation email</button> : null}
               />
             )}
 
             {requestOpen && (
-              <div className="login-view login-view-enter">
-                <button
-                  type="button"
-                  className="login-back"
-                  onClick={() => {
-                    setRequestOpen(false);
-                    setRequestMessage("");
-                  }}
-                >
+              <section className={styles.signupView} aria-label="Create CRM account">
+                <button className={styles.signupBack} type="button"
+                  onClick={() => {setRequestOpen(false);setRequestMessage("");}}>
                   ← Back to sign in
                 </button>
-
-                <div className="login-copy login-copy-access">
-                  <span className="login-view-eyebrow">ORBIT ACCESS</span>
-                  <h1>Request access</h1>
-                </div>
-
-                <form className="request-access-form access-standalone-form" onSubmit={submitAccessRequest}>
-                  <div className="request-grid">
-                    <label>
-                      <span>Name</span>
-                      <input
-                        value={requestName}
-                        onChange={(e) => setRequestName(e.target.value)}
-                        placeholder="Enter your name"
-                      />
+                <header className={styles.signupTitle}>
+                  <span>ORBIT CRM / TEAM ACCESS</span>
+                  <h1>Create your account</h1>
+                  <p>Your workspace opens after Superadmin approval.</p>
+                </header>
+                <form className={styles.signupForm} onSubmit={submitAccessRequest}>
+                  <div className={styles.signupGrid}>
+                    <label className={styles.signupField}>
+                      <span>Full name</span>
+                      <input required maxLength={120} autoComplete="name"
+                        value={requestName} disabled={requestSubmitted || !!signupAccountId}
+                        onChange={e=>setRequestName(e.target.value)} placeholder="Your full name"/>
                     </label>
-
-                    <label>
-                      <span>Email</span>
-                      <input
-                        type="email"
-                        value={requestEmail}
-                        onChange={(e) => setRequestEmail(e.target.value)}
-                        placeholder="Enter your email"
-                      />
+                    <label className={styles.signupField}>
+                      <span>Work email</span>
+                      <input required type="email" autoComplete="email"
+                        value={requestEmail} disabled={requestSubmitted || !!signupAccountId}
+                        onChange={e=>setRequestEmail(e.target.value)} placeholder="name@company.com"/>
                     </label>
-
-
-                    <label>
-                      <span>Phone with country code</span>
-                      <input
-                        type="tel"
-                        required
-                        value={requestPhone}
-                        onChange={(e) => setRequestPhone(e.target.value)}
-                        placeholder="Country code and phone number"
-                        autoComplete="tel"
-                      />
+                    <label className={styles.signupField}>
+                      <span>Phone number</span>
+                      <input required type="tel" autoComplete="tel"
+                        value={requestPhone} disabled={requestSubmitted}
+                        onChange={e=>setRequestPhone(e.target.value)} placeholder="+91 98765 43210"/>
                     </label>
-
-                    <label>
-                      <span>Department / Work area</span>
-                      <select required value={requestDepartment}
-                        onChange={(e) => setRequestDepartment(e.target.value)}>
-                        <option value="">Select your department</option>
-                        {TEAM_DEPARTMENTS.map((department) => (
-                          <option key={department} value={department}>{department}</option>
-                        ))}
+                    <label className={styles.signupField}>
+                      <span>Department</span>
+                      <select required value={requestDepartment} disabled={requestSubmitted}
+                        onChange={e=>setRequestDepartment(e.target.value)}>
+                        <option value="">Select department</option>
+                        {TEAM_DEPARTMENTS.map(dept=><option key={dept} value={dept}>{dept}</option>)}
                       </select>
                     </label>
-                  </div>
-
-                  {requestMessage && (
-                    <div className="request-message">{requestMessage}</div>
-                  )}
-
-                  <button
-                    type="submit"
-                    className="request-submit access-primary-button"
-                    disabled={requestLoading}
-                  >
-                    {requestLoading ? "Submitting..." : "Submit Request"}
-                  </button>
-                </form>
-
-                <div className="login-view-footer">
-                  <span>Already approved?</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setRequestOpen(false);
-                      setActivateOpen(true);
-                      setRequestMessage("");
-                    }}
-                  >
-                    Activate Access
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {activateOpen && (
-              <div className="login-view login-view-enter">
-                <button
-                  type="button"
-                  className="login-back"
-                  onClick={() => {
-                    setActivateOpen(false);
-                    setActivateMessage("");
-                  }}
-                >
-                  ← Back to sign in
-                </button>
-
-                <div className="login-copy login-copy-access">
-                  <span className="login-view-eyebrow">APPROVED ACCESS</span>
-                  <h1>Set up your account</h1>
-                  <p>Use your approved email address and create your Orbit password.</p>
-                </div>
-
-                <form className="request-access-form access-standalone-form" onSubmit={activateApprovedAccess}>
-                  <div className="request-grid">
-                    <label className="access-full">
-                      <span>Approved Email</span>
-                      <input
-                        type="email"
-                        value={activateEmail}
-                        onChange={(e) => setActivateEmail(e.target.value)}
-                        placeholder="name@igebra.ai"
-                      />
+                    <label className={styles.signupField}>
+                      <span>Create password</span>
+                      <div className={styles.signupPasswordWrap}>
+                        <input type={showSignupPassword?"text":"password"} minLength={8}
+                          required autoComplete="new-password" disabled={requestSubmitted}
+                          value={signupPassword} onChange={e=>setSignupPassword(e.target.value)}
+                          placeholder="Minimum 8 characters"/>
+                        <button type="button" aria-label={showSignupPassword?"Hide passwords":"Show passwords"}
+                          onClick={()=>setShowSignupPassword(v=>!v)} aria-pressed={showSignupPassword}>
+                          {showSignupPassword?"Hide":"Show"}
+                        </button>
+                      </div>
                     </label>
-
-                    <label>
-                      <span>Create Password</span>
-                      <input
-                        type="password"
-                        value={activatePassword}
-                        onChange={(e) => setActivatePassword(e.target.value)}
-                        placeholder="Minimum 8 characters"
-                      />
-                    </label>
-
-                    <label>
-                      <span>Confirm Password</span>
-                      <input
-                        type="password"
-                        value={activateConfirm}
-                        onChange={(e) => setActivateConfirm(e.target.value)}
-                        placeholder="Repeat password"
-                      />
+                    <label className={styles.signupField}>
+                      <span>Confirm password</span>
+                      <input type={showSignupPassword?"text":"password"} required
+                        autoComplete="new-password" disabled={requestSubmitted}
+                        value={signupConfirmPassword} onChange={e=>setSignupConfirmPassword(e.target.value)}
+                        placeholder="Repeat your password"/>
                     </label>
                   </div>
-
-                  {activateMessage && (
-                    <div className="request-message">{activateMessage}</div>
-                  )}
-
-                  {needsConfirmation && activateEmail.trim() && (
-                    <button
-                      type="button"
-                      className="auth-helper-button auth-helper-button-access"
-                      onClick={() => resendConfirmation(activateEmail)}
-                    >
-                      Resend confirmation email
-                    </button>
-                  )}
-
-                  <button
-                    type="submit"
-                    className="request-submit access-primary-button"
-                    disabled={activateLoading}
-                  >
-                    {activateLoading ? "Activating..." : "Activate Access"}
+                  <p className={styles.passwordHint}>Use a unique password of at least 8 characters.</p>
+                  {requestMessage && <div className={requestSubmitted?styles.signupSuccess:styles.signupError}
+                    role="status">{requestMessage}</div>}
+                  <button className={styles.signupSubmit} type="submit"
+                    disabled={requestLoading||requestSubmitted}>
+                    {requestSubmitted?"Request submitted":requestLoading?"Creating account…":"Create Account & Request Access"}
+                    {!requestSubmitted&&<span aria-hidden="true">→</span>}
                   </button>
                 </form>
-
-                <div className="login-view-footer">
-                  <span>Not approved yet?</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActivateOpen(false);
-                      setRequestOpen(true);
-                      setActivateMessage("");
-                    }}
-                  >
-                    Request Access
+                <div className={styles.signupFooter}>
+                  Already have an account? <button type="button"
+                    onClick={()=>{setRequestOpen(false);setRequestMessage("");}}>
+                    Sign in
                   </button>
                 </div>
-              </div>
-            )}
+              </section>
+            )
           </div>
         </div>
 

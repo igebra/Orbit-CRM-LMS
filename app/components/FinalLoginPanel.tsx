@@ -17,14 +17,13 @@ type Props = {
   onSignIn: (event: FormEvent<HTMLFormElement>) => void;
   onForgotPassword: () => void;
   onSignUp: () => void;
-  onActivate: () => void;
   afterMessage?: ReactNode;
 };
 
 /** Orbit's approved 2026 desktop login; fully interactive, never a form screenshot. */
 export default function FinalLoginPanel({
   email,password,remember,showPassword,loading,message,onEmail,onPassword,
-  onRemember,onTogglePassword,onSignIn,onForgotPassword,onSignUp,onActivate,
+  onRemember,onTogglePassword,onSignIn,onForgotPassword,onSignUp,
   afterMessage,
 }: Props) {
   return (
@@ -93,9 +92,6 @@ export default function FinalLoginPanel({
         <span className={styles.newUser}>New user?</span>
         <button type="button" onClick={onSignUp}>Sign up for access</button>
       </div>
-      <button className={styles.activateLink} type="button" onClick={onActivate}>
-        Already approved? Activate access
-      </button>
     </div>
   );
 }

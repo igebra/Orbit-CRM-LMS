@@ -201,3 +201,38 @@
 }
 @media(prefers-reduced-motion:reduce){.inputWrap{transition:none;}}
 
+
+/* Approved CRM signup v2: spacious two-column fields and calm form hierarchy. */
+.signupView{width:100%;color:#243B48;}
+.signupBack{background:transparent;border:0;color:#2459D6;font-size:12px;font-weight:500;cursor:pointer;padding:5px 0;margin-bottom:19px;}
+.signupTitle{margin:0 0 22px;text-align:left;}
+.signupTitle>span{display:block;color:#7054A4;font-size:10px;letter-spacing:.12em;font-weight:600;margin-bottom:7px;}
+.signupTitle h1{font-family:var(--font-orbit-heading),"Plus Jakarta Sans",sans-serif;font-size:clamp(23px,2vw,29px);
+ line-height:1.2;letter-spacing:-.5px;font-weight:650;color:#1F2D45;margin:0;}
+.signupTitle p{font-size:13px;color:#74808D;margin:8px 0 0;line-height:1.5;font-weight:400;}
+.signupForm{display:grid;gap:0;}
+.signupGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;}
+.signupField{display:flex;flex-direction:column;gap:7px;min-width:0;}
+.signupField>span{font-size:12px;font-weight:500;color:#3F5060;}
+.signupField input,.signupField select{box-sizing:border-box;width:100%;min-width:0;height:47px;padding:0 13px;
+ color:#243B48;background:#fff;border:1px solid #DAE2ED;border-radius:10px;
+ font-family:var(--font-orbit-body),Inter,sans-serif;font-size:13px;font-weight:400;outline:0;}
+.signupField input::placeholder{color:#A1ACB8;}
+.signupField input:focus,.signupField select:focus{border-color:#2459D6;box-shadow:0 0 0 3px rgba(36,89,214,.10);}
+.signupField :is(input,select):disabled{background:#F6F7FA;opacity:.8;cursor:not-allowed;}
+.signupPasswordWrap{display:flex;align-items:center;position:relative;}
+.signupPasswordWrap input{padding-right:52px;}
+.signupPasswordWrap button{position:absolute;right:10px;border:0;background:transparent;color:#2459D6;font-size:11px;font-weight:500;padding:7px 3px;cursor:pointer;}
+.passwordHint{font-size:11px;line-height:1.4;color:#8793A1;margin:12px 0 18px;}
+.signupSubmit{display:flex;align-items:center;justify-content:center;gap:12px;min-height:49px;width:100%;
+ border:0;border-radius:10px;background:linear-gradient(105deg,#25AFF6,#2459D6);
+ color:white;cursor:pointer;font-size:13px;font-weight:600;box-shadow:0 7px 18px rgba(36,89,214,.13);}
+.signupSubmit span{font-size:19px;font-weight:400;}.signupSubmit:hover{filter:brightness(.97);}
+.signupSubmit:disabled{opacity:.6;cursor:default;}
+.signupSuccess,.signupError{font-size:12px;line-height:1.5;border-radius:9px;padding:11px 13px;margin:0 0 14px;}
+.signupSuccess{background:#F0F8F3;border:1px solid #CDE5D6;color:#275F43;}
+.signupError{background:#FFF8F0;border:1px solid #F0D5B9;color:#845125;}
+.signupFooter{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:19px;font-size:12px;color:#8A98A5;}
+.signupFooter button{border:0;background:transparent;color:#2459D6;font-size:12px;font-weight:600;cursor:pointer;padding:3px;}
+.signupView button:focus-visible{outline:2px solid #2459D6;outline-offset:3px;}
+@media(max-width:590px){.signupGrid{grid-template-columns:1fr;gap:12px;}.signupTitle{margin-bottom:18px;}}

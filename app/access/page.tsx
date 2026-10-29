@@ -274,7 +274,7 @@ export default function AccessPage() {
     setMessage(
       request.user_id
         ? "Access approved and existing Orbit account activated."
-        : "Access approved. The user can now use Activate Approved Access on the login page."
+        : "Access approved. Once email confirmation is complete, the user can sign in."
     );
 
     await load();
@@ -366,7 +366,7 @@ export default function AccessPage() {
     setGrantEmail("");
     setGrantRole("marketing");
     setMessage(
-      "Access granted. The user can now use Activate Approved Access on the Orbit login page."
+      "Access granted. The employee can create an account using the CRM signup form, then sign in after verification."
     );
     await load();
   }
@@ -473,7 +473,7 @@ export default function AccessPage() {
   function accountState(request: RequestRow) {
     if (request.user_id && request.user_is_active) return "Active";
     if (request.user_id && !request.user_is_active) return "Inactive";
-    if (request.status === "Approved") return "Waiting Activation";
+    if (request.status === "Approved") return "Awaiting Signup";
     return "No Account";
   }
 
