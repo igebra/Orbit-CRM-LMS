@@ -200,3 +200,5 @@
 .approvedCheck{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;width:20px;height:20px;}
 .approvedCheck svg{display:block;flex:none;}
 @media(max-width:760px){.headerMascot{width:74px;height:92px;}.headerTools{gap:8px;}}
+
+.statusCell{text-align:center!important;}
