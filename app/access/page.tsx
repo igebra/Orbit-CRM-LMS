@@ -691,7 +691,7 @@ export default function AccessPage() {
                               </button>
                               <OrbitDeleteButton label={`Remove access request / approval for ${request.email}`} disabled={saving} onClick={() => deleteRequest(request)}/>
                             </div>
-                          ) : accountState(request) === "Waiting Activation" ? (
+                          ) : accountState(request) === "Awaiting Signup" ? (
                             <div className={styles.actions}>
                               <OrbitDeleteButton label={`Remove access request / approval for ${request.email}`} disabled={saving} onClick={() => deleteRequest(request)}/>
                             </div>
