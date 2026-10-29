@@ -126,8 +126,8 @@
   margin-left: auto;
   padding: 3px 7px;
   border-radius: 999px;
-  color: #ffd2a5;
-  background: rgba(217,133,59,.18);
+  color: #DDD0E7;
+  background: rgba(124,75,199,.18);
 }
 
 .sidebarBottom {
@@ -311,10 +311,10 @@ button.statCard {
 .message {
   margin-bottom: 14px;
   padding: 11px 13px;
-  border: 1px solid rgba(217,133,59,.35);
+  border: 1px solid rgba(124,75,199,.35);
   border-radius: 11px;
-  background: #fff8f0;
-  color: #7b4a20;
+  background: #F3EDFA;
+  color: #6238AB;
   font-size: 13px;
 }
 
@@ -837,9 +837,9 @@ button.statCard {
 }
 
 .rowActions .convertButton {
-  border-color: rgba(217,133,59,.42);
+  border-color: rgba(124,75,199,.42);
   background: #fff7ee;
-  color: #9a5c24;
+  color: #6238AB;
 }
 
 .followUpDate {
@@ -851,8 +851,8 @@ button.statCard {
 }
 
 .followUpToday {
-  background: #fff0dd;
-  color: #9a6028;
+  background: #F3EDFA;
+  color: #6238AB;
 }
 
 .followUpOverdue {
@@ -1102,7 +1102,7 @@ button.statCard {
 .tableWrap tbody tr:hover{background:#F8FAFB;}
 .tableWrap .stageBadge{display:inline;background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:0!important;font:600 11px/1.4 var(--font-orbit-body),sans-serif;}
 .selectionBar{border:1px solid #DCE5E8;border-radius:12px;background:#F0F4F5;box-shadow:none;}
-.message{font:500 12px/1.4 var(--font-orbit-body),sans-serif;border:1px solid #E5D69B;border-radius:10px;color:#70571F;background:#F9F3DF;}
+.message{font:500 12px/1.4 var(--font-orbit-body),sans-serif;border:1px solid #DDD0E7;border-radius:10px;color:#6238AB;background:#F9F3DF;}
 .modal input,.modal select,.modal textarea{border:1px solid #DCE5E8;border-radius:10px;color:#263D46;font:400 13px var(--font-orbit-body),sans-serif;}
 .modal :is(input,select){min-height:40px;}
 .modalHeader h2{font:600 20px var(--font-orbit-heading),sans-serif;color:#263D46;}

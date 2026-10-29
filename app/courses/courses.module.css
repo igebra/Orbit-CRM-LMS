@@ -22,7 +22,7 @@
 .metrics strong{font-size:11px;line-height:1.35;display:block}
 .price{margin:15px 0 13px;padding-top:13px;border-top:1px solid #e6eceb;color:#d17a32;font-size:18px;font-weight:900}
 .actions{display:flex;gap:8px}.primary,.secondary{display:inline-flex;align-items:center;justify-content:center;border-radius:10px;padding:10px 12px;font-size:12px;font-weight:800;text-decoration:none;cursor:pointer}
-.primary{border:1px solid #6238AB;background:#df8a3d;color:#fff;box-shadow:0 2px 0 #a86328}
+.primary{border:1px solid #6238AB;background:#2459D6;color:#fff;box-shadow:0 2px 0 #1D46AB}
 .secondary{border:1px solid #DDDCEB;background:#fff;color:#2459D6}
 .actions .primary{flex:1}
 .quickSummary{margin-top:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
@@ -145,7 +145,7 @@
 }
 
 .mathCourseIcon{
-  background:linear-gradient(145deg,#ffffff,#ffe6cf);
+  background:linear-gradient(145deg,#ffffff,#DDD0E7);
 }
 
 .actions{

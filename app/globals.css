@@ -28,7 +28,7 @@ button,input,select{font:inherit}
 .orbit-mark{width:60px;height:60px;border:5px solid var(--orbit-teal-dark);border-right-color:transparent;border-radius:50%;position:relative;transform:rotate(-15deg);box-shadow:inset 4px 4px 8px rgba(255,255,255,.75),0 8px 18px rgba(19,89,88,.16)}
 .orbit-dot{position:absolute;border-radius:50%}
 .orbit-dot-teal{width:9px;height:9px;background:var(--orbit-teal-dark);right:3px;top:9px}
-.orbit-dot-orange{width:16px;height:16px;background:linear-gradient(145deg,#f4a45d,var(--orbit-orange));right:-6px;top:-3px}
+.orbit-dot-orange{width:16px;height:16px;background:linear-gradient(145deg,#A78AD5,var(--orbit-orange));right:-6px;top:-3px}
 .brand-name{font-size:clamp(46px,4vw,58px);line-height:.9;font-weight:760;letter-spacing:-3px;color:#10272c}
 .brand-sub{margin-top:7px;font-size:16px;text-align:right;color:#33494a}
 .brand-sub strong,.text-link{color:var(--orbit-teal-dark)}
@@ -43,7 +43,7 @@ button,input,select{font:inherit}
 .form-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .remember-row{display:flex!important;align-items:center;gap:8px;font-size:12px}
 .remember-row input{width:15px;height:15px;accent-color:var(--orbit-teal-dark)}
-.login-message,.request-message{padding:7px 10px;border-radius:8px;background:#f7f2eb;border:1px solid rgba(217,133,59,.28);color:#825024;font-size:11px}
+.login-message,.request-message{padding:7px 10px;border-radius:8px;background:#F3EDFA;border:1px solid rgba(124,75,199,.28);color:#6238AB;font-size:11px}
 .signin-button{height:52px;border:1px solid rgba(5,73,76,.7);border-radius:13px;padding:0 18px 0 24px;background:linear-gradient(180deg,#2459D6 0%,#2459D6 56%,#1D46AB 100%);color:white;font-size:17px;font-weight:780;display:flex;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:0 5px 0 #1E408C,0 12px 20px rgba(14,78,78,.21),inset 0 2px 0 rgba(255,255,255,.25)}
 .signin-arrow{font-size:26px;color:#fff;transition:color .16s ease,transform .16s ease}
 .signin-button:hover .signin-arrow{color:var(--orbit-orange);transform:translateX(4px)}
@@ -55,11 +55,11 @@ button,input,select{font:inherit}
 .request-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .request-access-form input,.request-access-form select{width:100%;height:36px;border:1px solid #DDDCEB;border-radius:8px;background:#fff;padding:0 9px;outline:none;font-size:12px}
 .request-message{margin-top:8px}
-.request-submit{margin-top:8px;width:100%;height:36px;border:0;border-radius:8px;background:linear-gradient(180deg,#e2934c,var(--orbit-orange));color:white;font-weight:760;cursor:pointer;font-size:12px}
+.request-submit{margin-top:8px;width:100%;height:36px;border:0;border-radius:8px;background:linear-gradient(180deg,#7C4BC7,var(--orbit-orange));color:white;font-weight:760;cursor:pointer;font-size:12px}
 .brand-characters{position:absolute;right:18px;left:auto;bottom:8px;width:clamp(150px,14vw,205px);max-height:82px;object-fit:contain;object-position:right bottom;pointer-events:none;z-index:1}
 .hero-panel{position:relative;height:100vh;overflow:hidden;background:#1D46AB}
 .hero-image{position:absolute;inset:0;background-image:url("/orbit-hero-clean.jpg");background-size:cover;background-position:center;transform:scale(1.015)}
-.hero-vignette{position:absolute;inset:0;background:radial-gradient(circle at 86% 9%,rgba(217,133,59,.22),transparent 23%);pointer-events:none}
+.hero-vignette{position:absolute;inset:0;background:radial-gradient(circle at 86% 9%,rgba(124,75,199,.22),transparent 23%);pointer-events:none}
 
 /* DASHBOARD */
 .orbit-dashboard-shell{min-height:100vh;background:linear-gradient(135deg,#f7f7f4 0%,#F4EFFB 100%);display:grid;grid-template-columns:270px 1fr}
@@ -81,7 +81,7 @@ button,input,select{font:inherit}
 .orbit-subnav-item{width:100%;border:0;border-radius:9px;padding:6px 10px;background:transparent;color:rgba(255,255,255,.7);font-size:12px;text-align:left;cursor:pointer}
 .orbit-subnav-item:hover{background:rgba(255,255,255,.10);color:#fff}
 .orbit-nav-icon{width:22px;text-align:center}
-.orbit-coming-soon{margin-left:auto;font-size:11px;background:rgba(217,133,59,.18);color:#ffd2a5;padding:4px 8px;border-radius:999px}
+.orbit-coming-soon{margin-left:auto;font-size:11px;background:rgba(124,75,199,.18);color:#DDD0E7;padding:4px 8px;border-radius:999px}
 .orbit-sidebar-footer{display:flex;flex-direction:column;gap:14px}
 .orbit-user-card{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.08);border-radius:16px;padding:12px}
 .orbit-user-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#BA96E7,#7C4BC7);color:white;font-weight:800;display:flex;align-items:center;justify-content:center}
@@ -470,7 +470,7 @@ button,input,select{font:inherit}
 
 .login-mode-card-accent{
   border-color:#efc59d;
-  background:linear-gradient(145deg,#ffffff,#fff6ed);
+  background:linear-gradient(145deg,#ffffff,#F3EDFA);
 }
 
 .login-mode-icon{
@@ -488,7 +488,7 @@ button,input,select{font:inherit}
 }
 
 .login-mode-card-accent .login-mode-icon{
-  background:#fff0e3;
+  background:#F3EDFA;
   color:#b86a2d;
 }
 
@@ -575,7 +575,7 @@ button,input,select{font:inherit}
   height:42px;
   border-radius:9px;
   font-size:12px;
-  box-shadow:0 5px 12px rgba(217,133,59,.13);
+  box-shadow:0 5px 12px rgba(124,75,199,.13);
 }
 
 .login-view-footer{

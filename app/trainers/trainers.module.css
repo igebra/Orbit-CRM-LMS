@@ -5,9 +5,9 @@
 .header h1{margin:4px 0 6px;font-size:36px}.header p{margin:0;color:#758584;font-size:14px}
 .kicker{font-size:12px!important;color:#7C4BC7!important;font-weight:900;letter-spacing:.08em}
 .primary,.secondary{border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer}
-.primary{border:1px solid #6238AB;background:#df8a3d;color:#fff;box-shadow:0 2px 0 #a86328}
+.primary{border:1px solid #6238AB;background:#2459D6;color:#fff;box-shadow:0 2px 0 #1D46AB}
 .secondary{border:1px solid #DDDCEB;background:#fff;color:#2459D6}
-.message{margin-bottom:14px;padding:10px 12px;border-radius:10px;background:#fff4e7;color:#80532e;border:1px solid #f0d3b2;font-size:12px}
+.message{margin-bottom:14px;padding:10px 12px;border-radius:10px;background:#fff4e7;color:#6238AB;border:1px solid #DDD0E7;font-size:12px}
 .summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}
 .summary>div{background:#fff;border:1px solid #d9e5e2;border-radius:13px;padding:14px}.summary span{display:block;color:#7d8d8b;font-size:11px}.summary strong{display:block;margin-top:4px;font-size:22px}
 .card{background:#fff;border:1px solid #d9e5e2;border-radius:16px;overflow:hidden}

@@ -126,8 +126,8 @@
   margin-left: auto;
   padding: 3px 7px;
   border-radius: 999px;
-  color: #ffd2a5;
-  background: rgba(217, 133, 59, 0.18);
+  color: #DDD0E7;
+  background: rgba(124,75,199, 0.18);
 }
 
 .sidebarBottom {
@@ -290,10 +290,10 @@
 .message,
 .inlineError {
   padding: 11px 13px;
-  border: 1px solid rgba(217, 133, 59, 0.35);
+  border: 1px solid rgba(124,75,199, 0.35);
   border-radius: 11px;
-  background: #fff8f0;
-  color: #7b4a20;
+  background: #F3EDFA;
+  color: #6238AB;
   font-size: 13px;
 }
 
@@ -416,8 +416,8 @@
   display: inline-block;
   padding: 5px 8px;
   border-radius: 999px;
-  background: #fff0dd;
-  color: #9a6028;
+  background: #F3EDFA;
+  color: #6238AB;
   font-size: 11px;
   font-weight: 800;
   white-space: nowrap;
@@ -594,7 +594,7 @@
   padding: 15px;
   border: 1px solid #E3E0ED;
   border-radius: 14px;
-  background: linear-gradient(135deg, #f6faf9, #fff8ef);
+  background: linear-gradient(135deg, #f6faf9, #F3EDFA);
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   gap: 15px;
