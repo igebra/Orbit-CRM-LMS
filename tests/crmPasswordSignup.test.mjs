@@ -28,9 +28,12 @@ test("Signup is never authority: server checks Auth identity, Pending and Supera
  assert.match(page,/CRM_ALLOWED_ROLES/);
 });
 test("Six clearly spaced signup fields; role selection retained only for Superadmin",()=>{
- for(const label of ["Full name","Work email","Phone number","Department","Create password","Confirm password"])
+ for(const label of ["Full name","Work email","Phone number","Your role","Create password","Confirm password"])
    assert.ok(page.includes(label),label);
  assert.match(page,/className=\{styles\.signupGrid\}/);
+ assert.match(page,/>Select your role<\/option>/);
+ assert.match(page,/p_department: requestDepartment/);
+ assert.doesNotMatch(page,/<span>Department<\/span>/);
  assert.match(access,/approve_access_request/);
  assert.match(access,/Choose a CRM role before approving/);
 });

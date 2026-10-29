@@ -212,7 +212,7 @@ export default function LoginPage() {
     const cleanEmail = requestEmail.trim().toLowerCase();
     if (cleanName.length < 2 || !cleanEmail || !requestPhone.trim() ||
         !TEAM_DEPARTMENTS.includes(requestDepartment)) {
-      setRequestMessage("Complete your name, email, phone and department.");
+      setRequestMessage("Complete your name, email, phone and role.");
       return;
     }
     if (signupPassword.length < 8) {
@@ -330,10 +330,10 @@ export default function LoginPage() {
                         onChange={e=>setRequestPhone(e.target.value)} placeholder="+91 98765 43210"/>
                     </label>
                     <label className={styles.signupField}>
-                      <span>Department</span>
+                      <span>Your role</span>
                       <select required value={requestDepartment} disabled={requestSubmitted}
                         onChange={e=>setRequestDepartment(e.target.value)}>
-                        <option value="">Select department</option>
+                        <option value="">Select your role</option>
                         {TEAM_DEPARTMENTS.map(dept=><option key={dept} value={dept}>{dept}</option>)}
                       </select>
                     </label>

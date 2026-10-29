@@ -1,7 +1,10 @@
 # CRM signup with password before approval — Release candidate
 Date: 29 October 2026.
 
-**Goal**: Employee enters full name, work email, international phone number (+91 prefill, freely editable), department, password and confirm password. No separate Activate Access screen. Supabase Auth hashes/stores credentials; no passwords stored in public tables or access requests. After verifying email (if enabled), the user signs in with the same password **only after Superadmin approval**.
+**Goal**: Employee enters full name, work email, international phone number (+91 prefill, freely editable), self-described role, password and confirm password. No separate Activate Access screen. Supabase Auth hashes/stores credentials; no passwords stored in public tables or access requests. After verifying email (if enabled), the user signs in with the same password **only after Superadmin approval**.
+
+## UI label and authorization
+The staff registration form asks for **Your role** (dropdown placeholder **Select your role**). This is the applicant's requested work area only; it is transmitted in the existing `p_department` field for review and never grants a CRM role. The Superadmin still assigns the actual authorized CRM role on approval.
 
 ## Security flow
 1. Browser calls `supabase.auth.signUp` with the email/password. Existing `handle_new_orbit_user` trigger creates an inactive, non-CRM-authorized profile when no prior approval exists.
