@@ -1231,3 +1231,20 @@
 .calendarItem small{font:400 11px/1.5 var(--font-orbit-body),sans-serif;color:#52656F;margin-top:4px;}
 @media(max-width:1100px){.tableWrap table{min-width:890px;}.calendarItem{grid-template-columns:1fr 1fr;}}
 @media(max-width:650px){.calendarItem{grid-template-columns:1fr;}}
+
+/* Demo Schedule Actions: reserve enough space and never stack Zoom text. */
+.colDemoCombined{width:22%}
+.colDateCombined{width:24%}
+.colAssignedCombined{width:16%}
+.colAttendanceCombined{width:10%}
+.colStatusCombined{width:11%}
+.colActionsCombined{width:17%}
+.tableWrap table{min-width:1040px!important;}
+.tableWrap td.actionCell{white-space:nowrap!important;overflow-wrap:normal!important;word-break:normal!important;}
+.tableWrap .actionCell .rowActions{display:flex!important;align-items:center!important;justify-content:flex-start!important;flex-wrap:nowrap!important;gap:8px!important;white-space:nowrap!important;}
+.tableWrap .actionCell .zoomAction{display:inline-flex!important;flex:0 0 auto!important;align-items:center!important;white-space:nowrap!important;word-break:keep-all!important;overflow-wrap:normal!important;min-width:90px;padding:6px 9px;}
+.tableWrap .actionCell .zoomAction span{display:inline!important;white-space:nowrap!important;}
+.tableWrap .actionCell .rowActions button{flex:0 0 auto!important;}
+.tableWrap .actionCell .editAction{width:34px!important;min-width:34px!important;height:34px!important;padding:0!important;}
+.tableWrap .actionCell .deleteButton{width:34px!important;min-width:34px!important;height:34px!important;padding:0!important;}
+@media(max-width:1260px){.tableWrap table{min-width:1100px!important;}}
