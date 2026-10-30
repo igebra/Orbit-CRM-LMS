@@ -392,6 +392,7 @@ export default function DemoSchedulePage() {
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All statuses");
+  const [scheduleView, setScheduleView] = useState<"list" | "calendar">("list");
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -1232,90 +1233,45 @@ export default function DemoSchedulePage() {
             <button className={styles.refreshButton} onClick={loadDemos}>Refresh</button>
           </div>
 
+          <div className={styles.viewTabs} role="tablist" aria-label="Demo schedule view">
+            <button type="button" role="tab" aria-selected={scheduleView === "list"} className={scheduleView === "list" ? styles.viewTabActive : ""} onClick={() => setScheduleView("list")}>List view</button>
+            <button type="button" role="tab" aria-selected={scheduleView === "calendar"} className={scheduleView === "calendar" ? styles.viewTabActive : ""} onClick={() => setScheduleView("calendar")}>Calendar view</button>
+          </div>
+          {scheduleView === "calendar" ? (
+            <div className={styles.calendarList}>
+              {loading ? <p>Loading demo schedule...</p> : filteredDemos.length === 0 ? <p>No demos match your filters.</p> : filteredDemos.map(demo => (
+                <article key={demo.id} className={styles.calendarItem}>
+                  <div><strong>{formatInZone(demo.scheduled_at,demo.source_timezone)}</strong><small>{zoneLabel(demo.source_timezone)}</small><small>IST: {formatInZone(demo.scheduled_at,"Asia/Kolkata")}</small></div>
+                  <div><strong>{demo.demo_course}</strong><small>{demo.attendees.length} student(s) · {demo.session_duration_minutes} minutes</small></div>
+                  <span className={styles.statusBadge} data-status={demo.status.toLowerCase().replace(/\s+/g,"-")}>{demo.status}</span>
+                  <div className={styles.rowActions}>{demo.zoom_link && <a className={styles.zoomAction} href={demo.zoom_link} target="_blank" rel="noopener noreferrer">Open Zoom</a>}{canManageDemo && <button type="button" onClick={() => editDemo(demo)}>Edit</button>}</div>
+                </article>
+              ))}
+            </div>
+          ) : (
           <div className={styles.tableWrap}>
             <table aria-label="Demo Schedule">
-              <colgroup>
-                <col className={styles.colSerial}/>
-                <col className={styles.colCourse}/>
-                <col className={styles.colStudents}/>
-                <col className={styles.colTime}/>
-                <col className={styles.colAttendance}/>
-                <col className={styles.colTeam}/>
-                <col className={styles.colStatus}/>
-                <col className={styles.colZoom}/>
-                <col className={styles.colActions}/>
-              </colgroup>
-              <thead><tr>
-                <th data-sno>S.No</th>
-                <th>Demo / Duration</th>
-                <th>Students</th>
-                <th>Date &amp; Time</th>
-                <th>Attendance</th>
-                <th>Assigned To</th>
-                <th>Status</th>
-                <th>Meeting</th>
-                <th>Actions</th>
-              </tr></thead>
+              <colgroup><col className={styles.colDemoCombined}/><col className={styles.colDateCombined}/><col className={styles.colAssignedCombined}/><col className={styles.colAttendanceCombined}/><col className={styles.colStatusCombined}/><col className={styles.colActionsCombined}/></colgroup>
+              <thead><tr><th>Demo / Students</th><th>Date &amp; Time</th><th>Assigned To</th><th>Attendance</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody>
-                {loading ? (
-                  <tr><td colSpan={9} className={styles.empty}>Loading demo schedule...</td></tr>
-                ) : filteredDemos.length === 0 ? (
-                  <tr><td colSpan={9} className={styles.empty}>No demos scheduled yet.</td></tr>
-                ) : filteredDemos.map((demo, index) => {
-                  const attendedCount = demo.attendees.filter(
-                    item => item.attendance_status === "Attended"
-                  ).length;
-                  const names = demo.attendees.slice(0, 2).map(item => item.student_name);
+                {loading ? <tr><td colSpan={6} className={styles.empty}>Loading demo schedule...</td></tr>
+                : filteredDemos.length === 0 ? <tr><td colSpan={6} className={styles.empty}>No demos match your filters.</td></tr>
+                : filteredDemos.map(demo => {
+                  const attendedCount=demo.attendees.filter(item=>item.attendance_status==="Attended").length;
+                  const names=demo.attendees.slice(0,2).map(item=>item.student_name);
                   return <tr key={demo.id}>
-                    <td data-sno>{index + 1}</td>
-                    <td>
-                      <strong>{demo.demo_course}</strong>
-                      <small>{demo.session_duration_minutes === 120 ? "2 hours" : "1 hour"}</small>
-                    </td>
-                    <td>
-                      <strong>{demo.attendees.length} student(s)</strong>
-                      <small>{names.join(", ")}{demo.attendees.length > 2
-                        ? ` +${demo.attendees.length - 2} more` : ""}</small>
-                    </td>
-                    <td className={styles.timeCell}>
-                      <strong>{formatInZone(demo.scheduled_at, demo.source_timezone)}</strong>
-                      <small>{zoneLabel(demo.source_timezone)}</small>
-                      <div className={styles.istLine}>
-                        IST: {formatInZone(demo.scheduled_at, "Asia/Kolkata")}
-                      </div>
-                    </td>
-                    <td>
-                      <strong>{attendedCount} / {demo.attendees.length}</strong>
-                      <small>attended</small>
-                    </td>
-                    <td className={styles.assignedCell}>
-                      {demo.trainers.length > 0 && <div><small>Trainer</small>
-                        <strong>{demo.trainers.join(", ")}</strong></div>}
-                      {demo.team_members.length > 0 && <div><small>Team</small>
-                        <span>{demo.team_members.join(", ")}</span></div>}
-                      {!demo.trainers.length && !demo.team_members.length && "—"}
-                    </td>
-                    <td><span className={styles.statusBadge}>{demo.status}</span></td>
-                    <td>
-                      {demo.zoom_link ? <a className={styles.zoomLink}
-                        href={demo.zoom_link} target="_blank" rel="noopener noreferrer">
-                        Open Zoom
-                      </a> : "—"}
-                    </td>
-                    <td className={styles.actionCell}>
-                      {canManageDemo ? <div className={styles.rowActions}>
-                        <button type="button" className={styles.editAction}
-                          onClick={() => editDemo(demo)} title="Edit demo and attendance">
-                          Edit
-                        </button>
-                        <OrbitDeleteButton label={`Delete ${demo.demo_course} demo`} onClick={() => deleteDemo(demo.id)}/>
-                      </div> : <span>View only</span>}
-                    </td>
+                    <td className={styles.demoCombined}><strong>{demo.demo_course}</strong><small>{demo.session_duration_minutes} minutes · {demo.attendees.length} student(s)</small><div className={styles.studentNames}>{names.join(", ")}{demo.attendees.length>2?` +${demo.attendees.length-2} more`:""}</div></td>
+                    <td className={styles.timeCell}><strong>{formatInZone(demo.scheduled_at,demo.source_timezone)}</strong><small>{zoneLabel(demo.source_timezone)}</small><div className={styles.istLine}>IST: {formatInZone(demo.scheduled_at,"Asia/Kolkata")}</div></td>
+                    <td className={styles.assignedCell}>{demo.trainers.length>0 && <div><small>Trainer</small><strong>{demo.trainers.join(", ")}</strong></div>}{demo.team_members.length>0 && <div><small>Team</small><span>{demo.team_members.join(", ")}</span></div>}{!demo.trainers.length&&!demo.team_members.length&&"—"}</td>
+                    <td><strong>{attendedCount} / {demo.attendees.length}</strong><small>attended</small></td>
+                    <td><span className={styles.statusBadge} data-status={demo.status.toLowerCase().replace(/\s+/g,"-")}>{demo.status}</span></td>
+                    <td className={styles.actionCell}><div className={styles.rowActions}>{demo.zoom_link && <a className={styles.zoomAction} href={demo.zoom_link} target="_blank" rel="noopener noreferrer" title="Open Zoom meeting" aria-label="Open Zoom meeting">▣<span> Zoom</span></a>}{canManageDemo ? <><button type="button" className={styles.editAction} onClick={() => editDemo(demo)} title="Edit demo and attendance" aria-label={`Edit ${demo.demo_course} demo`}>✎</button><OrbitDeleteButton label={`Delete ${demo.demo_course} demo`} onClick={() => deleteDemo(demo.id)}/></> : !demo.zoom_link && <span>View only</span>}</div></td>
                   </tr>;
                 })}
               </tbody>
             </table>
           </div>
+          )}
         </section>
       </main>
 
