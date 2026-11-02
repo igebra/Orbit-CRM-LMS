@@ -231,7 +231,7 @@ export default function CompactClasswork({
             {canManage && current && <button className={styles.editTopic} type="button" onClick={() => onEditSession(current)}>Edit lesson details</button>}
           </div>
 
-          {maximum === 0 ? <div className={styles.empty}>Create class slots to begin adding resources.</div> : <>
+          {maximum === 0 ? <div className={styles.empty}>Create class slots to begin adding resources.</div> : <div className={styles.editorContent}>
             {canManage && <form onSubmit={save} className={styles.form}>
               <div className={styles.formHeading}>
                 <h4>+ Add learning material</h4>
@@ -251,7 +251,7 @@ export default function CompactClasswork({
               }
               <button type="button" className={styles.descriptionToggle} aria-expanded={showDescription} onClick={() => setShowDescription(!showDescription)}>{showDescription ? "− Hide description" : "+ Optional description"}</button>
               {showDescription && <label className={styles.descriptionField}><span>Description</span><textarea rows={2} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Instructions for the trainer or students" /></label>}
-              <div className={styles.formActions}><small>Attachments appear below as soon as they save successfully.</small><button type="submit" disabled={saving || working}>{saving ? "Saving..." : mode === "file" ? "Upload material" : "Save link"}</button></div>
+              <div className={styles.formActions}><small>Saved files appear in the attachments panel immediately.</small><button type="submit" disabled={saving || working}>{saving ? "Saving..." : mode === "file" ? "Upload material" : "Save link"}</button></div>
             </form>}
 
             <div className={styles.attachments}>
@@ -280,7 +280,7 @@ export default function CompactClasswork({
                 })}</div>
               }
             </div>
-          </>}
+          </div>}
         </section>
       </div>
     </section>
