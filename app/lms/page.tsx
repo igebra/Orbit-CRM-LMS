@@ -483,7 +483,7 @@ export default function LmsPage() {
   async function saveResource(draft: ResourceDraft): Promise<boolean> {
     const { session_number, resource_type, title, description, mode, file, externalUrl: url } = draft;
     if(!title.trim()){ setMessage("Resource title is required."); return false; }
-    if(!/^\\d+$/.test(session_number) || Number(session_number) < 1 || Number(session_number) > 200){
+    if(!/^[0-9]+$/.test(session_number) || Number(session_number) < 1 || Number(session_number) > 200){
       setMessage("Choose a valid class number between 1 and 200."); return false;
     }
     if(mode==="file"){
