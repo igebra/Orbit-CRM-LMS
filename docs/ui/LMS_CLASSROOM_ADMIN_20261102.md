@@ -10,7 +10,7 @@ The former library page placed uploaded files in a long table below course selec
 - Classwork is the default LMS screen for the current authorized LMS roles.
 - Course family and grade/level selectors stay available at the top.
 - The left column selects a Class; the right column shows that Class's editor.
-- The right column displays a compact type/title/file-or-link form and the current attachments immediately below, within the same panel.
+- The right workspace displays a compact type/title/file-or-link form and current attachments **side by side on desktop**, stacking vertically on smaller screens.
 - Class selections are independent of batches; uploads are stored in the existing master curriculum.
 - Files under 100 MB use the existing `lms-library` storage bucket and `lms_resource_versions` metadata; external URLs use the existing resource record.
 - On successful save, refresh lesson/resource lists without navigating away; on failed save, preserve the editor fields and report the error.
