@@ -76,3 +76,27 @@
 @media(max-width:1200px){.bannerStats{display:none}.columns{grid-template-columns:minmax(190px,.9fr) minmax(0,1.6fr)}.resource{flex-wrap:wrap}.resourceActions{max-width:none;width:100%;justify-content:flex-start}}
 @media(max-width:900px){.columns{grid-template-columns:1fr}.editorPanel{position:static;max-height:none}.lessonList{max-height:260px}.banner{padding:19px}.subnav .hint{display:none}}
 @media(max-width:550px){.fields{grid-template-columns:1fr}.editorHeading{flex-wrap:wrap}.formActions{align-items:stretch;flex-direction:column}.formActions button{width:100%}.subnav{gap:12px}.banner h2{font-size:20px!important}.banner p{font-size:11px}.resource{padding:9px}}
+
+/* On desktop, newly uploaded files remain in view alongside the editor. */
+.editorContent{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.1fr);align-items:start}
+.editorContent .form{border-bottom:0;border-right:1px solid #e9e3ef;padding:15px 14px}
+.editorContent .fields{grid-template-columns:1fr}
+.editorContent .formHeading{align-items:flex-start;flex-direction:column;gap:4px}
+.editorContent .attachments{padding:16px 14px;max-height:545px;overflow-y:auto;scrollbar-width:thin}
+.editorContent .resource{flex-wrap:wrap}
+.editorContent .resourceActions{max-width:none;width:100%;justify-content:flex-start}
+.editorContent .formActions{flex-direction:column;align-items:stretch}
+.editorContent .formActions button{width:100%}
+@media(max-width:1280px){
+  .editorContent{grid-template-columns:1fr}
+  .editorContent .form{border-right:0;border-bottom:1px solid #e9e3ef}
+  .editorContent .fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .editorContent .attachments{max-height:none;overflow:visible}
+  .editorContent .formActions{flex-direction:row;align-items:center}
+  .editorContent .formActions button{width:auto}
+}
+@media(max-width:550px){
+  .editorContent .fields{grid-template-columns:1fr}
+  .editorContent .formActions{flex-direction:column;align-items:stretch}
+  .editorContent .formActions button{width:100%}
+}
