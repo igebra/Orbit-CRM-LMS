@@ -63,3 +63,11 @@
 .metric:last-child{border-top-color:#DDD0E7;}
 .primary{background:#2459D6;border-color:#2459D6;}
 .primary:hover:not(:disabled){background:#1D46AB;}
+
+/* Same approved CRM layout; three native-currency metric cards. */
+.summary{grid-template-columns:repeat(3,minmax(0,1fr))}
+.metric:nth-child(3){border-top:3px solid #DDD0E7}
+.metric strong{overflow-wrap:anywhere}
+.legacyNote{grid-column:1/-1;color:#607780;font-size:11px;line-height:1.6;margin:-5px 0 0}
+@media(max-width:1120px){.summary{grid-template-columns:repeat(2,minmax(0,1fr))}.summary>.metric:last-child{grid-column:1/-1}}
+@media(max-width:700px){.summary{grid-template-columns:1fr}.summary>.metric:last-child{grid-column:auto}.legacyNote{grid-column:auto}}

@@ -23,7 +23,8 @@ type Payment = {
   student_name: string;
   batch_name: string;
   course_name: string;
-  amount_usd: number;
+  amount_received: number;
+  currency: "USD" | "INR";
   payment_mode: string;
   purpose: string;
   reference: string | null;
@@ -35,7 +36,7 @@ type StudentOption = {
   student_name: string; course_name: string;
 };
 type EntryForm = {
-  student_id: string; batch_id: string; amount_usd: string;
+  student_id: string; batch_id: string; amount_received: string; currency: "USD" | "INR";
   payment_date: string; payment_mode: string; purpose: string;
   reference: string; notes: string;
 };
@@ -51,11 +52,13 @@ function monthStart() {
   const now = new Date(); return localDate(new Date(now.getFullYear(), now.getMonth(), 1));
 }
 function emptyForm(): EntryForm {
-  return { student_id: "", batch_id: "", amount_usd: "", payment_date: localDate(new Date()),
+  return { student_id: "", batch_id: "", amount_received: "", currency: "USD", payment_date: localDate(new Date()),
     payment_mode: "Zelle", purpose: "Course Fee", reference: "", notes: "" };
 }
-function usd(value: number) {
-  return new Intl.NumberFormat("en-US", {style: "currency", currency: "USD"}).format(Number(value || 0));
+function money(value: number, currency: "USD" | "INR") {
+  return new Intl.NumberFormat(currency === "INR" ? "en-IN" : "en-US", {
+    style: "currency", currency, minimumFractionDigits: 2, maximumFractionDigits: 2
+  }).format(Number(value || 0));
 }
 function csvCell(value: unknown) {
   let text = String(value ?? "");
@@ -91,7 +94,7 @@ export default function PaymentsPage() {
     if (dateFrom > dateTo) {setNotice("From date cannot be after To date."); return;}
     setLoading(true); setNotice("");
     const [result, choices] = await Promise.all([
-      supabase.rpc("crm_received_payment_report", {p_from: dateFrom, p_to: dateTo}),
+      supabase.rpc("crm_received_payment_report_v2", {p_from: dateFrom, p_to: dateTo}),
       MANAGE_ROLES.includes(accessRole)
         ? supabase.rpc("crm_payment_entry_options")
         : Promise.resolve({data: [] as StudentOption[], error: null}),
@@ -132,13 +135,15 @@ export default function PaymentsPage() {
     const q = search.trim().toLowerCase();
     if (!q) return payments;
     return payments.filter(p =>
-      [p.student_name, p.batch_name, p.course_name, p.payment_mode, p.purpose, p.reference, p.payment_date]
+      [p.student_name, p.batch_name, p.course_name, p.payment_mode, p.purpose, p.reference, p.payment_date, p.currency]
         .some(value => String(value || "").toLowerCase().includes(q))
     );
   }, [payments, search]);
   const activePayments = useMemo(() => payments.filter(p => !p.voided_at), [payments]);
-  const totalReceived = useMemo(() =>
-    activePayments.reduce((sum, p) => sum + Number(p.amount_usd || 0), 0), [activePayments]);
+  const receivedByCurrency = useMemo(() => activePayments.reduce((totals, payment) => {
+    totals[payment.currency] += Number(payment.amount_received || 0);
+    return totals;
+  }, {USD: 0, INR: 0}), [activePayments]);
 
   const studentOptions = useMemo(() => {
     const unique = new Map<string, string>();
@@ -148,21 +153,29 @@ export default function PaymentsPage() {
   const relevantBatches = useMemo(() => options.filter(o => o.student_id === form.student_id), [options, form.student_id]);
   const chosen = options.find(o => o.student_id === form.student_id && o.batch_id === form.batch_id);
   const byMode = useMemo(() => {
-    const map = new Map<string, number>();
-    activePayments.forEach(p => map.set(p.payment_mode, (map.get(p.payment_mode) || 0) + Number(p.amount_usd || 0)));
-    return [...map].sort((a,b) => b[1]-a[1]);
-  }, [activePayments]);
+    const map = new Map<string, {name:string;currency:"USD"|"INR";amount:number}>();
+    activePayments.forEach(p => {
+      const key=p.currency+"|"+p.payment_mode;
+      const previous=map.get(key);
+      map.set(key,{name:p.payment_mode,currency:p.currency,amount:(previous?.amount||0)+Number(p.amount_received||0)});
+    });
+    return [...map.values()].sort((a,b)=>a.currency.localeCompare(b.currency)||b.amount-a.amount);
+  },[activePayments]);
   const byCourse = useMemo(() => {
-    const map = new Map<string, number>();
-    activePayments.forEach(p => map.set(p.course_name, (map.get(p.course_name) || 0) + Number(p.amount_usd || 0)));
-    return [...map].sort((a,b) => b[1]-a[1]);
-  }, [activePayments]);
+    const map = new Map<string, {name:string;currency:"USD"|"INR";amount:number}>();
+    activePayments.forEach(p => {
+      const key=p.currency+"|"+p.course_name;
+      const previous=map.get(key);
+      map.set(key,{name:p.course_name,currency:p.currency,amount:(previous?.amount||0)+Number(p.amount_received||0)});
+    });
+    return [...map.values()].sort((a,b)=>a.currency.localeCompare(b.currency)||b.amount-a.amount);
+  },[activePayments]);
 
   function closeDialog() {if (!saving) {setDialog(null);setSelected(null);setFormError("");setVoidReason("");}}
   function openNew() {setForm(emptyForm());setSelected(null);setFormError("");setDialog("new");}
   function openEdit(p: Payment) {
     setSelected(p);
-    setForm({student_id:"",batch_id:"",amount_usd:String(p.amount_usd),
+    setForm({student_id:"",batch_id:"",amount_received:String(p.amount_received),currency:p.currency,
       payment_date:p.payment_date,payment_mode:p.payment_mode,purpose:p.purpose||"Course Fee",
       reference:p.reference||"",notes:p.notes||""});
     setFormError("");setDialog("edit");
@@ -173,9 +186,9 @@ export default function PaymentsPage() {
     event.preventDefault();
     if (!canManage || !dialog || dialog === "void") return;
     setFormError("");
-    const amount = Number(form.amount_usd);
+    const amount = Number(form.amount_received);
     if (!Number.isFinite(amount) || amount <= 0 || amount > 9999999999) {
-      setFormError("Enter a valid positive USD payment amount.");return;
+      setFormError("Enter a valid positive payment amount in "+form.currency+".");return;
     }
     if (!form.payment_date || !form.payment_mode.trim()) {
       setFormError("Payment date and method are required.");return;
@@ -187,14 +200,15 @@ export default function PaymentsPage() {
     let error: {message:string}|null = null;
     if (dialog === "new") {
       const response = await supabase.from("crm_manual_payments").insert({
-        student_id:form.student_id,batch_id:form.batch_id,amount_usd:amount,
+        student_id:form.student_id,batch_id:form.batch_id,
+        amount_received:amount,currency:form.currency,amount_usd:form.currency==="USD"?amount:null,
         payment_date:form.payment_date,payment_mode:form.payment_mode,
         purpose:form.purpose,reference:form.reference.trim()||null,notes:form.notes.trim()||null,
       });
       error = response.error;
     } else if (selected?.source === "manual") {
-      const response = await supabase.rpc("crm_edit_manual_payment", {
-        p_id:selected.transaction_id,p_amount_usd:amount,p_payment_date:form.payment_date,
+      const response = await supabase.rpc("crm_edit_manual_payment_v2", {
+        p_id:selected.transaction_id,p_amount_received:amount,p_currency:form.currency,p_payment_date:form.payment_date,
         p_payment_mode:form.payment_mode,p_purpose:form.purpose,
         p_reference:form.reference.trim()||null,p_notes:form.notes.trim()||null,
       });
@@ -240,9 +254,9 @@ export default function PaymentsPage() {
   }
 
   function exportCsv() {
-    const header = ["Date","Student","Course","Batch","Amount USD","Method","Payment for","Reference","Notes","Status","Source"];
+    const header = ["Date","Student","Course","Batch","Amount Received","Currency","Method","Payment for","Reference","Notes","Status","Source"];
     const rows = filtered.map(p => [p.payment_date,p.student_name,p.course_name,p.batch_name,
-      Number(p.amount_usd).toFixed(2),p.payment_mode,p.purpose,p.reference||"",p.notes||"",
+      Number(p.amount_received).toFixed(2),p.currency,p.payment_mode,p.purpose,p.reference||"",p.notes||"",
       p.voided_at?"Voided":"Recorded",p.source]);
     const contents = [header,...rows].map(row => row.map(csvCell).join(",")).join("\r\n");
     const blob = new Blob(["\uFEFF"+contents],{type:"text/csv;charset=utf-8"});
@@ -269,8 +283,11 @@ export default function PaymentsPage() {
         </header>
 
         <div className={styles.summary} aria-label="Recorded payments summary">
-          <section className={styles.metric}><span>Collected in selected period</span>
-            <strong>{loading?"—":usd(totalReceived)}</strong><small>From recorded payments only</small>
+          <section className={styles.metric}><span>Received in USD</span>
+            <strong>{loading?"—":money(receivedByCurrency.USD,"USD")}</strong><small>US Dollar receipts</small>
+          </section>
+          <section className={styles.metric}><span>Received in INR</span>
+            <strong>{loading?"—":money(receivedByCurrency.INR,"INR")}</strong><small>Indian Rupee receipts</small>
           </section>
           <section className={styles.metric}><span>Payments recorded</span>
             <strong>{loading?"—":activePayments.length}</strong><small>Current selected period</small>
@@ -311,7 +328,7 @@ export default function PaymentsPage() {
                     <td>{index+1}</td><td>{p.payment_date}</td>
                     <td>{p.student_name}{p.voided_at&&<span className={styles.pill}>Voided</span>}</td>
                     <td>{p.course_name}<small>{p.batch_name}</small></td>
-                    <td className={[styles.amount,p.voided_at?styles.voided:""].join(" ")}>{usd(p.amount_usd)}</td>
+                    <td className={[styles.amount,p.voided_at?styles.voided:""].join(" ")}>{money(p.amount_received,p.currency)}</td>
                     <td>{p.payment_mode}</td><td>{p.purpose||"Course Fee"}</td><td>{p.reference||"—"}</td>
                     {canManage&&<td><div className={styles.actions}>
                       <button type="button" className={styles.action} disabled={!!p.voided_at}
@@ -325,17 +342,17 @@ export default function PaymentsPage() {
               </table>
             </div>
             <div className={styles.footer}><span>{filtered.length} record(s) shown</span>
-              <span>Amounts are in USD. Voided records are excluded from collections.</span></div>
+              <span>Amounts shown in original currency · Voided records excluded.</span></div>
           </> : <>
             <p className={styles.hint}>Reports use only payments actually recorded. No fee schedules, projected revenue, balances or overdue calculations.</p>
             <div className={styles.reportGrid}>
               <div className={styles.reportCard}><h3>Collections by payment method</h3><p>Selected period</p>
-                {byMode.length===0?<p>No recorded payments.</p>:byMode.map(([name,amount])=>
-                  <div key={name} className={styles.reportLine}><span>{name}</span><strong>{usd(amount)}</strong></div>)}
+                {byMode.length===0?<p>No recorded payments.</p>:byMode.map(item=>
+                  <div key={item.currency+"|"+item.name} className={styles.reportLine}><span>{item.name} · {item.currency}</span><strong>{money(item.amount,item.currency)}</strong></div>)}
               </div>
               <div className={styles.reportCard}><h3>Collections by course</h3><p>Selected period</p>
-                {byCourse.length===0?<p>No recorded payments.</p>:byCourse.map(([name,amount])=>
-                  <div key={name} className={styles.reportLine}><span>{name}</span><strong>{usd(amount)}</strong></div>)}
+                {byCourse.length===0?<p>No recorded payments.</p>:byCourse.map(item=>
+                  <div key={item.currency+"|"+item.name} className={styles.reportLine}><span>{item.name} · {item.currency}</span><strong>{money(item.amount,item.currency)}</strong></div>)}
               </div>
             </div>
           </>}
@@ -368,8 +385,17 @@ export default function PaymentsPage() {
               </>:<div className={styles.span2}><strong>{selected?.student_name}</strong>
                   <p className={styles.note}>{selected?.course_name} · {selected?.batch_name}</p>
                 </div>}
-              <label>Amount received (USD) *<input type="number" min="0.01" max="9999999999" step="0.01" required
-                value={form.amount_usd} onChange={e=>setForm(prev=>({...prev,amount_usd:e.target.value}))}/></label>
+              <label>Currency *
+                <select required value={form.currency} disabled={dialog==="edit"&&selected?.source==="existing"}
+                  onChange={e=>setForm(prev=>({...prev,currency:e.target.value as "USD"|"INR"}))}>
+                  <option value="USD">USD ($) — US Dollar</option>
+                  <option value="INR">INR (₹) — Indian Rupee</option>
+                </select>
+              </label>
+              <label>Amount received ({form.currency==="INR"?"₹":"$"}) *<input type="number" min="0.01" max="9999999999" step="0.01" required
+                value={form.amount_received} onChange={e=>setForm(prev=>({...prev,amount_received:e.target.value}))}/></label>
+              {dialog==="edit"&&selected?.source==="existing"&&
+                <p className={styles.legacyNote}>Legacy finance transactions remain in USD. Record INR using a new manual payment entry.</p>}
               <label>Payment date *<input type="date" required value={form.payment_date}
                 onChange={e=>setForm(prev=>({...prev,payment_date:e.target.value}))}/></label>
               <label>Payment method *<select required value={form.payment_mode}
@@ -394,7 +420,7 @@ export default function PaymentsPage() {
             </div>
           </form> : <>
             <div className={styles.formGrid}><div className={styles.span2}>
-              <p>Payment for <strong>{selected?.student_name}</strong> — {usd(selected?.amount_usd||0)}.</p>
+              <p>Payment for <strong>{selected?.student_name}</strong> — {money(selected?.amount_received||0,selected?.currency||"USD")}.</p>
               <p className={styles.note}>{selected?.source==="manual"
                 ?"This receipt will remain in the audit trail as voided. It will no longer count toward collections."
                 :"This older payment will be removed through the existing audited correction process."}</p>
