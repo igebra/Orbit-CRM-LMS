@@ -701,3 +701,27 @@
     font-size:11px;
   }
 }
+
+
+/* Orbit Classroom admin — compact navigation, existing advanced views unchanged. */
+.compactMain{padding-top:18px}
+.compactMain .header{min-height:56px;margin-bottom:12px;align-items:center;gap:12px}
+.compactMain .lmsHeaderTitle{gap:9px;padding:0}
+.compactMain .lmsHeaderIcon3D{width:42px;height:42px;flex-basis:42px;border-radius:12px}
+.compactMain .lmsHeaderIconSvg{width:35px;height:35px}
+.compactMain .lmsHeaderTitle h1{font-size:22px;line-height:1.2;color:#31283d}
+.compactMain .lmsViewTabs{gap:6px;flex-wrap:wrap}
+.compactMain .lmsViewTab{min-height:44px;min-width:102px;padding:6px 10px;border-radius:9px;gap:5px;flex-direction:row}
+.compactMain .lmsViewTab .libraryIconShell,.compactMain .lmsViewTab .curriculumIconShell{width:25px;height:25px}
+.compactMain .lmsViewTab .libraryIconSvg,.compactMain .lmsViewTab .curriculumIconSvg{width:25px;height:25px}
+.compactMain .lmsViewTabActive{border-color:#a993d2;background:#f2edfa;color:#6544a4;box-shadow:none}
+.classworkTabIcon{font-size:21px;line-height:1;color:#7957b5;font-weight:650}
+.compactMain .courseBar{margin-bottom:12px;padding:10px 12px;gap:10px;box-shadow:none;border-color:#e6dfed}
+.compactMain .familyButtons{gap:6px}
+.compactMain .courseFamilyCard{min-height:49px;padding:5px 11px;gap:7px}
+.compactMain .courseFamilyCard .courseIconShell{width:29px;height:29px}
+.compactMain .courseChoices{padding-top:0}
+.compactMain .courseMeta{padding-top:5px}
+.compactMain .pageMascot{display:none}
+@media(max-width:1100px){.compactMain .header{align-items:flex-start;flex-direction:column}.compactMain .lmsViewTabs{width:100%}}
+@media(max-width:640px){.compactMain{padding:12px}.compactMain .lmsHeaderTitle h1{font-size:17px}.compactMain .lmsViewTab{flex:1;min-width:80px}.compactMain .lmsViewTab>span:last-child{font-size:9px}}

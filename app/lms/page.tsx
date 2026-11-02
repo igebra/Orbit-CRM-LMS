@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import OrbitSidebar from "../components/OrbitSidebar";
 import { COURSE_OPTIONS, courseDefaults } from "../lib/orbitCourses";
 import styles from "./lms.module.css";
+import CompactClasswork, { type ResourceDraft } from "./CompactClasswork";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -318,7 +319,7 @@ export default function LmsPage() {
   const [email,setEmail] = useState("");
   const [userId,setUserId] = useState("");
   const [role,setRole] = useState("");
-  const [tab,setTab] = useState<"library"|"curriculum">("library");
+  const [tab,setTab] = useState<"classwork"|"library"|"curriculum">("classwork");
   const [course,setCourse] = useState("Math - Grade 01");
   const [sessionFilter,setSessionFilter] = useState("All");
   const [typeFilter,setTypeFilter] = useState("All");
@@ -479,112 +480,87 @@ export default function LmsPage() {
     setUploadOpen(true);
   }
 
-  async function uploadResource(e:FormEvent){
-    e.preventDefault();
-
-    if(!upload.title.trim()){
-      setMessage("Resource title is required.");
-      return;
+  async function saveResource(draft: ResourceDraft): Promise<boolean> {
+    const { session_number, resource_type, title, description, mode, file, externalUrl: url } = draft;
+    if(!title.trim()){ setMessage("Resource title is required."); return false; }
+    if(!/^[0-9]+$/.test(session_number) || Number(session_number) < 1 || Number(session_number) > 200){
+      setMessage("Choose a valid class number between 1 and 200."); return false;
     }
-
-    if(uploadMode==="file"){
-      if(!uploadFile){
-        setMessage("Choose a file or switch to External Link.");
-        return;
-      }
-      if(uploadFile.size>MAX_FILE){
-        setMessage("This file is over 100 MB. Please use External Link for larger files.");
-        return;
-      }
+    if(mode==="file"){
+      if(!file){ setMessage("Choose a file or switch to External Link."); return false; }
+      if(file.size>MAX_FILE){ setMessage("This file is over 100 MB. Use External Link for larger files."); return false; }
     }else{
-      if(!externalUrl.trim()){
-        setMessage("Paste the external file link.");
-        return;
-      }
-      if(!isValidExternalUrl(externalUrl)){
-        setMessage("Enter a valid http:// or https:// link.");
-        return;
-      }
+      if(!isValidExternalUrl(url)){ setMessage("Enter a valid http:// or https:// link."); return false; }
     }
 
+    setMessage("");
     setWorking(true);
-    let resourceId="";
-    let storagePath="";
-
-    try{
+    let resourceId = "";
+    let storagePath = "";
+    try {
       const {data:curriculumId,error:currErr} = await supabase.rpc(
         "ensure_lms_curriculum_session",
-        {p_course_name:course,p_session_number:Number(upload.session_number)}
+        {p_course_name:course,p_session_number:Number(session_number)}
       );
-      if(currErr) throw currErr;
+      if(currErr || !curriculumId) throw currErr || new Error("Could not create curriculum class.");
 
-      const {data:r,error:rErr} = await supabase
-        .from("lms_resources")
+      const {data:created,error:rErr} = await supabase.from("lms_resources")
         .insert({
           curriculum_session_id:String(curriculumId),
-          resource_type:upload.resource_type,
-          title:upload.title.trim(),
-          description:upload.description.trim()||null,
-          external_url:uploadMode==="link" ? externalUrl.trim() : null,
+          resource_type,
+          title:title.trim(),
+          description:description.trim()||null,
+          external_url:mode==="link" ? url.trim() : null,
           created_by:userId||null,
           updated_by:userId||null
         })
-        .select("id")
-        .single();
+        .select("id").single();
+      if(rErr || !created) throw rErr || new Error("Could not create resource.");
+      resourceId = created.id;
 
-      if(rErr || !r) throw rErr || new Error("Could not create resource.");
-      resourceId = r.id;
-
-      if(uploadMode==="file" && uploadFile){
-        const clean = safeName(uploadFile.name)||"file";
-        const unique =
-          typeof crypto!=="undefined" && "randomUUID" in crypto
-            ? crypto.randomUUID()
-            : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-        storagePath = `${resourceId}/${unique}-${clean}`;
-
-        const up = await supabase.storage
-          .from("lms-library")
-          .upload(storagePath,uploadFile,{cacheControl:"3600",upsert:false});
-
-        if(up.error) throw up.error;
-
-        const {error:vErr} = await supabase
-          .from("lms_resource_versions")
-          .insert({
-            resource_id:resourceId,
-            version_number:1,
-            file_name:uploadFile.name,
-            storage_path:storagePath,
-            mime_type:uploadFile.type||null,
-            size_bytes:uploadFile.size,
-            uploaded_by:userId||null
-          });
-
+      if(mode==="file" && file){
+        const clean=safeName(file.name)||"file";
+        const unique=typeof crypto!=="undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        storagePath=`${resourceId}/${unique}-${clean}`;
+        const uploaded=await supabase.storage.from("lms-library")
+          .upload(storagePath,file,{cacheControl:"3600",upsert:false});
+        if(uploaded.error) throw uploaded.error;
+        const {error:vErr}=await supabase.from("lms_resource_versions").insert({
+          resource_id:resourceId, version_number:1, file_name:file.name,
+          storage_path:storagePath, mime_type:file.type||null,
+          size_bytes:file.size, uploaded_by:userId||null
+        });
         if(vErr) throw vErr;
       }
 
       setUploadOpen(false);
       setUploadFile(null);
       setExternalUrl("");
-      setMessage(
-        uploadMode==="link"
-          ? `${upload.title.trim()} link saved.`
-          : `${upload.title.trim()} uploaded.`
-      );
+      setMessage(mode==="link" ? `${title.trim()} link saved.` : `${title.trim()} uploaded.`);
       await loadAll();
+      return true;
     }catch(err){
-      if(storagePath){
-        await supabase.storage.from("lms-library").remove([storagePath]);
-      }
-      if(resourceId){
-        await supabase.from("lms_resources").delete().eq("id",resourceId);
-      }
+      if(storagePath) await supabase.storage.from("lms-library").remove([storagePath]);
+      if(resourceId) await supabase.from("lms_resources").delete().eq("id",resourceId);
       setMessage(err instanceof Error ? err.message : "Could not save resource.");
+      return false;
     }finally{
       setWorking(false);
     }
+  }
+
+  async function uploadResource(e:FormEvent){
+    e.preventDefault();
+    await saveResource({
+      session_number:upload.session_number,
+      resource_type:upload.resource_type,
+      title:upload.title,
+      description:upload.description,
+      mode:uploadMode,
+      file:uploadFile,
+      externalUrl
+    });
   }
 
   async function openVersion(v:Version){
@@ -658,7 +634,7 @@ export default function LmsPage() {
 
   return <div className={styles.shell}>
     <OrbitSidebar email={email} active="lms" />
-    <main className={styles.main}>
+    <main className={`${styles.main} ${tab==="classwork" ? styles.compactMain : ""}`}>
       <header className={styles.header}>
         <div className={styles.lmsHeaderTitle}>
           <LmsHeaderIcon3D />
@@ -668,6 +644,12 @@ export default function LmsPage() {
         </div>
 
         <div className={styles.lmsViewTabs} role="tablist" aria-label="LMS sections">
+          <button type="button" role="tab" aria-selected={tab==="classwork"}
+            className={`${styles.lmsViewTab} ${tab==="classwork"?styles.lmsViewTabActive:""}`}
+            onClick={()=>setTab("classwork")}>
+            <span className={styles.classworkTabIcon} aria-hidden="true">▤</span>
+            <span>Classwork</span>
+          </button>
           <button
             type="button"
             role="tab"
@@ -760,9 +742,28 @@ export default function LmsPage() {
         </div>
       </section>
 
-      <section className={styles.stats}><div><span>Sessions</span><strong>{sessions.length}</strong></div><div><span>Resources</span><strong>{courseResourceCount}</strong></div><div><span>Required</span><strong>{requiredCount}</strong></div><div className={missingCount?styles.warning:""}><span>Missing</span><strong>{missingCount}</strong></div></section>
+      {tab!=="classwork" && <section className={styles.stats}><div><span>Sessions</span><strong>{sessions.length}</strong></div><div><span>Resources</span><strong>{courseResourceCount}</strong></div><div><span>Required</span><strong>{requiredCount}</strong></div><div className={missingCount?styles.warning:""}><span>Missing</span><strong>{missingCount}</strong></div></section>}
 
-      {tab==="library" ? <>
+      {tab==="classwork" ? <CompactClasswork
+        course={course}
+        plannedSessions={courseDefaults(course).plannedSessions}
+        sessions={sessions}
+        resources={resources}
+        versions={versions}
+        resourceTypes={RESOURCE_TYPES}
+        canManage={canManage}
+        loading={loading}
+        working={working}
+        onSave={saveResource}
+        onGenerateSessions={generateSessions}
+        onEditSession={openEdit}
+        onOpenFile={openVersion}
+        onOpenLink={openExternalLink}
+        onVersions={setVersionResource}
+        onReplace={(resource)=>{setReplaceResource(resource);setReplaceFile(null);}}
+        onEditLink={(resource)=>{setLinkResource(resource);setEditExternalUrl(resource.external_url||"");}}
+        onArchive={archiveResource}
+      /> : tab==="library" ? <>
         {missingCount>0 && <section className={styles.missingPanel}><div><h2>Missing Resources</h2><p>Required by curriculum but not uploaded yet.</p></div><div className={styles.missingGrid}>{missing.slice(0,8).map(x=><button key={x.session.id} onClick={()=>setSessionFilter(String(x.session.session_number))}><strong>Session {x.session.session_number}</strong><span>{x.session.topic||"Topic not added"}</span><small>{x.missing.join(" · ")}</small></button>)}</div></section>}
         <section className={styles.card}>
           <div className={styles.toolbar}><input type="search" placeholder="Search resources or topics..." value={search} onChange={e=>setSearch(e.target.value)}/><select value={sessionFilter} onChange={e=>setSessionFilter(e.target.value)}><option value="All">All Sessions</option>{sessions.map(s=><option key={s.id} value={s.session_number}>Session {s.session_number}{s.topic?` — ${s.topic}`:""}</option>)}</select><select value={typeFilter} onChange={e=>setTypeFilter(e.target.value)}><option value="All">All Resource Types</option>{RESOURCE_TYPES.map(t=><option key={t}>{t}</option>)}</select>{canManage && (
