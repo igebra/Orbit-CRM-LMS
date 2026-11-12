@@ -41,7 +41,7 @@ test("Fx route pulls validated dated USD base rates, caches once a day and fails
 
 test("CRM payments panel independently requests month-to-date receipts and shows dated attribution",()=>{
  const page=readFileSync(new URL("../app/payments/page.tsx",import.meta.url),"utf8");
- assert.match(page,/sameAsThisMonth\?Promise\.resolve\(null\)/);
+ assert.match(page,/sameAsThisMonth\s*\?\s*Promise\.resolve\(null\)/);
  assert.match(page,/supabase\.rpc\("crm_received_payment_report_v2", \{p_from:firstOfMonth,p_to:today\}\)/);
  assert.match(page,/monthlyRevenueEquivalent\(monthlyPayments,usdRates\?\.rates\)/);
  assert.match(page,/!monthlyReady\|\|fxLoading/);
