@@ -7,6 +7,7 @@ import OrbitSidebar from "../components/OrbitSidebar";
 import styles from "./received-payments.module.css";
 import { PAYMENT_CURRENCIES, currencyOptionLabel, currencySymbol, formatPaymentAmount, sumPaymentsByCurrency } from "../lib/paymentCurrencies.mjs";
 import type { PaymentCurrency } from "../lib/paymentCurrencies.mjs";
+import { monthlyRevenueEquivalent } from "../lib/monthlyRevenueFx.mjs";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -43,6 +44,7 @@ type EntryForm = {
   reference: string; notes: string;
 };
 type Dialog = "new" | "edit" | "void" | null;
+type UsdFxSnapshot = {base:"USD";rates:Record<string,number>;updatedAt:string;source:string};
 
 function localDate(date: Date) {
   const y = date.getFullYear();
@@ -75,6 +77,12 @@ export default function PaymentsPage() {
   const [from, setFrom] = useState(monthStart);
   const [to, setTo] = useState(() => localDate(new Date()));
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [monthlyPayments,setMonthlyPayments]=useState<Payment[]>([]);
+  const [monthlyReady,setMonthlyReady]=useState(false);
+  const [monthlyError,setMonthlyError]=useState("");
+  const [usdRates,setUsdRates]=useState<UsdFxSnapshot|null>(null);
+  const [fxLoading,setFxLoading]=useState(true);
+  const [fxError,setFxError]=useState("");
   const [options, setOptions] = useState<StudentOption[]>([]);
   const [search, setSearch] = useState("");
   const [section, setSection] = useState<"history" | "reports">("history");
@@ -92,14 +100,27 @@ export default function PaymentsPage() {
   async function load(dateFrom: string, dateTo: string, accessRole: string) {
     if (!VIEW_ROLES.includes(accessRole)) return;
     if (dateFrom > dateTo) {setNotice("From date cannot be after To date."); return;}
-    setLoading(true); setNotice("");
-    const [result, choices] = await Promise.all([
+    const firstOfMonth=monthStart();
+    const today=localDate(new Date());
+    const sameAsThisMonth=dateFrom===firstOfMonth && dateTo===today;
+    setLoading(true); setNotice("");setMonthlyReady(false);setMonthlyError("");
+    const [result, choices, monthlyResult] = await Promise.all([
       supabase.rpc("crm_received_payment_report_v2", {p_from: dateFrom, p_to: dateTo}),
       MANAGE_ROLES.includes(accessRole)
         ? supabase.rpc("crm_payment_entry_options")
         : Promise.resolve({data: [] as StudentOption[], error: null}),
+      sameAsThisMonth ? Promise.resolve(null) :
+        supabase.rpc("crm_received_payment_report_v2", {p_from:firstOfMonth,p_to:today}),
     ]);
     setLoading(false);
+    const thisMonth=sameAsThisMonth ? result : monthlyResult;
+    if (thisMonth?.error) {
+      setMonthlyError("This month's payment records are unavailable.");
+      setMonthlyPayments([]);
+    } else {
+      setMonthlyPayments((thisMonth?.data||[]) as Payment[]);
+      setMonthlyReady(true);
+    }
     if (result.error) {
       setNotice("Could not load payments: " + result.error.message);
       setPayments([]); return;
@@ -130,6 +151,33 @@ export default function PaymentsPage() {
     void init();
     return () => {active = false;};
   }, [router]);
+
+  useEffect(() => {
+    let mounted=true;
+    async function loadRates(){
+      setFxLoading(true);
+      try {
+        const response=await fetch("/api/fx/latest",{cache:"no-store"});
+        if(!response.ok) throw new Error("Latest exchange rate unavailable");
+        const data=await response.json() as UsdFxSnapshot;
+        if(data.base!=="USD" || !Number.isFinite(data.rates?.INR) || data.rates.INR<=0)
+          throw new Error("Invalid exchange-rate response");
+        if(mounted){setUsdRates(data);setFxError("");}
+      } catch {
+        if(mounted){setUsdRates(null);setFxError("Exchange rates are unavailable; amounts have not been estimated.");}
+      } finally {
+        if(mounted)setFxLoading(false);
+      }
+    }
+    void loadRates();
+    return ()=>{mounted=false;};
+  },[]);
+
+  const monthLabel=useMemo(()=>new Intl.DateTimeFormat("en-IN",{month:"long",year:"numeric"}).format(new Date()),[]);
+  const monthlyRevenue=useMemo(
+    ()=>monthlyRevenueEquivalent(monthlyPayments,usdRates?.rates),
+    [monthlyPayments,usdRates]
+  );
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -292,6 +340,38 @@ export default function PaymentsPage() {
             <strong>{loading?"—":activePayments.length}</strong><small>Current selected period</small>
           </section>
         </div>
+        <section className={styles.fxPanel} aria-label="This month's revenue converted to USD and INR">
+          <div className={styles.fxHeading}>
+            <div>
+              <span className={styles.fxEyebrow}>MONTHLY COLLECTIONS · REFERENCE CONVERSION</span>
+              <h2>{monthLabel} revenue</h2>
+              <p>Payments received this month, shown in two reporting currencies.</p>
+            </div>
+            <span className={styles.fxRatePill}>Indicative FX</span>
+          </div>
+          <div className={styles.fxAmounts}>
+            <div className={styles.fxAmount}>
+              <span>USD equivalent</span>
+              <strong>{!monthlyReady||fxLoading?"—":monthlyRevenue?money(monthlyRevenue.usd,"USD"):"—"}</strong>
+              <small>Estimated US dollar value</small>
+            </div>
+            <div className={styles.fxAmount}>
+              <span>INR equivalent</span>
+              <strong>{!monthlyReady||fxLoading?"—":monthlyRevenue?money(monthlyRevenue.inr,"INR"):"—"}</strong>
+              <small>Estimated Indian rupee value</small>
+            </div>
+          </div>
+          <div className={styles.fxFootnote}>
+            <span>{monthlyError||fxError||
+              (monthlyRevenue===null&&monthlyReady&&!fxLoading?"Cannot convert an unsupported currency.":null)||
+              (usdRates?`1 USD ≈ ₹${usdRates.rates.INR.toFixed(2)} · Reference rate updated ${new Date(usdRates.updatedAt).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric",timeZone:"UTC"})}`:
+                "Daily exchange rates are loading…")}</span>
+            <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer">
+              Rates By Exchange Rate API
+            </a>
+          </div>
+          <p className={styles.fxDisclaimer}>Based on recorded, non-voided payments and a single recent reference-rate snapshot; not bank settlement amounts, booked revenue or a tax exchange rate. Original payment currencies are unchanged.</p>
+        </section>
         {notice && <div className={styles.notice} role="status">{notice}</div>}
         <section className={styles.panel}>
           <div className={styles.panelTop}>
