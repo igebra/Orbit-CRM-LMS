@@ -5,6 +5,8 @@ import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import OrbitSidebar from "../components/OrbitSidebar";
 import styles from "./received-payments.module.css";
+import { PAYMENT_CURRENCIES, currencyOptionLabel, currencySymbol, formatPaymentAmount, sumPaymentsByCurrency } from "../lib/paymentCurrencies.mjs";
+import type { PaymentCurrency } from "../lib/paymentCurrencies.mjs";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,7 +26,7 @@ type Payment = {
   batch_name: string;
   course_name: string;
   amount_received: number;
-  currency: "USD" | "INR";
+  currency: PaymentCurrency;
   payment_mode: string;
   purpose: string;
   reference: string | null;
@@ -36,7 +38,7 @@ type StudentOption = {
   student_name: string; course_name: string;
 };
 type EntryForm = {
-  student_id: string; batch_id: string; amount_received: string; currency: "USD" | "INR";
+  student_id: string; batch_id: string; amount_received: string; currency: PaymentCurrency;
   payment_date: string; payment_mode: string; purpose: string;
   reference: string; notes: string;
 };
@@ -55,10 +57,8 @@ function emptyForm(): EntryForm {
   return { student_id: "", batch_id: "", amount_received: "", currency: "USD", payment_date: localDate(new Date()),
     payment_mode: "Zelle", purpose: "Course Fee", reference: "", notes: "" };
 }
-function money(value: number, currency: "USD" | "INR") {
-  return new Intl.NumberFormat(currency === "INR" ? "en-IN" : "en-US", {
-    style: "currency", currency, minimumFractionDigits: 2, maximumFractionDigits: 2
-  }).format(Number(value || 0));
+function money(value: number, currency: PaymentCurrency) {
+  return formatPaymentAmount(value,currency);
 }
 function csvCell(value: unknown) {
   let text = String(value ?? "");
@@ -140,10 +140,10 @@ export default function PaymentsPage() {
     );
   }, [payments, search]);
   const activePayments = useMemo(() => payments.filter(p => !p.voided_at), [payments]);
-  const receivedByCurrency = useMemo(() => activePayments.reduce((totals, payment) => {
-    totals[payment.currency] += Number(payment.amount_received || 0);
-    return totals;
-  }, {USD: 0, INR: 0}), [activePayments]);
+  const receivedByCurrency = useMemo(() => sumPaymentsByCurrency(activePayments), [activePayments]);
+  const visibleCurrencyMetrics = PAYMENT_CURRENCIES.filter(
+    option => ["USD","INR"].includes(option.code) || receivedByCurrency[option.code] > 0
+  );
 
   const studentOptions = useMemo(() => {
     const unique = new Map<string, string>();
@@ -153,7 +153,7 @@ export default function PaymentsPage() {
   const relevantBatches = useMemo(() => options.filter(o => o.student_id === form.student_id), [options, form.student_id]);
   const chosen = options.find(o => o.student_id === form.student_id && o.batch_id === form.batch_id);
   const byMode = useMemo(() => {
-    const map = new Map<string, {name:string;currency:"USD"|"INR";amount:number}>();
+    const map = new Map<string, {name:string;currency:PaymentCurrency;amount:number}>();
     activePayments.forEach(p => {
       const key=p.currency+"|"+p.payment_mode;
       const previous=map.get(key);
@@ -162,7 +162,7 @@ export default function PaymentsPage() {
     return [...map.values()].sort((a,b)=>a.currency.localeCompare(b.currency)||b.amount-a.amount);
   },[activePayments]);
   const byCourse = useMemo(() => {
-    const map = new Map<string, {name:string;currency:"USD"|"INR";amount:number}>();
+    const map = new Map<string, {name:string;currency:PaymentCurrency;amount:number}>();
     activePayments.forEach(p => {
       const key=p.currency+"|"+p.course_name;
       const previous=map.get(key);
@@ -283,12 +283,11 @@ export default function PaymentsPage() {
         </header>
 
         <div className={styles.summary} aria-label="Recorded payments summary">
-          <section className={styles.metric}><span>Received in USD</span>
-            <strong>{loading?"—":money(receivedByCurrency.USD,"USD")}</strong><small>US Dollar receipts</small>
-          </section>
-          <section className={styles.metric}><span>Received in INR</span>
-            <strong>{loading?"—":money(receivedByCurrency.INR,"INR")}</strong><small>Indian Rupee receipts</small>
-          </section>
+          {visibleCurrencyMetrics.map(option=><section key={option.code} className={styles.metric}>
+            <span>Received in {option.code}</span>
+            <strong>{loading?"—":money(receivedByCurrency[option.code]||0,option.code)}</strong>
+            <small>{option.name} receipts</small>
+          </section>)}
           <section className={styles.metric}><span>Payments recorded</span>
             <strong>{loading?"—":activePayments.length}</strong><small>Current selected period</small>
           </section>
@@ -387,15 +386,16 @@ export default function PaymentsPage() {
                 </div>}
               <label>Currency *
                 <select required value={form.currency} disabled={dialog==="edit"&&selected?.source==="existing"}
-                  onChange={e=>setForm(prev=>({...prev,currency:e.target.value as "USD"|"INR"}))}>
-                  <option value="USD">USD ($) — US Dollar</option>
-                  <option value="INR">INR (₹) — Indian Rupee</option>
+                  onChange={e=>setForm(prev=>({...prev,currency:e.target.value as PaymentCurrency}))}>
+                  {PAYMENT_CURRENCIES.map(option=>
+                    <option key={option.code} value={option.code}>{currencyOptionLabel(option)}</option>
+                  )}
                 </select>
               </label>
-              <label>Amount received ({form.currency==="INR"?"₹":"$"}) *<input type="number" min="0.01" max="9999999999" step="0.01" required
+              <label>Amount received ({currencySymbol(form.currency)}) *<input type="number" min="0.01" max="9999999999" step="0.01" required
                 value={form.amount_received} onChange={e=>setForm(prev=>({...prev,amount_received:e.target.value}))}/></label>
               {dialog==="edit"&&selected?.source==="existing"&&
-                <p className={styles.legacyNote}>Legacy finance transactions remain in USD. Record INR using a new manual payment entry.</p>}
+                <p className={styles.legacyNote}>Legacy finance transactions remain in USD. Record payments in other currencies using a new manual payment entry.</p>}
               <label>Payment date *<input type="date" required value={form.payment_date}
                 onChange={e=>setForm(prev=>({...prev,payment_date:e.target.value}))}/></label>
               <label>Payment method *<select required value={form.payment_mode}
