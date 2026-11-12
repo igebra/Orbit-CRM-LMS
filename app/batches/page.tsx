@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import OrbitSidebar from "../components/OrbitSidebar";
 import OrbitDeleteButton from "../components/ui/OrbitDeleteButton";
 import { COURSE_OPTIONS, courseDefaults } from "../lib/orbitCourses";
+import { CRM_BATCH_PROGRAMMES, crmBatchProgrammeSummary, crmFilteredBatches } from "../lib/crmBatchProgrammeSummary.mjs";
 import styles from "../lms.module.css";
 import visual from "./batches-visual.module.css";
 
@@ -158,6 +159,7 @@ export default function BatchesPage() {
   const [userId, setUserId] = useState("");
   const [role, setRole] = useState("");
   const [batches, setBatches] = useState<Batch[]>([]);
+  const [selectedProgramme, setSelectedProgramme] = useState("All");
   const [roster, setRoster] = useState<Roster[]>([]);
   const [students, setStudents] = useState<StudentOption[]>([]);
   const [trainers, setTrainers] = useState<Trainer[]>([]);
@@ -224,6 +226,12 @@ export default function BatchesPage() {
     }
     return {total:batches.length,running:running.length,weekday,weekend,both,unscheduled};
   }, [batches]);
+
+  const programmeSummary = useMemo(() => crmBatchProgrammeSummary(batches), [batches]);
+  const displayedBatches = useMemo(
+    () => crmFilteredBatches(batches, selectedProgramme),
+    [batches, selectedProgramme]
+  );
 
   const studentNamesByBatch = useMemo(() => {
     const studentMap = new Map(students.map((student) => [student.id, student.student_name]));
@@ -402,6 +410,49 @@ export default function BatchesPage() {
           </p>
         )}
 
+
+        <section className={visual.programmeSection} aria-label="Active batches by programme">
+          <div className={visual.programmeSectionHeader}>
+            <div>
+              <h2>Batches by programme</h2>
+              <p>Select a programme to filter the batch directory.</p>
+            </div>
+            {selectedProgramme !== "All" && (
+              <button type="button" className={visual.showAll}
+                onClick={() => setSelectedProgramme("All")}>Show all batches</button>
+            )}
+          </div>
+          <div className={visual.programmeCards}>
+            {CRM_BATCH_PROGRAMMES.map(name => (
+              <button
+                key={name}
+                type="button"
+                className={`${visual.programmeCard} ${name === "Math" ? visual.mathCard : name === "AiEdge" ? visual.aiEdgeCard : visual.codingCard} ${selectedProgramme === name ? visual.programmeSelected : ""}`}
+                aria-pressed={selectedProgramme === name}
+                onClick={() => setSelectedProgramme(current => current === name ? "All" : name)}
+              >
+                <span className={visual.programmeCardTop}>
+                  <span className={visual.programmeCardName}>{name}</span>
+                  <span className={visual.programmeCardMark} aria-hidden="true">{name === "Math" ? "∑" : name === "AiEdge" ? "AI" : "</>"}</span>
+                </span>
+                <span className={visual.programmeCardCount}>{loading ? "—" : programmeSummary.counts[name]}</span>
+                <span className={visual.programmeCardCaption}>Active {loading || programmeSummary.counts[name] !== 1 ? "batches" : "batch"}</span>
+              </button>
+            ))}
+          </div>
+          {!loading && programmeSummary.other > 0 && (
+            <p className={visual.otherProgrammesNote}>
+              {programmeSummary.other} active {programmeSummary.other === 1 ? "batch belongs" : "batches belong"} to other programmes.
+            </p>
+          )}
+        </section>
+        {selectedProgramme !== "All" && (
+          <p className={visual.filteredNotice}>
+            Showing {displayedBatches.length} {selectedProgramme} {displayedBatches.length === 1 ? "batch" : "batches"} ·{" "}
+            <button type="button" onClick={() => setSelectedProgramme("All")}>View all {batches.length}</button>
+          </p>
+        )}
+
         {message && <div className={styles.message}>{message}</div>}
 
         <section className={`${styles.card} ${visual.list}`}>
@@ -424,9 +475,11 @@ export default function BatchesPage() {
               <tbody>
                 {loading ? (
                   <tr><td colSpan={10} className={styles.empty}>Loading batches...</td></tr>
-                ) : batches.length === 0 ? (
-                  <tr><td colSpan={10} className={styles.empty}>No batches found.</td></tr>
-                ) : batches.map((b, index) => (
+                ) : displayedBatches.length === 0 ? (
+                  <tr><td colSpan={10} className={styles.empty}>
+                    {selectedProgramme === "All" ? "No batches found." : "No batches found for this programme."}
+                  </td></tr>
+                ) : displayedBatches.map((b, index) => (
                   <tr key={b.id}>
                     <td data-sno>{index + 1}</td>
                     <td>{b.batch_name}</td>
