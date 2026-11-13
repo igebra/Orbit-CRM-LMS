@@ -101,3 +101,10 @@
 .modal .phoneInputGroup .phoneCodeInput{flex:0 0 92px;width:92px;min-width:0;padding:0 10px;text-align:left}
 .modal .phoneInputGroup .phoneLocalInput{flex:1 1 auto;width:100%;min-width:0}
 @media(max-width:410px){.modal .phoneInputGroup .phoneCodeInput{flex-basis:79px;width:79px}.phoneInputGroup{gap:6px}}
+
+
+/* CRM-CTA-001: Students non-destructive actions and focus rings. */
+.iconButton{color:var(--crm-action,#765BA3)}
+.iconButton:hover:not(:disabled){background:var(--crm-action-tint,#F5F0FA);border-color:var(--crm-action-border,#DED7E9)}
+.iconButton:focus-visible,.card :global(button[data-orbit-button]:focus-visible),
+.modal :is(input,select,button):focus-visible{outline-color:var(--crm-action,#765BA3)}
