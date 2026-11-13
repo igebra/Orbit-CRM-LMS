@@ -202,3 +202,17 @@
 @media(max-width:760px){.headerMascot{width:74px;height:92px;}.headerTools{gap:8px;}}
 
 .statusCell{text-align:center!important;}
+
+
+/* CRM-CTA-001: Access management, preserving approval/rejection semantics. */
+.primary{background:var(--crm-action,#765BA3);border-color:var(--crm-action,#765BA3);color:white}
+.primary:hover:not(:disabled){background:var(--crm-action-hover,#624888);border-color:var(--crm-action-hover,#624888)}
+.secondary,.editButton,.resetButton{color:var(--crm-action,#765BA3)}
+.secondary:hover:not(:disabled),.editButton:hover:not(:disabled),.resetButton:hover:not(:disabled){
+  background:var(--crm-action-tint,#F5F0FA);
+}
+.tabs button.activeTab{border-bottom-color:var(--crm-action,#765BA3)}
+.tableWrap :is(.approveButton,.editButton,.resetButton){
+  color:var(--crm-action,#765BA3)!important;
+}
+.main :is(button,input,select):focus-visible{outline-color:var(--crm-action,#765BA3)}
