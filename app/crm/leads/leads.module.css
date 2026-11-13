@@ -1107,3 +1107,113 @@ button.statCard {
 .modal :is(input,select){min-height:40px;}
 .modalHeader h2{font:600 20px var(--font-orbit-heading),sans-serif;color:#263D46;}
 .main :is(button,input,select,textarea):focus-visible{outline:2px solid #2459D6;outline-offset:2px;}
+
+/* BRAND-009 · Lead Management aligned to the current Orbit CRM soft-pastel
+   palette. UI-only; preserve Lead workflow, validation, table actions and RLS. */
+.shell{background:#FBFAFF;color:#263D46}
+.main{background:#FBFAFF;padding:24px 27px 40px}
+.kicker{color:#8264AB!important}
+.header{margin-bottom:20px}
+.header h1{color:#263D46}
+.subtitle{color:#657181}
+.headerActions{gap:10px}
+.primaryButton{
+  background:#765BA3;border:1px solid #765BA3;color:#fff;
+  box-shadow:none;border-radius:11px;transition:background .15s ease;
+}
+.primaryButton:hover:not(:disabled){background:#624888;border-color:#624888}
+.primaryButton:active{background:#624888;transform:none;box-shadow:none}
+.secondaryButton,.cancelButton,.refreshButton{
+  color:#765BA3;border:1px solid #DED7E9;background:#fff;
+  box-shadow:none;border-radius:11px;
+}
+.secondaryButton:hover:not(:disabled),.cancelButton:hover:not(:disabled),
+.refreshButton:hover:not(:disabled){background:#F5F0FA}
+.main :is(button,input,select,textarea):focus-visible{
+  outline:2px solid #8065A5;outline-offset:2px;
+}
+.statsGrid{gap:12px;margin-bottom:19px}
+.statCard{
+  position:relative;min-height:94px;padding:15px 16px;
+  background:#fff;border:1px solid #E6E0ED;border-radius:16px;
+  box-shadow:0 5px 18px rgba(73,58,80,.035);
+}
+.statCard:nth-child(1){background:linear-gradient(145deg,#F1F6FE,#fff 72%);border-top:3px solid #B7CFF1}
+.statCard:nth-child(2){background:linear-gradient(145deg,#F6F0FC,#fff 72%);border-top:3px solid #C9B5DE}
+.statCard:nth-child(3){background:linear-gradient(145deg,#F9F7E9,#fff 72%);border-top:3px solid #E5D99D}
+.statCard:nth-child(4){background:linear-gradient(145deg,#FDF0F7,#fff 72%);border-top:3px solid #E3BBD1}
+.statCard:nth-child(5){background:linear-gradient(145deg,#FFF5EA,#fff 72%);border-top:3px solid #EBC9A9}
+.statCard span{font:600 12px/1.4 var(--font-orbit-body),sans-serif;color:#63586F;margin-bottom:6px}
+.statCard strong{font:700 25px/1.2 var(--font-orbit-heading),sans-serif;color:#493A50}
+.statCard.duplicateCardActive{
+  border-color:#CE9AA3;background:linear-gradient(145deg,#FFF0F2,#fff 75%);
+  box-shadow:0 0 0 2px rgba(206,154,163,.12);
+}
+.toolbar{padding:12px 0 15px;border:0;background:transparent;gap:10px}
+.toolbar :is(input[type="search"],select){
+  border:1px solid #DDD6E7;border-radius:11px;background:#fff;
+  color:#493A50;min-height:42px;font:400 13px var(--font-orbit-body),sans-serif;
+}
+.toolbar :is(input[type="search"],select):focus-visible{outline-color:#8065A5}
+.tableCard{background:transparent;border:0;box-shadow:none;border-radius:0}
+.tableWrap{background:transparent}
+.tableWrap th{
+  background:#F0ECF5;color:#4E435D;
+  border-bottom:1px solid #E6DEEC;
+}
+.tableWrap td{border-bottom:1px solid #E9E3ED;color:#493A50}
+.tableWrap td small{color:#786C84}
+.tableWrap tbody tr:hover,.expandedActionRow:hover{background:#F5F0F9}
+.actionToggle,.expandedActionContent .rowActions button{color:#765BA3!important}
+.actionToggle:hover,.expandedActionContent .rowActions button:hover{
+  color:#604782!important;text-decoration:underline;
+}
+.expandedActionRow{background:#F7F3FB}
+.expandedActionRow>td{border-bottom:1px solid #E6DEEC}
+.selectionBar{border:1px solid #DDD3E9;background:#F3EDF9;box-shadow:none}
+.selectionCount{color:#624A85}
+.selectionCount strong{background:#765BA3}
+.selectionActions button{border-color:#DED3E8;color:#765BA3}
+.selectionActions .scheduleSelected{background:#765BA3;border-color:#765BA3;color:#fff}
+.selectionActions .selectionDelete{border-color:#E9C4C9;color:#A43936;background:#FFF4F5}
+.selectionActions .clearSelection{color:#776B80}
+.message{border-color:#DED0EA;background:#F6F0FC;color:#674C84}
+.stageBadge{color:#6A5487;background:#EFE8F7}
+.stageEnrolled{color:#36724C;background:#EAF4EC}
+.stageDemoScheduled{color:#856719;background:#FFF7DC}
+.stageLost{color:#805B62;background:#F5EEF0}
+.followUpToday{background:#EFE5F8;color:#674889}
+.followUpUpcoming{background:#EDF1F9;color:#536C9A}
+.rowActions .followUpButton{border-color:#DED3E8;background:#F6F1FB;color:#624A85}
+.rowActions .convertButton{border-color:#E8D5E6;background:#FFF6FC;color:#765BA3}
+.activityPanel{background:#F8F5FB}
+.activityItem{border-color:#E6DDEC;background:#fff}
+.activityTop strong{color:#765BA3}
+.activityItem p{color:#574D64}
+.importChoice{background:#FBF8FE;border-color:#E7DFEE}
+.modal,.followUpModal,.importModal{
+  background:#fff;border:1px solid #EBE4F1;
+  box-shadow:0 24px 65px rgba(52,38,69,.17);border-radius:18px;
+}
+.modalHeader{border-bottom:1px solid #EBE5F1}
+.closeButton{background:#F5EFFB;color:#735998;border:1px solid #E4D9EE}
+.formGrid label>span{color:#493A50}
+.formGrid :is(input,select,textarea){
+  border:1px solid #DED7E9;border-radius:10px;
+  background:#fff;color:#493A50;
+}
+.formGrid :is(input,select,textarea):focus{
+  border-color:#A78BCE;box-shadow:0 0 0 3px rgba(167,139,206,.14);
+}
+.phoneField{border:1px solid #DED7E9;border-radius:10px;background:#fff}
+.phoneField>span{
+  min-width:65px;padding:0 11px;
+  background:#F0E9F8;color:#694C92;
+  border-right:1px solid #DED7E9;
+  font:700 13px var(--font-orbit-body),sans-serif;
+}
+.phoneField:focus-within{outline:2px solid #A78BCE;outline-offset:1px}
+.modalFooter{border-top-color:#EBE5F1}
+@media(max-width:900px){.main{padding:20px}}
+@media(max-width:620px){.main{padding:17px}.statsGrid{gap:9px}.statCard{min-height:85px;padding:13px}}
+@media(prefers-reduced-motion:reduce){.primaryButton{transition:none}}
