@@ -14,6 +14,7 @@ import OrbitSidebar from "../../components/OrbitSidebar";
 import OrbitDeleteButton from "../../components/ui/OrbitDeleteButton";
 import * as XLSX from "xlsx";
 import styles from "./demos.module.css";
+import { CRM_TIME_ZONES } from "../../lib/crmRegionalOptions.mjs";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,13 +27,7 @@ const GRADES = Array.from({ length: 10 }, (_, i) =>
 
 const DEMO_COURSES = ["AiEdge", "Coding4AI", "Math"];
 
-const TIMEZONES = [
-  { value: "America/New_York", label: "US Eastern" },
-  { value: "America/Chicago", label: "US Central" },
-  { value: "America/Denver", label: "US Mountain" },
-  { value: "America/Los_Angeles", label: "US Pacific" },
-  { value: "Asia/Kolkata", label: "India IST" },
-];
+const TIMEZONES = CRM_TIME_ZONES;
 
 const SESSION_STATUS_OPTIONS = [
   "Scheduled",
