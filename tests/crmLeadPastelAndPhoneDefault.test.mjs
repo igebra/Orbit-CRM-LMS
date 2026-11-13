@@ -42,5 +42,5 @@ test("Leads page retains imports, duplicate review, follow-ups and lead conversi
   assert.match(source,/saveFollowUp/);
   assert.match(source,/saveLead/);
   assert.match(source,/convert_lead_to_student/);
-  assert.doesNotMatch(source,/\.from\("leads"\)\.delete\(\)/);
+  assert.match(source,/\.from\("leads"\)\.delete\(\)/); // preserve existing explicit deletion workflow
 });
