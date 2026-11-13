@@ -90,3 +90,12 @@
 .fxFootnote a{color:#2459D6;text-decoration:underline;text-underline-offset:2px;font-size:10px}
 .fxDisclaimer{font-size:10px;line-height:1.5;margin:7px 0 0;color:#85949E}
 @media(max-width:650px){.fxPanel{padding:15px 13px}.fxAmounts{grid-template-columns:1fr;gap:8px}.fxAmount strong{font-size:22px}.fxHeading{flex-wrap:wrap}}
+
+
+/* CRM-CTA-001: Payments page Add/Edit/Save and non-destructive text actions. */
+.primary{background:var(--crm-action,#765BA3);border-color:var(--crm-action,#765BA3);color:#fff}
+.primary:hover:not(:disabled){background:var(--crm-action-hover,#624888);border-color:var(--crm-action-hover,#624888)}
+.secondary,.action:not(.actionDanger){color:var(--crm-action,#765BA3)}
+.activeTab{color:var(--crm-action,#765BA3);border-bottom-color:var(--crm-action,#765BA3)}
+.action:not(.actionDanger):hover{color:var(--crm-action-hover,#624888)}
+:is(.primary,.secondary,.action,.tab):focus-visible{outline:2px solid var(--crm-action,#765BA3);outline-offset:2px}

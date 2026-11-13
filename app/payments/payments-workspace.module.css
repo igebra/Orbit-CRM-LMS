@@ -160,3 +160,16 @@
 .ledgerTable[aria-label="Payment transaction history"] th{width:auto;}
 .ledgerTable[aria-label="Payment transaction history"] th:first-child{width:4%;}
 @media(max-width:780px){.rightRail{grid-template-columns:1fr!important;}}
+
+
+/* CRM-CTA-001: Payment workspace buttons; financial values and red delete stay intact. */
+.primaryButton{background:var(--crm-action,#765BA3);border-color:var(--crm-action,#765BA3);color:#fff}
+.primaryButton:hover:not(:disabled){background:var(--crm-action-hover,#624888);border-color:var(--crm-action-hover,#624888)}
+.outlineButton,.textLink,.sideHeading button,.rowAction,.auditLink,
+.tableFooter button,.inlineActions button:not(:last-child){
+  color:var(--crm-action,#765BA3)!important;
+}
+.inlineActions button:last-child{color:#A43936!important}
+.tabs button:hover{color:var(--crm-action,#765BA3)}
+.tabs button.activeTab{border-bottom-color:var(--crm-action,#765BA3)}
+.main :is(button,input,select,textarea):focus-visible{outline-color:var(--crm-action,#765BA3)}

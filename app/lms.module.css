@@ -693,3 +693,28 @@
 .nav button:hover{background:#F4EFFB!important;color:#263D46;}
 .navActive .navIcon{color:#7044B8;}
 .nav button:focus-visible,.brand:focus-visible,.signOut:focus-visible{outline-color:#2459D6;}
+
+
+/* CRM-CTA-001: shared internal actions (does not touch sidebar backgrounds,
+   decorative programme colours, statuses or red destructive controls). */
+.primary,.headerActions .primary,.tabBar .tabActive{
+  background:var(--crm-action,#765BA3);border-color:var(--crm-action,#765BA3);color:#fff;
+}
+.primary:hover:not(:disabled),.headerActions .primary:hover:not(:disabled){
+  background:var(--crm-action-hover,#624888);border-color:var(--crm-action-hover,#624888);
+}
+.secondary,.smallButton,.headerActions .secondary,.compactOpenButton,.signOut{
+  color:var(--crm-action,#765BA3);
+}
+.secondary:hover:not(:disabled),.smallButton:hover:not(:disabled),
+.headerActions .secondary:hover:not(:disabled),.signOut:hover{
+  background:var(--crm-action-tint,#F5F0FA);border-color:var(--crm-action-border,#DED7E9);
+}
+.rowActions button:not([class*="delete" i]):not([class*="danger" i]){
+  color:var(--crm-action,#765BA3)!important;
+}
+.classDayButtonActive{
+  color:var(--crm-action,#765BA3);border-color:#C8B6DD;background:#F5F0FA;
+}
+.headerActions :is(button,a):focus-visible,.nav button:focus-visible,
+.signOut:focus-visible,.classDayButton:focus-visible{outline-color:var(--crm-action,#765BA3)}

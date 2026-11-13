@@ -103,3 +103,14 @@
 .tableWrap tr{min-height:58px;}
 .tableWrap tbody tr:hover{background:#F8FAFB;}
 @media(max-width:1230px){.tableWrap table{min-width:1030px;}}
+
+
+/* CRM-CTA-001: Trainer actions only. Status badges and Delete stay unchanged. */
+.primary{background:var(--crm-action,#765BA3);border:1px solid var(--crm-action,#765BA3);color:white}
+.primary:hover:not(:disabled){background:var(--crm-action-hover,#624888);border-color:var(--crm-action-hover,#624888)}
+.secondary,.actionToggle{color:var(--crm-action,#765BA3)!important}
+.actions button:not([class*="delete" i]):not([class*="danger" i]),
+.expandedActionsContent .actions button:not([class*="delete" i]):not([class*="danger" i]){
+  color:var(--crm-action,#765BA3)!important;
+}
+.actionToggle:focus-visible,.expandedActions button:focus-visible{outline-color:var(--crm-action,#765BA3)}

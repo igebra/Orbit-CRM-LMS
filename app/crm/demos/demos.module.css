@@ -1248,3 +1248,15 @@
 .tableWrap .actionCell .editAction{width:34px!important;min-width:34px!important;height:34px!important;padding:0!important;}
 .tableWrap .actionCell .deleteButton{width:34px!important;min-width:34px!important;height:34px!important;padding:0!important;}
 @media(max-width:1260px){.tableWrap table{min-width:1100px!important;}}
+
+
+/* CRM-CTA-001: Demo scheduling buttons and links; status colours remain distinct. */
+.primaryButton,.smallPrimary{background:var(--crm-action,#765BA3);border-color:var(--crm-action,#765BA3);color:#fff}
+.primaryButton:hover:not(:disabled),.smallPrimary:hover:not(:disabled){
+  background:var(--crm-action-hover,#624888);border-color:var(--crm-action-hover,#624888);
+}
+.secondaryButton,.refreshButton,.rowActions button:not([class*="delete" i]):not([class*="danger" i]),
+.zoomAction,.viewTabs .viewTabActive{color:var(--crm-action,#765BA3)}
+.rowActions button:not([class*="delete" i]):not([class*="danger" i]){color:var(--crm-action,#765BA3)!important}
+.viewTabs .viewTabActive{border-bottom-color:var(--crm-action,#765BA3)}
+.main :is(button,input,select,textarea):focus-visible{outline-color:var(--crm-action,#765BA3)}

@@ -321,3 +321,17 @@
 .headerTools{display:flex;align-items:center;gap:14px;flex:none}
 .headerMascot{width:52px;height:68px;object-fit:contain;user-select:none;pointer-events:none}
 @media(max-width:960px){.headerTools{gap:8px}.headerMascot{width:44px;height:58px}}
+
+
+/* CRM-CTA-001: Courses creation, primary/secondary choices and modals. */
+.primary,.actions .primary,.modal .primary,.editModal .primary{
+  background:var(--crm-action,#765BA3);border-color:var(--crm-action,#765BA3);color:#fff;
+}
+.primary:hover:not(:disabled),.actions .primary:hover:not(:disabled),
+.modal .primary:hover:not(:disabled),.editModal .primary:hover:not(:disabled){
+  background:var(--crm-action-hover,#624888);border-color:var(--crm-action-hover,#624888);
+}
+.secondary,.actions .secondary,.modal .secondary,.editModal .secondary{color:var(--crm-action,#765BA3)}
+.actions :is(button,a):focus-visible,.primary:focus-visible,.secondary:focus-visible{
+  outline-color:var(--crm-action,#765BA3);
+}

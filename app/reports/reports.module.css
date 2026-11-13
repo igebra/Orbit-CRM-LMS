@@ -49,3 +49,11 @@
 .empty{padding:26px 12px!important;color:#52656F!important;font:400 12px var(--font-orbit-body),sans-serif!important;text-align:center!important;}
 @media(max-width:1150px){.filters .primary{margin-left:0;}.tableWrap th,.tableWrap td{padding:9px 5px;font-size:10px;}}
 @media(max-width:900px){.main{padding:20px}.summary{grid-template-columns:repeat(3,minmax(0,1fr))}.filters{align-items:stretch}.filters label{min-width:135px}.tableWrap{overflow-x:auto}.tableWrap table{min-width:780px!important}}
+
+
+/* CRM-CTA-001: Reports actions and selected navigation. */
+.primary{background:var(--crm-action,#765BA3);border-color:var(--crm-action,#765BA3);color:#fff}
+.primary:hover:not(:disabled){background:var(--crm-action-hover,#624888);border-color:var(--crm-action-hover,#624888)}
+.secondary{color:var(--crm-action,#765BA3)}
+.tabs button.activeTab{border-bottom-color:var(--crm-action,#765BA3)}
+.main :is(button,input,select):focus-visible{outline-color:var(--crm-action,#765BA3)}

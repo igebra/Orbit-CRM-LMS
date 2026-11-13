@@ -19,3 +19,7 @@
 .panel td{color:#263D46}.footnote{font-size:11px;line-height:1.4;color:#52656F;margin:12px 0 0}
 @media(max-width:1150px){.grid{grid-template-columns:1fr}}
 @media(max-width:520px){.programmes{grid-template-columns:1fr}}
+
+/* CRM-CTA-001: Overview programme navigation action. */
+.head button{color:var(--crm-action,#765BA3)}
+.head button:hover:not(:disabled){color:var(--crm-action-hover,#624888)}

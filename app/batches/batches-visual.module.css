@@ -111,3 +111,15 @@
   .programmeCard{min-height:91px;}
   .programmeSectionHeader{flex-wrap:wrap;}
 }
+
+
+/* CRM-CTA-001: Batch creation, selection and inline non-destructive actions. */
+.header button{background:var(--crm-action,#765BA3);border-color:var(--crm-action,#765BA3)}
+.header button:hover:not(:disabled){background:var(--crm-action-hover,#624888);border-color:var(--crm-action-hover,#624888)}
+.header button:focus-visible,.programmeCard:focus-visible,.pageButtons button:focus-visible{
+  outline-color:var(--crm-action,#765BA3);
+}
+.tableWrap td:nth-child(10) button:first-child{color:var(--crm-action,#765BA3)!important}
+.tableWrap td:nth-child(10) button:focus-visible{outline-color:var(--crm-action,#765BA3)}
+.showAll,.filteredNotice button{color:var(--crm-action,#765BA3)}
+.programmeCard.programmeSelected{border-color:#A991C8;box-shadow:0 0 0 2px rgba(118,91,163,.12);background:#F9F5FC}

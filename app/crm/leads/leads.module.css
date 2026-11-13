@@ -1217,3 +1217,9 @@ button.statCard {
 @media(max-width:900px){.main{padding:20px}}
 @media(max-width:620px){.main{padding:17px}.statsGrid{gap:9px}.statCard{min-height:85px;padding:13px}}
 @media(prefers-reduced-motion:reduce){.primaryButton{transition:none}}
+
+
+/* CRM-CTA-001: Keep approved Add Lead mauve and match other action controls. */
+.selectionActions button:not(.selectionDelete),.refreshButton,.actionToggle{color:var(--crm-action,#765BA3)!important}
+.selectionActions .scheduleSelected{background:var(--crm-action,#765BA3);border-color:var(--crm-action,#765BA3);color:#fff!important}
+.expandedActionContent .rowActions button:not(.deleteButton){color:var(--crm-action,#765BA3)!important}

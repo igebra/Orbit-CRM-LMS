@@ -913,3 +913,13 @@ main table :is(th,td)[data-sno]{
   --orbit-teal-soft:#F0EAFB;
   --orbit-aqua:#DDE9FF;
 }
+
+
+/* Shared CRM-only action tokens. Applied by internal CRM modules; public sign-in
+   and informational/status palettes intentionally remain unchanged. */
+:root{
+  --crm-action:#765BA3;
+  --crm-action-hover:#624888;
+  --crm-action-tint:#F5F0FA;
+  --crm-action-border:#DED7E9;
+}

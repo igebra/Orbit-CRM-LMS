@@ -454,3 +454,11 @@
   .breakdownGrid{grid-template-columns:repeat(2,minmax(0,1fr));}
 }
 @media(max-width:1050px){.breakdownGrid{grid-template-columns:1fr;}}
+
+
+/* CRM-CTA-001: Legacy finance views use the same shared mauve action palette. */
+.primary{background:var(--crm-action,#765BA3);border-color:var(--crm-action,#765BA3);color:#fff}
+.primary:hover:not(:disabled){background:var(--crm-action-hover,#624888);border-color:var(--crm-action-hover,#624888)}
+.secondary,.transactionActions .editPaymentButton{color:var(--crm-action,#765BA3)}
+.primary:focus-visible,.secondary:focus-visible,.presetButtons button:focus-visible,
+.tableWrap button:focus-visible,.dateRange input:focus-visible{outline-color:var(--crm-action,#765BA3)}

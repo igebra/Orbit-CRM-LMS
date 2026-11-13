@@ -361,3 +361,9 @@
 .metricCard:nth-child(4){border-top-color:#F5E8B8;}
 .metricCard:nth-child(5){border-top-color:#DDE9FF;}
 .metricCard:nth-child(6){border-top-color:#E8C4D9;}
+
+
+/* CRM-CTA-001: Keyboard focus for navigable overview controls. */
+.metricCard:focus-visible,.focusList button:focus-visible,.quickGrid button:focus-visible{
+  outline:2px solid var(--crm-action,#765BA3);outline-offset:2px;
+}
