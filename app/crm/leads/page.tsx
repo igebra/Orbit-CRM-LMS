@@ -8,6 +8,7 @@ import SmartLeadImport from "./SmartLeadImport";
 import OrbitDeleteButton from "../../components/ui/OrbitDeleteButton";
 import OrbitNavIcon from "../../components/OrbitNavIcon";
 import styles from "./leads.module.css";
+import { CRM_PARTNERS, CRM_TIME_ZONES, CRM_LEAD_COUNTRIES, isCrmTimeZone } from "../../lib/crmRegionalOptions.mjs";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -34,13 +35,7 @@ const LEAD_SOURCES = [
 
 const ASSIGNED_TO = ["Madhu", "Armaity", "Karuna"];
 
-const PARTNERS = [
-  "Hari Vangala",
-  "Shiva Chidara",
-  "Chandra Shekar",
-  "Vijay Devuluru",
-  "Satya Prakash",
-];
+const PARTNERS = CRM_PARTNERS;
 
 const NEXT_ACTIONS = [
   "Need to Call",
@@ -71,25 +66,7 @@ const SCHOOL_COURSES = [
   "Algebra 2",
 ];
 
-const COUNTRIES = [
-  { name: "United States", code: "+1" },
-  { name: "Canada", code: "+1" },
-  { name: "Australia", code: "+61" },
-  { name: "United Kingdom", code: "+44" },
-  { name: "India", code: "+91" },
-  { name: "UAE", code: "+971" },
-  { name: "Saudi Arabia", code: "+966" },
-  { name: "Qatar", code: "+974" },
-  { name: "Kuwait", code: "+965" },
-  { name: "Bahrain", code: "+973" },
-  { name: "Oman", code: "+968" },
-  { name: "Singapore", code: "+65" },
-  { name: "Malaysia", code: "+60" },
-  { name: "Thailand", code: "+66" },
-  { name: "Indonesia", code: "+62" },
-  { name: "Philippines", code: "+63" },
-  { name: "Hong Kong", code: "+852" },
-];
+const COUNTRIES = CRM_LEAD_COUNTRIES;
 
 
 const FOLLOW_UP_ACTIONS = [
@@ -142,6 +119,7 @@ type Lead = {
   phone_number: string | null;
   lead_source: string | null;
   partner_name: string | null;
+  preferred_timezone: string | null;
   course_interested: string | null;
   assigned_to: string | null;
   next_action: string | null;
@@ -172,6 +150,7 @@ type FormState = {
   phone_number: string;
   lead_source: string;
   partner_name: string;
+  preferred_timezone: string;
   course_interested: string;
   assigned_to: string;
   next_action: string;
@@ -195,6 +174,7 @@ const EMPTY_FORM: FormState = {
   phone_number: "",
   lead_source: "",
   partner_name: "",
+  preferred_timezone: "",
   course_interested: "",
   assigned_to: "",
   next_action: "Need to Call",
@@ -476,6 +456,7 @@ export default function LeadsPage() {
       phone_number: lead.phone_number || "",
       lead_source: lead.lead_source || "",
       partner_name: lead.partner_name || "",
+      preferred_timezone: lead.preferred_timezone || "",
       course_interested: lead.course_interested || "",
       assigned_to: lead.assigned_to || "",
       next_action: lead.next_action || "",
@@ -522,6 +503,7 @@ export default function LeadsPage() {
       phone_number: clean(form.phone_number),
       lead_source: clean(form.lead_source),
       partner_name: form.lead_source === "Partners" ? clean(form.partner_name) : null,
+      preferred_timezone: isCrmTimeZone(form.preferred_timezone) ? form.preferred_timezone : null,
       course_interested: clean(form.course_interested),
       assigned_to: clean(form.assigned_to),
       next_action: clean(form.next_action),
@@ -1501,8 +1483,21 @@ export default function LeadsPage() {
                   >
                     {COUNTRIES.map((country) => (
                       <option key={country.name} value={country.name}>
-                        {country.name} ({country.code})
+                        {country.label || country.name} ({country.code})
                       </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  <span>Preferred Time Zone (optional)</span>
+                  <select
+                    value={form.preferred_timezone}
+                    onChange={(event) => setForm({ ...form, preferred_timezone: event.target.value })}
+                  >
+                    <option value="">Not specified</option>
+                    {CRM_TIME_ZONES.map((zone) => (
+                      <option key={zone.value} value={zone.value}>{zone.label}</option>
                     ))}
                   </select>
                 </label>
@@ -1553,6 +1548,9 @@ export default function LeadsPage() {
                       }
                     >
                       <option value="">Select partner</option>
+                      {form.partner_name && !PARTNERS.includes(form.partner_name) && (
+                        <option value={form.partner_name}>{form.partner_name} (previous partner)</option>
+                      )}
                       {PARTNERS.map((partner) => (
                         <option key={partner}>{partner}</option>
                       ))}
