@@ -5,20 +5,14 @@ import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import OrbitSidebar from "../components/OrbitSidebar";
 import styles from "./trainers.module.css";
+import { CRM_TRAINER_TIME_ZONES } from "../lib/crmRegionalOptions.mjs";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
 );
 
-const TIMEZONES = [
-  "US Eastern",
-  "US Central",
-  "US Mountain",
-  "US Pacific",
-  "India IST",
-  "Other",
-];
+const TIMEZONES = CRM_TRAINER_TIME_ZONES;
 
 type Trainer = {
   id: string;
@@ -361,7 +355,8 @@ export default function TrainersPage() {
                     value={form.timezone}
                     onChange={(e) => setForm({ ...form, timezone: e.target.value })}
                   >
-                    {TIMEZONES.map((zone) => <option key={zone}>{zone}</option>)}
+                    {form.timezone && !TIMEZONES.some((zone) => zone.value === form.timezone) && <option value={form.timezone}>{form.timezone} (existing)</option>}
+                    {TIMEZONES.map((zone) => <option key={zone.value} value={zone.value}>{zone.label}</option>)}
                   </select>
                 </label>
 

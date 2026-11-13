@@ -9,6 +9,7 @@ import { COURSE_OPTIONS, courseDefaults } from "../lib/orbitCourses";
 import { CRM_BATCH_PROGRAMMES, crmBatchProgrammeSummary, crmFilteredBatches } from "../lib/crmBatchProgrammeSummary.mjs";
 import styles from "../lms.module.css";
 import visual from "./batches-visual.module.css";
+import { CRM_TIME_ZONES } from "../lib/crmRegionalOptions.mjs";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -25,13 +26,7 @@ const CLASS_DAYS = [
   { value: "Sun", label: "Sun" },
 ];
 
-const TIMEZONES = [
-  { value: "America/New_York", label: "US Eastern" },
-  { value: "America/Chicago", label: "US Central" },
-  { value: "America/Denver", label: "US Mountain" },
-  { value: "America/Los_Angeles", label: "US Pacific" },
-  { value: "Asia/Kolkata", label: "India IST" },
-];
+const TIMEZONES = CRM_TIME_ZONES;
 
 
 type Batch = {
