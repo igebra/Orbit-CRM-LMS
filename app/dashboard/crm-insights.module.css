@@ -35,3 +35,9 @@
 @media(max-width:1160px){.grid{grid-template-columns:1fr 1fr}.stacked{grid-row:auto;grid-column:1/-1;grid-template-columns:1fr 1fr}.mascot{grid-column:1/-1}}
 @media(max-width:900px){.grid{grid-template-columns:1fr}.stacked{grid-column:auto;display:grid;grid-template-columns:1fr}.mascot{grid-column:auto}}
 @media(prefers-reduced-motion:reduce){.bar{transition:none}}
+
+
+/* CRM-CTA-001: Overview Insights refresh, retry and deep-link buttons. */
+.refresh,.link,.error button{color:var(--crm-action,#765BA3);border-color:var(--crm-action-border,#DED7E9)}
+.refresh:hover:not(:disabled),.error button:hover:not(:disabled){background:var(--crm-action-tint,#F5F0FA)}
+.root button:focus-visible{outline-color:var(--crm-action,#765BA3)}
