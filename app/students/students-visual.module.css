@@ -95,3 +95,9 @@
 .formMessage{padding:10px 12px;background:#FFF5F3;color:#A43936;border:1px solid #EBCAC7;border-radius:10px;font:500 12px var(--font-orbit-body),Inter,sans-serif}
 .modal{max-height:90vh;overflow-y:auto}
 @media(max-width:800px){.financeGrid{grid-template-columns:1fr}}
+
+/* Compact country code + phone number, using the existing CRM Student phone field. */
+.phoneInputGroup{display:flex;gap:8px;width:100%;min-width:0;align-items:center}
+.modal .phoneInputGroup .phoneCodeInput{flex:0 0 92px;width:92px;min-width:0;padding:0 10px;text-align:left}
+.modal .phoneInputGroup .phoneLocalInput{flex:1 1 auto;width:100%;min-width:0}
+@media(max-width:410px){.modal .phoneInputGroup .phoneCodeInput{flex-basis:79px;width:79px}.phoneInputGroup{gap:6px}}
