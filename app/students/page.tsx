@@ -9,6 +9,8 @@ import visual from "./students-visual.module.css";
 import OrbitButton from "../components/ui/OrbitButton";
 import OrbitNavIcon from "../components/OrbitNavIcon";
 import OrbitDeleteButton from "../components/ui/OrbitDeleteButton";
+import { CRM_LEAD_COUNTRIES } from "../lib/crmRegionalOptions.mjs";
+import { DEFAULT_STUDENT_DIAL_CODE, formatStudentPhone } from "../lib/studentPhone.mjs";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -81,6 +83,7 @@ type FormState = {
   parent_first_name: string;
   parent_last_name: string;
   email: string;
+  phone_country_code: string;
   phone: string;
   course_name: string;
   notes: string;
@@ -99,6 +102,7 @@ const EMPTY_FORM: FormState = {
   parent_first_name: "",
   parent_last_name: "",
   email: "",
+  phone_country_code: DEFAULT_STUDENT_DIAL_CODE,
   phone: "",
   course_name: "",
   notes: "",
@@ -253,7 +257,8 @@ export default function StudentsPage() {
       parent_first_name: lead.parent_first_name || "",
       parent_last_name: lead.parent_last_name || "",
       email: lead.email || "",
-      phone: lead.phone_number ? `${lead.phone_country_code || ""} ${lead.phone_number}`.trim() : "",
+      phone_country_code: lead.phone_country_code || DEFAULT_STUDENT_DIAL_CODE,
+      phone: lead.phone_number || "",
       course_name: lead.course_interested || "",
       notes:"",create_plan:false,batch_id:"",total_fee_usd:"",
       installment_amount_usd:"",payment_plan:"Monthly",
@@ -268,6 +273,8 @@ export default function StudentsPage() {
       return;
     }
     if (!form.student_name.trim()) { setMessage("Student name is required."); return; }
+    const phoneResult=formatStudentPhone(form.phone_country_code,form.phone);
+    if(phoneResult.error){setMessage(phoneResult.error);return;}
     if (form.notes.trim() && !form.course_name && !form.create_plan) {
       setMessage("Select an initial course to save a note in the student profile.");
       return;
@@ -292,7 +299,7 @@ export default function StudentsPage() {
       lead_id:form.lead_id||null,student_name:form.student_name.trim(),
       grade:form.grade||null,parent_first_name:form.parent_first_name.trim()||null,
       parent_last_name:form.parent_last_name.trim()||null,
-      email:form.email.trim().toLowerCase()||null,phone:form.phone.trim()||null,
+      email:form.email.trim().toLowerCase()||null,phone:phoneResult.value,
       created_by:userId||null,updated_by:userId||null,
     }).select("id").single();
     if(studentError||!studentRow){
@@ -506,7 +513,37 @@ export default function StudentsPage() {
                 <label><span>Parent First Name</span><input value={form.parent_first_name} onChange={(event) => setForm({ ...form, parent_first_name: event.target.value })} /></label>
                 <label><span>Parent Last Name</span><input value={form.parent_last_name} onChange={(event) => setForm({ ...form, parent_last_name: event.target.value })} /></label>
                 <label><span>Email</span><input type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /></label>
-                <label><span>Phone</span><input value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} /></label>
+                <label>
+                  <span>Phone</span>
+                  <div className={visual.phoneInputGroup}>
+                    <input
+                      className={visual.phoneCodeInput}
+                      type="tel"
+                      inputMode="tel"
+                      aria-label="Phone country code"
+                      title="Country code (editable)"
+                      list="crm-student-dial-codes"
+                      value={form.phone_country_code}
+                      onChange={(event) => setForm({ ...form, phone_country_code:event.target.value })}
+                      placeholder="+91"
+                    />
+                    <datalist id="crm-student-dial-codes">
+                      {Array.from(new Map(CRM_LEAD_COUNTRIES.map(country=>[country.code,country])).values()).map(country=>(
+                        <option key={country.code} value={country.code} label={country.label || country.name}/>
+                      ))}
+                    </datalist>
+                    <input
+                      className={visual.phoneLocalInput}
+                      type="tel"
+                      inputMode="tel"
+                      aria-label="Student parent phone number without country code"
+                      autoComplete="tel-national"
+                      value={form.phone}
+                      onChange={(event) => setForm({ ...form, phone:event.target.value })}
+                      placeholder="Phone number"
+                    />
+                  </div>
+                </label>
                 <label className={styles.full}>
                   <span>Initial Course Enrollment</span>
                   <select value={form.course_name} onChange={event=>setForm({...form,course_name:event.target.value})}>
