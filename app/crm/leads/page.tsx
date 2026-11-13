@@ -719,6 +719,7 @@ export default function LeadsPage() {
       "phone_country_name",
       "phone_country_code",
       "phone_number",
+      "preferred_timezone",
       "lead_source",
       "partner_name",
       "course_interested",
@@ -745,6 +746,7 @@ export default function LeadsPage() {
           lead.phone_country_name,
           lead.phone_country_code,
           lead.phone_number,
+          lead.preferred_timezone,
           lead.lead_source,
           lead.partner_name,
           lead.course_interested,
@@ -796,6 +798,7 @@ export default function LeadsPage() {
       "phone_country_name",
       "phone_country_code",
       "phone_number",
+      "preferred_timezone",
       "lead_source",
       "partner_name",
       "course_interested",
@@ -815,6 +818,7 @@ export default function LeadsPage() {
       "United States",
       "+1",
       "5551234567",
+      "",
       "Meta Ads",
       "",
       "AiEdge Middle School - Level 01",
@@ -888,6 +892,9 @@ export default function LeadsPage() {
               pick(row, ["phone_country_code", "country_code"]) || country.code,
             phone_number:
               pick(row, ["phone_number", "phone", "mobile"]) || null,
+            preferred_timezone: isCrmTimeZone(pick(row, ["preferred_timezone", "timezone", "time_zone"]))
+              ? pick(row, ["preferred_timezone", "timezone", "time_zone"])
+              : null,
             lead_source: pick(row, ["lead_source", "source"]) || null,
             partner_name:
               pick(row, ["lead_source", "source"]) === "Partners"
