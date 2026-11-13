@@ -23,3 +23,11 @@
 .icon{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;flex:0 0 16px}
 .icon svg{width:16px;height:16px}
 @media(prefers-reduced-motion:reduce){.button{transition:none}}
+
+
+/* CRM-CTA-001: one approved mauve action colour, including outlined/ghost states. */
+.primary{background:var(--crm-action,#765BA3);border-color:var(--crm-action,#765BA3);color:#fff}
+.primary:not(:disabled):hover{background:var(--crm-action-hover,#624888);border-color:var(--crm-action-hover,#624888)}
+.secondary,.ghost{color:var(--crm-action,#765BA3)}
+.secondary:not(:disabled):hover,.ghost:not(:disabled):hover{background:var(--crm-action-tint,#F5F0FA);border-color:var(--crm-action-border,#DED7E9)}
+.button:focus-visible{outline-color:var(--crm-action,#765BA3)}
