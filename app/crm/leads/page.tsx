@@ -1484,7 +1484,7 @@ export default function LeadsPage() {
                 </label>
 
                 <label>
-                  <span>Phone Country</span>
+                  <span>Phone Country / Dial Code</span>
                   <select
                     value={form.phone_country_name}
                     onChange={(event) => updateCountry(event.target.value)}
@@ -1513,13 +1513,17 @@ export default function LeadsPage() {
                 <label>
                   <span>Phone Number</span>
                   <div className={styles.phoneField}>
-                    <span>{form.phone_country_code}</span>
+                    <span aria-label={`Dial code ${form.phone_country_code}`} title="Country code based on Phone Country">{form.phone_country_code}</span>
                     <input
                       value={form.phone_number}
                       onChange={(event) =>
                         setForm({ ...form, phone_number: event.target.value })
                       }
                       placeholder="Phone number"
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="tel-national"
+                      aria-label="Phone number without country code"
                     />
                   </div>
                 </label>
