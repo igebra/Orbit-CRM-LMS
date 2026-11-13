@@ -410,6 +410,7 @@ export default function LeadsPage() {
         lead.phone_country_name,
         lead.phone_country_code,
         lead.phone_number,
+        lead.preferred_timezone,
         lead.lead_source,
         lead.partner_name,
         lead.course_interested,
