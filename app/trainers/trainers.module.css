@@ -114,3 +114,75 @@
   color:var(--crm-action,#765BA3)!important;
 }
 .actionToggle:focus-visible,.expandedActions button:focus-visible{outline-color:var(--crm-action,#765BA3)}
+
+/* CRM Trainers batch-workload overview · November 2026.
+   Reuses Orbit's pastel surfaces and approved mauve #765BA3 action palette. */
+.summary{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:17px}
+.summary>div{
+  display:flex;flex-direction:column;align-items:flex-start;gap:3px;
+  min-height:100px;padding:14px 17px;
+  background:#fff;border:1px solid #E4DEEA;border-top:3px solid #E4DEEA;
+  border-radius:15px;box-shadow:0 4px 17px rgba(67,49,85,.025)
+}
+.summary>div:nth-child(1){border-top-color:#B8D5DD;background:linear-gradient(165deg,#F5FAFD,#fff 62%)}
+.summary>div:nth-child(2){border-top-color:#D5C2E7;background:linear-gradient(165deg,#F9F4FD,#fff 62%)}
+.summary>div:nth-child(3){border-top-color:#E8C4D9;background:linear-gradient(165deg,#FFF7FB,#fff 62%)}
+.summary>div:nth-child(4){border-top-color:#C9DCCF;background:linear-gradient(165deg,#F5FBF6,#fff 62%)}
+.summary>div:nth-child(5){border-top-color:#E5BA98;background:linear-gradient(165deg,#FFF8F2,#fff 62%)}
+.summary>div:nth-child(6){border-top-color:#F1D99E;background:linear-gradient(165deg,#FFFBF1,#fff 62%)}
+.summary span{font:600 12px/1.35 var(--font-orbit-body),sans-serif;color:#625771}
+.summary strong{font:700 27px/1.15 var(--font-orbit-heading),sans-serif;color:#3D334D}
+.summary small{font:400 11px/1.45 var(--font-orbit-body),sans-serif;color:#807587}
+.toolbar{display:flex;align-items:flex-end;gap:11px;flex-wrap:wrap;padding:6px 0 9px}
+.toolbar input{flex:1 1 240px;max-width:430px;height:42px;border-color:#E2D9EA}
+.toolbarSelect{display:flex;flex:0 1 200px;flex-direction:column;gap:5px;min-width:175px}
+.toolbarSelect span{font:600 11px/1.3 var(--font-orbit-body),sans-serif;color:#61566F}
+.toolbarSelect select{
+  height:42px;width:100%;padding:0 11px;
+  background:#fff;border:1px solid #DDD3E8;border-radius:10px;color:#493A50;
+  font:500 12px var(--font-orbit-body),sans-serif
+}
+.toolbarSelect select:disabled{background:#F5F3F7;color:#988FA2}
+.toolbar :is(select,input):focus-visible,.clearFilters:focus-visible,
+.batchCountButton:focus-visible{outline:2px solid var(--crm-action,#765BA3);outline-offset:2px}
+.clearFilters{min-height:40px;background:transparent;border:0;padding:0 4px;
+  font:600 12px var(--font-orbit-body),sans-serif;color:var(--crm-action,#765BA3);cursor:pointer}
+.clearFilters:hover{text-decoration:underline}
+.tableHint{margin:0 0 8px;color:#83748F;font:400 11px/1.45 var(--font-orbit-body),sans-serif}
+.workloadWarning{margin:-6px 0 15px;background:#FFF9EF;padding:10px 12px;border:1px solid #E7DBB9;border-radius:10px;font-size:12px;color:#7E663F}
+.tableWrap table{min-width:1160px!important}
+.tableWrap th:nth-child(1){width:4%}
+.tableWrap th:nth-child(2){width:11%}
+.tableWrap th:nth-child(3){width:15%}
+.tableWrap th:nth-child(4){width:10%}
+.tableWrap th:nth-child(5){width:10%}
+.tableWrap th:nth-child(6){width:16%}
+.tableWrap th:nth-child(7){width:11%}
+.tableWrap th:nth-child(8){width:9%}
+.tableWrap th:nth-child(9){width:6%}
+.tableWrap th:nth-child(10){width:8%}
+.batchCountCell{white-space:nowrap}
+.batchCountButton{
+  border:1px solid #E4D5ED;background:#F6F1FB;color:var(--crm-action,#765BA3);
+  padding:6px 9px;border-radius:9px;font:700 12px var(--font-orbit-body),sans-serif;
+  cursor:pointer;white-space:nowrap
+}
+.batchCountButton:hover,.batchCountButton[aria-expanded="true"]{
+  border-color:#BBA5D4;background:#EEE5F7;color:var(--crm-action-hover,#624888)
+}
+.noBatches{font:600 12px var(--font-orbit-body),sans-serif;color:#938A9C}
+.batchDetailRow{background:#FAF7FD}
+.batchDetailRow>td{padding:12px 16px!important;border-bottom:1px solid #E6DDEB}
+.batchDetailContent{display:grid;gap:12px}
+.batchDetailContent>strong{font:600 13px var(--font-orbit-heading),sans-serif;color:#493A50}
+.batchDetailGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:8px}
+.batchDetailItem{min-width:0;padding:10px 12px;border:1px solid #E9DFF0;border-radius:10px;background:#fff;display:flex;flex-direction:column;gap:4px}
+.batchDetailItem span{font:600 12px/1.4 var(--font-orbit-body),sans-serif;color:#493A50}
+.batchDetailItem small{font:400 11px/1.4 var(--font-orbit-body),sans-serif;color:#7C7285}
+@media(max-width:1060px){.summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:550px){
+  .summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .summary>div{padding:12px;min-height:90px}
+  .toolbar input{flex-basis:100%;max-width:none}
+  .toolbarSelect{flex:1 1 145px;min-width:145px}
+}
