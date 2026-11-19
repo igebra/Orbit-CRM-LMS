@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import OrbitSidebar from "../components/OrbitSidebar";
 import styles from "./trainers.module.css";
 import { CRM_TRAINER_TIME_ZONES } from "../lib/crmRegionalOptions.mjs";
+import { buildTrainerBatchWorkload, sortTrainersByWorkload, workloadMatches } from "../lib/crmTrainerWorkload.mjs";
+import type { CrmWorkloadBatch, CrmBatchAssignment } from "../lib/crmTrainerWorkload.mjs";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -49,6 +51,12 @@ export default function TrainersPage() {
   const [userId, setUserId] = useState("");
   const [role, setRole] = useState("");
   const [trainers, setTrainers] = useState<Trainer[]>([]);
+  const [batches,setBatches] = useState<CrmWorkloadBatch[]>([]);
+  const [assignments,setAssignments] = useState<CrmBatchAssignment[]>([]);
+  const [batchLoaded,setBatchLoaded] = useState(false);
+  const [batchWarning,setBatchWarning] = useState("");
+  const [batchFilter,setBatchFilter] = useState("all");
+  const [batchSort,setBatchSort] = useState("name");
   const [search, setSearch] = useState("");
   const [message, setMessage] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -56,6 +64,7 @@ export default function TrainersPage() {
   const [form, setForm] = useState<FormState>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [expandedTrainerId, setExpandedTrainerId] = useState<string | null>(null);
+  const [expandedBatchesTrainerId,setExpandedBatchesTrainerId] = useState<string | null>(null);
 
   const canManage = ["super_admin","admin","sales","sales_marketing"].includes(role);
 
@@ -81,31 +90,61 @@ export default function TrainersPage() {
   }, [router]);
 
   async function load() {
-    const { data, error } = await supabase
-      .from("trainers")
-      .select("id,trainer_name,email,phone,timezone,courses,status,linked_user_id")
-      .order("trainer_name");
+    setBatchLoaded(false);
+    setBatchWarning("");
+    const [trainerResult,batchResult,assignmentResult]=await Promise.all([
+      supabase.from("trainers")
+        .select("id,trainer_name,email,phone,timezone,courses,status,linked_user_id")
+        .order("trainer_name"),
+      supabase.from("batches")
+        .select("id,batch_name,course_name,status,trainer_id,trainer_user_id"),
+      supabase.from("batch_trainer_assignments")
+        .select("batch_id,trainer_id,trainer_user_id,is_active,assigned_from,assigned_to")
+        .eq("is_active",true),
+    ]);
 
-    if (error) {
-      setMessage(error.message);
+    if(trainerResult.error){
+      setMessage(trainerResult.error.message);
       setTrainers([]);
       return;
     }
-
-    setTrainers((data || []) as Trainer[]);
+    setTrainers((trainerResult.data||[]) as Trainer[]);
+    if(batchResult.error){
+      setMessage("Trainer directory loaded, but batch counts are unavailable: "+batchResult.error.message);
+      setBatches([]);
+      setAssignments([]);
+      return;
+    }
+    setBatches((batchResult.data||[]) as CrmWorkloadBatch[]);
+    setAssignments(assignmentResult.error?[]:(assignmentResult.data||[]) as CrmBatchAssignment[]);
+    setBatchWarning(assignmentResult.error
+      ?"Additional assignment records could not be loaded. Counts include primary trainers only."
+      :"");
+    setBatchLoaded(true);
+    setMessage("");
   }
 
-  // Display is consistently alphabetical; S.No reflects the visible sorted list.
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return trainers.filter(trainer =>
-      !q || [trainer.trainer_name,trainer.email,trainer.phone,trainer.timezone,trainer.courses]
-        .filter(Boolean).join(" ").toLowerCase().includes(q)
-    ).sort((a,b) =>
-      a.trainer_name.localeCompare(b.trainer_name,undefined,{sensitivity:"base"}) ||
-      a.id.localeCompare(b.id)
-    );
-  }, [trainers, search]);
+  const workload=useMemo(
+    ()=>buildTrainerBatchWorkload(trainers,batches,assignments),
+    [trainers,batches,assignments]
+  );
+  const trainersWithBatches=useMemo(
+    ()=>trainers.filter(trainer=>(workload.byTrainer[trainer.id]||[]).length>0).length,
+    [trainers,workload]
+  );
+
+  // A trainer's workload is the count of DISTINCT active batches, not a count
+  // of duplicate history rows. Keep alphabetical directory order by default.
+  const filtered=useMemo(()=>{
+    const q=search.trim().toLowerCase();
+    const matches=trainers.filter(trainer=>{
+      const count=(workload.byTrainer[trainer.id]||[]).length;
+      return (!q||[trainer.trainer_name,trainer.email,trainer.phone,trainer.timezone,trainer.courses]
+        .filter(Boolean).join(" ").toLowerCase().includes(q)) &&
+        (!batchLoaded||workloadMatches(count,batchFilter));
+    });
+    return sortTrainersByWorkload(matches,workload.byTrainer,batchSort);
+  },[trainers,search,workload,batchLoaded,batchFilter,batchSort]);
 
   function openAdd() {
     setEditingId(null);
@@ -209,11 +248,16 @@ export default function TrainersPage() {
 
         {message && <div className={styles.message}>{message}</div>}
 
-        <section className={styles.summary}>
-          <div><span>Total</span><strong>{trainers.length}</strong></div>
-          <div><span>Active</span><strong>{trainers.filter((t) => t.status === "Active").length}</strong></div>
-          <div><span>Orbit Access</span><strong>{trainers.filter((t) => t.linked_user_id).length}</strong></div>
+        <section className={styles.summary} aria-label="Trainer overview">
+          <div><span>Total Trainers</span><strong>{trainers.length}</strong><small>Directory records</small></div>
+          <div><span>Active Trainers</span><strong>{trainers.filter(t=>t.status==="Active").length}</strong><small>Currently active</small></div>
+          <div><span>Orbit Access</span><strong>{trainers.filter(t=>t.linked_user_id).length}</strong><small>Linked LMS accounts</small></div>
+          <div><span>Handling Batches</span><strong>{batchLoaded?trainersWithBatches:"—"}</strong><small>Assigned to active batches</small></div>
+          <div><span>No Batches</span><strong>{batchLoaded?trainers.length-trainersWithBatches:"—"}</strong><small>Available for assignment</small></div>
+          <div><span>Active Batches</span><strong>{batchLoaded?workload.totalActiveBatches:"—"}</strong>
+            <small>{batchLoaded?`${workload.assignedActiveBatches} assigned`:"Checking assignments"}</small></div>
         </section>
+        {batchWarning&&<p role="status" className={styles.workloadWarning}>{batchWarning}</p>}
 
         <section className={styles.card}>
           <div className={styles.toolbar}>
@@ -224,11 +268,39 @@ export default function TrainersPage() {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
+            <label className={styles.toolbarSelect}>
+              <span>Batch workload</span>
+              <select aria-label="Filter trainers by number of batches" value={batchFilter}
+                disabled={!batchLoaded} onChange={e=>setBatchFilter(e.target.value)}>
+                <option value="all">All trainers</option>
+                <option value="none">No batches (0)</option>
+                <option value="one">1 batch</option>
+                <option value="two-three">2–3 batches</option>
+                <option value="four-plus">4+ batches</option>
+              </select>
+            </label>
+            <label className={styles.toolbarSelect}>
+              <span>Sort by</span>
+              <select aria-label="Sort trainers by batch workload" value={batchSort}
+                disabled={!batchLoaded} onChange={e=>setBatchSort(e.target.value)}>
+                <option value="name">Trainer name (A–Z)</option>
+                <option value="most">Most batches</option>
+                <option value="least">Fewest batches</option>
+              </select>
+            </label>
+            {(search||batchFilter!=="all"||batchSort!=="name")&&
+              <button type="button" className={styles.clearFilters}
+                onClick={()=>{setSearch("");setBatchFilter("all");setBatchSort("name");}}>
+                Clear filters
+              </button>}
           </div>
+          <p className={styles.tableHint}>
+            Showing {filtered.length} of {trainers.length} trainers · Active batch assignments only
+          </p>
 
           <div className={styles.tableWrap}>
             <table aria-label="Trainer directory">
-              <colgroup>{[5,12,16,11,10,20,9,7,10].map((width,i)=><col key={i} style={{width:`${width}%`}}/>)}</colgroup>
+              <colgroup>{[4,11,15,10,10,16,11,9,6,8].map((width,i)=><col key={i} style={{width:`${width}%`}}/>)}</colgroup>
               <thead>
                 <tr>
                   <th data-sno>S.No</th>
@@ -237,6 +309,7 @@ export default function TrainersPage() {
                   <th>Phone</th>
                   <th>Time Zone</th>
                   <th>Courses / Skills</th>
+                  <th>Active Batches</th>
                   <th>Orbit Access</th>
                   <th>Status</th>
                   <th>Actions</th>
@@ -245,7 +318,7 @@ export default function TrainersPage() {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className={styles.empty}>
+                    <td colSpan={10} className={styles.empty}>
                       No trainers found.
                     </td>
                   </tr>
@@ -259,6 +332,22 @@ export default function TrainersPage() {
                       <td>{trainer.phone || "—"}</td>
                       <td>{trainer.timezone || "—"}</td>
                       <td>{trainer.courses || "—"}</td>
+                      <td className={styles.batchCountCell}>
+                        {!batchLoaded?"—":(
+                          (workload.byTrainer[trainer.id]||[]).length>0
+                            ? <button type="button" className={styles.batchCountButton}
+                                aria-expanded={expandedBatchesTrainerId===trainer.id}
+                                aria-controls={`trainer-batches-${trainer.id}`}
+                                title="Show active batches handled by this trainer"
+                                onClick={()=>{
+                                  setExpandedTrainerId(null);
+                                  setExpandedBatchesTrainerId(current=>current===trainer.id?null:trainer.id);
+                                }}>
+                                {(workload.byTrainer[trainer.id]||[]).length} {(workload.byTrainer[trainer.id]||[]).length===1?"batch":"batches"}
+                              </button>
+                            : <span className={styles.noBatches}>0</span>
+                        )}
+                      </td>
                       <td>
                         <span className={trainer.linked_user_id ? styles.accessYes : styles.accessNo}>
                           {trainer.linked_user_id ? "Linked" : "No login"}
@@ -269,14 +358,34 @@ export default function TrainersPage() {
                         <button type="button" className={styles.actionToggle}
                           aria-expanded={expandedTrainerId === trainer.id}
                           aria-controls={`trainer-actions-${trainer.id}`}
-                          onClick={() => setExpandedTrainerId(current => current === trainer.id ? null : trainer.id)}>
+                          onClick={() => {
+                            setExpandedBatchesTrainerId(null);
+                            setExpandedTrainerId(current => current === trainer.id ? null : trainer.id);
+                          }}>
                           Actions <span aria-hidden="true">{expandedTrainerId === trainer.id ? "▴" : "▾"}</span>
                         </button>
                       </td>
                     </tr>
+                    {expandedBatchesTrainerId===trainer.id&&batchLoaded&&
+                      <tr id={`trainer-batches-${trainer.id}`} className={styles.batchDetailRow}>
+                        <td colSpan={10}>
+                          <div className={styles.batchDetailContent}>
+                            <strong>{trainer.trainer_name} · Active batches</strong>
+                            <div className={styles.batchDetailGrid}>
+                              {(workload.byTrainer[trainer.id]||[]).map(batch=>
+                                <div key={batch.id} className={styles.batchDetailItem}>
+                                  <span>{batch.batch_name}</span>
+                                  <small>{batch.course_name}</small>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    }
                     {expandedTrainerId === trainer.id && (
                       <tr id={`trainer-actions-${trainer.id}`} className={styles.expandedActions}>
-                        <td colSpan={9}>
+                        <td colSpan={10}>
                           <div className={styles.expandedActionsContent}>
                             <span>Actions for {trainer.trainer_name}</span>
                             <div className={styles.actions}>
