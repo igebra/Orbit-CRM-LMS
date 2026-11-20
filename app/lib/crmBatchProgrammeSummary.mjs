@@ -30,3 +30,22 @@ export function crmFilteredBatches(batches, selectedProgramme) {
   if (!selectedProgramme || selectedProgramme === "All") return batches;
   return batches.filter(batch => crmBatchProgramme(batch.course_name) === selectedProgramme);
 }
+
+
+/** Case-insensitive CRM batch directory search.
+ * Searches display text only; batch identity and original records remain unchanged.
+ * Whitespace-separated terms may match across batch, course, trainer, status,
+ * or names of learners enrolled in that batch.
+ */
+export function crmSearchBatches(batches, search, studentNamesByBatch = new Map()) {
+  const terms=String(search ?? "").normalize("NFKC").trim().toLocaleLowerCase().split(/\s+/u).filter(Boolean);
+  if (!terms.length) return batches;
+  return batches.filter(batch=>{
+    const learners=studentNamesByBatch.get(batch.id)||[];
+    const searchable=[
+      batch.batch_name, batch.course_name, batch.trainer_name,
+      batch.status, ...learners
+    ].filter(Boolean).join(" ").normalize("NFKC").toLocaleLowerCase();
+    return terms.every(term=>searchable.includes(term));
+  });
+}
