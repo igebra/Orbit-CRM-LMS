@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import OrbitSidebar from "../components/OrbitSidebar";
 import OrbitDeleteButton from "../components/ui/OrbitDeleteButton";
 import { COURSE_OPTIONS, courseDefaults } from "../lib/orbitCourses";
-import { CRM_BATCH_PROGRAMMES, crmBatchProgrammeSummary, crmFilteredBatches } from "../lib/crmBatchProgrammeSummary.mjs";
+import { CRM_BATCH_PROGRAMMES, crmBatchProgrammeSummary, crmFilteredBatches, crmSearchBatches } from "../lib/crmBatchProgrammeSummary.mjs";
 import styles from "../lms.module.css";
 import visual from "./batches-visual.module.css";
 import { CRM_TIME_ZONES } from "../lib/crmRegionalOptions.mjs";
@@ -155,6 +155,7 @@ export default function BatchesPage() {
   const [role, setRole] = useState("");
   const [batches, setBatches] = useState<Batch[]>([]);
   const [selectedProgramme, setSelectedProgramme] = useState("All");
+  const [search, setSearch] = useState("");
   const [roster, setRoster] = useState<Roster[]>([]);
   const [students, setStudents] = useState<StudentOption[]>([]);
   const [trainers, setTrainers] = useState<Trainer[]>([]);
@@ -223,10 +224,6 @@ export default function BatchesPage() {
   }, [batches]);
 
   const programmeSummary = useMemo(() => crmBatchProgrammeSummary(batches), [batches]);
-  const displayedBatches = useMemo(
-    () => crmFilteredBatches(batches, selectedProgramme),
-    [batches, selectedProgramme]
-  );
 
   const studentNamesByBatch = useMemo(() => {
     const studentMap = new Map(students.map((student) => [student.id, student.student_name]));
@@ -247,6 +244,15 @@ export default function BatchesPage() {
 
     return batchMap;
   }, [roster, students]);
+
+  const programmeBatches = useMemo(
+    () => crmFilteredBatches(batches, selectedProgramme),
+    [batches, selectedProgramme]
+  );
+  const displayedBatches = useMemo(
+    () => crmSearchBatches(programmeBatches, search, studentNamesByBatch),
+    [programmeBatches, search, studentNamesByBatch]
+  );
 
   const scheduleLocal = useMemo(
     () =>
@@ -441,10 +447,29 @@ export default function BatchesPage() {
             </p>
           )}
         </section>
-        {selectedProgramme !== "All" && (
-          <p className={visual.filteredNotice}>
-            Showing {displayedBatches.length} {selectedProgramme} {displayedBatches.length === 1 ? "batch" : "batches"} ·{" "}
-            <button type="button" onClick={() => setSelectedProgramme("All")}>View all {batches.length}</button>
+        <div className={visual.batchSearchToolbar} role="search" aria-label="Search CRM batches">
+          <label className={visual.batchSearchLabel} htmlFor="crm-batch-search">Find a batch</label>
+          <input
+            id="crm-batch-search"
+            type="search"
+            value={search}
+            onChange={event => setSearch(event.target.value)}
+            placeholder="Search batch, course, trainer or student..."
+            autoComplete="off"
+            className={visual.batchSearchInput}
+          />
+          {(search || selectedProgramme !== "All") && (
+            <button type="button" className={visual.clearSearch}
+              onClick={() => { setSearch(""); setSelectedProgramme("All"); }}>
+              Clear filters
+            </button>
+          )}
+        </div>
+        {!loading && (
+          <p className={visual.batchSearchResults} role="status" aria-live="polite">
+            Showing {displayedBatches.length} of {programmeBatches.length} batches
+            {selectedProgramme !== "All" ? ` · ${selectedProgramme}` : ""}
+            {search.trim() ? " · Search results" : ""}
           </p>
         )}
 
@@ -472,7 +497,8 @@ export default function BatchesPage() {
                   <tr><td colSpan={10} className={styles.empty}>Loading batches...</td></tr>
                 ) : displayedBatches.length === 0 ? (
                   <tr><td colSpan={10} className={styles.empty}>
-                    {selectedProgramme === "All" ? "No batches found." : "No batches found for this programme."}
+                    {search.trim() ? "No matching batches. Try a different name, course, trainer or student." :
+                      selectedProgramme === "All" ? "No batches found." : "No batches found for this programme."}
                   </td></tr>
                 ) : displayedBatches.map((b, index) => (
                   <tr key={b.id}>
