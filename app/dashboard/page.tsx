@@ -7,6 +7,7 @@ import OrbitSidebar from "../components/OrbitSidebar";
 import CRMInsights from "./CRMInsights";
 import ProgrammeOverview from "./ProgrammeOverview";
 import styles from "./dashboard.module.css";
+import { monthlyRevenueEquivalent, validateUsdFxRates } from "../lib/monthlyRevenueFx.mjs";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,6 +19,14 @@ type Metric = {
   value: string;
   note: string;
   href?: string;
+};
+
+type ReceivedPayment = {amount_received:number;currency:string;voided_at:string|null};
+type UsdFxSnapshot = {
+  base:"USD";
+  rates:Record<string,number>;
+  updatedAt:string;
+  source:string;
 };
 
 type FocusItem = {
@@ -71,7 +80,8 @@ export default function DashboardPage() {
   const [studentCount, setStudentCount] = useState<number | null>(null);
   const [batchCount, setBatchCount] = useState<number | null>(null);
   const [trainerCount, setTrainerCount] = useState<number | null>(null);
-  const [monthCollections, setMonthCollections] = useState<number | null>(null);
+  const [monthCollections, setMonthCollections] = useState<number | "unavailable" | null>(null);
+  const [collectionsNote, setCollectionsNote] = useState("Payments received this month");
   const [upcomingClasses, setUpcomingClasses] = useState<number | null>(null);
 
   const [followUpsDue, setFollowUpsDue] = useState<number | null>(null);
@@ -241,21 +251,44 @@ export default function DashboardPage() {
     if (canSeePayments) {
       tasks.push(
         (async () => {
-          const { data: transactions } = await supabase.rpc(
-            "payment_report_transactions",
-            {
-              p_from: monthStart,
-              p_to: todayIso,
+          // Use the same union of recorded receipts as the Payments module.
+          // Legacy payment transactions and manually recorded payments are both
+          // included; voided receipts are excluded by the shared FX helper.
+          const {data: receipts, error: receiptError} = await supabase.rpc(
+            "crm_received_payment_report_v2",
+            {p_from: monthStart, p_to: todayIso}
+          );
+          if (receiptError || !Array.isArray(receipts)) {
+            setMonthCollections("unavailable");
+            setCollectionsNote("Payment records unavailable · open Payments");
+          } else {
+            const records = receipts as ReceivedPayment[];
+            const active = records.filter(p => !p.voided_at);
+            if (active.length === 0) {
+              // Zero is accurate only after a successful report with no receipts.
+              setMonthCollections(0);
+              setCollectionsNote("No payments received this month");
+            } else {
+              try {
+                const response = await fetch("/api/fx/latest", {cache:"no-store"});
+                if (!response.ok) throw new Error("FX request failed");
+                const snapshot = await response.json() as UsdFxSnapshot;
+                if (snapshot.base !== "USD" || !validateUsdFxRates(snapshot.rates)) {
+                  throw new Error("Invalid FX reference rates");
+                }
+                const equivalent = monthlyRevenueEquivalent(records, snapshot.rates);
+                if (!equivalent) throw new Error("Some payment currencies cannot be converted");
+                setMonthCollections(equivalent.usd);
+                setCollectionsNote(
+                  `This month · ${equivalent.receipts} receipts · indicative USD`
+                );
+              } catch {
+                // Never present missing exchange rates as $0 or omit receipts.
+                setMonthCollections("unavailable");
+                setCollectionsNote("FX unavailable · see original amounts in Payments");
+              }
             }
-          );
-
-          const collected = (transactions || []).reduce(
-            (sum: number, row: { amount_usd?: number }) =>
-              sum + Number(row.amount_usd || 0),
-            0
-          );
-
-          setMonthCollections(collected);
+          }
 
           if (!isMarketing) {
             const { data: outstanding } = await supabase.rpc(
@@ -329,8 +362,8 @@ export default function DashboardPage() {
     if (monthCollections !== null) {
       items.push({
         label: "Collections",
-        value: money(monthCollections),
-        note: "Payments received",
+        value: typeof monthCollections === "number" ? money(monthCollections) : "—",
+        note: collectionsNote,
         href: "/payments",
       });
     }
@@ -351,6 +384,7 @@ export default function DashboardPage() {
     batchCount,
     trainerCount,
     monthCollections,
+    collectionsNote,
     upcomingClasses,
   ]);
 
