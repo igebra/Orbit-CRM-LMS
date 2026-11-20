@@ -123,3 +123,19 @@
 .tableWrap td:nth-child(10) button:focus-visible{outline-color:var(--crm-action,#765BA3)}
 .showAll,.filteredNotice button{color:var(--crm-action,#765BA3)}
 .programmeCard.programmeSelected{border-color:#A991C8;box-shadow:0 0 0 2px rgba(118,91,163,.12);background:#F9F5FC}
+
+/* CRM Batches directory search — consistent with CRM Trainers toolbar. */
+.batchSearchToolbar{display:flex;align-items:end;flex-wrap:wrap;gap:10px;margin:2px 0 6px}
+.batchSearchLabel{width:100%;font:600 11px/1.3 var(--font-orbit-body),sans-serif;color:#61566F}
+.batchSearchInput{width:min(445px,100%);flex:1 1 270px;height:42px;min-width:0;
+  border:1px solid #DDD3E8;background:#fff;border-radius:10px;
+  padding:0 13px;color:#493A50;font:400 14px var(--font-orbit-body),sans-serif}
+.batchSearchInput::placeholder{color:#897F94}
+.clearSearch{min-height:42px;border:0;background:transparent;
+  padding:0 5px;color:var(--crm-action,#765BA3);
+  font:600 12px var(--font-orbit-body),sans-serif;cursor:pointer}
+.clearSearch:hover{text-decoration:underline}
+.batchSearchInput:focus-visible,.clearSearch:focus-visible{outline:2px solid var(--crm-action,#765BA3);outline-offset:2px}
+.batchSearchResults{margin:0 0 11px;color:#83748F;
+  font:400 11px/1.45 var(--font-orbit-body),sans-serif}
+@media(max-width:650px){.batchSearchInput{flex-basis:100%;width:100%}.batchSearchToolbar{align-items:start}}
