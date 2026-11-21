@@ -373,7 +373,7 @@ export default function BatchesPage() {
     if (!canDelete) return;
 
     const confirmed = window.confirm(
-      `Delete ${batch.batch_name} permanently?\n\nThis will also remove its student assignments, sessions, attendance, homework, trainer history and linked batch payment records.`
+      `Delete ${batch.batch_name} from CRM?\n\nCRM-linked records may be removed. LMS class history is preserved and the LMS batch is NOT automatically deleted.\n\nProceed only after reviewing both systems.`
     );
 
     if (!confirmed) return;
@@ -402,7 +402,7 @@ export default function BatchesPage() {
           <div>
             <p className={styles.kicker}>CRM · BATCHES</p>
             <h1>Batches</h1>
-            <p className={styles.subtitle}>Manage trainers, schedules, students and class operations.</p>
+            <p className={styles.subtitle}>Create batches and manage schedules, Zoom links and student assignments. Trainer changes are managed in LMS.</p>
           </div>
 
           {canAdmin && (
@@ -564,7 +564,7 @@ export default function BatchesPage() {
         <div className={styles.modalBackdrop}>
           <div className={styles.modal}>
             <div className={styles.modalHeader}>
-              <div><h2>Add Batch</h2><p>Create the batch and operational schedule.</p></div>
+              <div><h2>Add Batch</h2><p>Create once here. The batch will appear automatically in LMS.</p></div>
               <button className={styles.close} onClick={() => setModalOpen(false)}>×</button>
             </div>
 
@@ -585,7 +585,7 @@ export default function BatchesPage() {
                   </label>
 
                   <label>
-                    <span>Trainer</span>
+                    <span>Initial Trainer (optional)</span>
                     <select value={form.trainer_id} onChange={(e) => chooseTrainer(e.target.value)}>
                       <option value="">Select trainer</option>
                       {trainers.map((x) => <option key={x.id} value={x.id}>{x.trainer_name}</option>)}
