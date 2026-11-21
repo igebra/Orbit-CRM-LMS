@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Do not recommit historical patch/backup copies
+*.bak
+/Orbit_*.zip

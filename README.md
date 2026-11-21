@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Orbit CRM
 
-## Getting Started
+Internal igebra.ai Customer Relationship Management and delivery operations application, built with Next.js 16, React 19, Supabase Auth/PostgreSQL/Storage, and Vercel.
 
-First, run the development server:
+CRM modules include leads and demo management, customer/student admissions, enrollments, trainers, batches, scheduling views, manual receipts, financial reports, role approvals and audit.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Start here for a new developer
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. [As-built developer handover and maintenance](docs/TECHNICAL_HANDOVER_AND_MAINTENANCE_2026-11-21.md)
+2. [Live CRM Supabase schema inventory, read-only snapshot](docs/LIVE_SUPABASE_INVENTORY_2026-11-21.md)
+3. [Project and security rules](AGENTS.md)
+4. [Historical production source parity blocker](docs/releases/PRODUCTION_SOURCE_PARITY_BLOCKER.md)
+5. [CRM student sync outbox SQL source](docs/migrations/20261030_crm_lms_realtime_outbox.sql)
+6. [Safe cleanup audit](docs/REPOSITORY_CLEANUP_REVIEW_2026-11-21.md)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Local development
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Use Node 24.x, an isolated/non-production Supabase project and a local environment file containing only appropriate non-production project keys.
 
-## Learn More
+    npm ci
+    npm run dev
+    node --test tests/*.test.mjs
+    npm run build
 
-To learn more about Next.js, take a look at the following resources:
+## Deployment and data integrity
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- GitHub: igebra/Orbit-CRM-LMS; production branch: main.
+- Vercel: orbit-crm-lms. Supabase: Orbit (cgencwgfupijundbhpdv).
+- The LMS is separate: igebra/Orbit-LMS; CRM-origin students/enrollments replicate to the LMS via protected outbox delivery.
+- Do not modify learner attendance/homework or edit academic trainer assignments independently from LMS.
+- Use reviewed PRs and approved after-9-PM IST releases; never commit credentials or personal data.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Immediate security review:** this repo was PUBLIC at the handover audit. Review source/history exposure and apply an owner-approved visibility policy.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Known handover gap:** the new LMS->CRM trainer receiver RPC and Edge Function are deployed to live CRM Supabase, but corresponding version-controlled code remains in the unmerged feat/lms-to-crm-batch-trainer-sync-20261121 branch. Reconcile source, schema and release before signoff..
