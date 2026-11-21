@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import OrbitSidebar from "../../components/OrbitSidebar";
 import OrbitDeleteButton from "../../components/ui/OrbitDeleteButton";
 import styles from "../../lms.module.css";
+import { CRM_TIME_ZONES } from "../../lib/crmRegionalOptions.mjs";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,7 +33,7 @@ const PAYMENT_MODES = [
 
 type Batch = {
   id:string; batch_name:string; course_name:string; trainer_name:string|null; trainer_user_id:string|null; trainer_id:string|null;
-  start_at:string|null; source_timezone:string|null; end_date:string|null; recurring_zoom_url:string|null;
+  start_at:string|null; start_date:string|null; source_timezone:string|null; end_date:string|null; recurring_zoom_url:string|null; notes:string|null;
   planned_sessions:number|null; classes_per_week:number|null; classes_per_month:number|null; class_days:string[]|null; default_duration_minutes:number|null; status:string; max_students:number;
 };
 
@@ -63,6 +64,16 @@ function fmt(iso:string|null, zone:string) {
   }).format(new Date(iso));
 }
 
+function batchLocalDateTime(iso:string|null,zone:string):string{
+ if(!iso)return "";
+ try{
+  const parts=new Intl.DateTimeFormat("en-GB",{
+    timeZone:zone,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"
+  }).formatToParts(new Date(iso));
+  const x=Object.fromEntries(parts.filter(p=>p.type!=="literal").map(p=>[p.type,p.value]));
+  return x.year+"-"+x.month+"-"+x.day+"T"+x.hour+":"+x.minute;
+ }catch{return "";}
+}
 function getOffsetMs(date:Date, zone:string) {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone:zone, year:"numeric", month:"2-digit", day:"2-digit",
@@ -115,7 +126,7 @@ export default function BatchDetailPage() {
   const [financeOpen,setFinanceOpen] = useState(false);
   const [paymentOpen,setPaymentOpen] = useState(false);
 
-  const [edit,setEdit] = useState({trainer_id:"",trainer_name:"",end_date:"",recurring_zoom_url:"",planned_sessions:"",classes_per_month:"4",class_days:[] as string[],duration_minutes:"90",status:"Active"});
+  const [edit,setEdit] = useState({trainer_id:"",trainer_name:"",batch_name:"",start_at_local:"",source_timezone:"America/New_York",end_date:"",recurring_zoom_url:"",planned_sessions:"",classes_per_month:"4",class_days:[] as string[],duration_minutes:"90",max_students:"8",notes:"",status:"Active"});
   const [sessionForm,setSessionForm] = useState({session_number:"",scheduled_at:"",topic_planned:"",status:"Scheduled"});
   const [attendanceRows,setAttendanceRows] = useState<{session_id:string;attendance_status:string}[]>([]);
   const [financeForm,setFinanceForm] = useState({student_id:"",total_fee_usd:"",payment_plan:"Monthly",installment_amount_usd:"",plan_start_date:new Date().toISOString().slice(0,10),custom_next_due_date:""});
@@ -262,6 +273,11 @@ export default function BatchDetailPage() {
     setEdit({
       trainer_id:batch.trainer_id||"",
       trainer_name:batch.trainer_name||"",
+      batch_name:batch.batch_name,
+      start_at_local:batchLocalDateTime(batch.start_at,batch.source_timezone||"America/New_York"),
+      source_timezone:batch.source_timezone||"America/New_York",
+      max_students:String(batch.max_students||8),
+      notes:batch.notes||"",
       end_date:batch.end_date||"",
       recurring_zoom_url:batch.recurring_zoom_url||"",
       planned_sessions:batch.planned_sessions?String(batch.planned_sessions):"",
@@ -296,11 +312,30 @@ export default function BatchDetailPage() {
     e.preventDefault();
 
     if (edit.class_days.length === 0) {
-      setMessage("Select at least one Class Day.");
-      return;
+      setMessage("Select at least one Class Day.");return;
     }
-
+    if(!edit.batch_name.trim()||!edit.start_at_local){
+      setMessage("Batch name and start date/time are required.");return;
+    }
+    if(!Number.isInteger(Number(edit.max_students))||Number(edit.max_students)<1||Number(edit.max_students)>8){
+      setMessage("Batch capacity must be between 1 and 8 students.");return;
+    }
+    if(edit.recurring_zoom_url.trim()&&!/^https:\/\//i.test(edit.recurring_zoom_url.trim())){
+      setMessage("Enter a secure HTTPS Zoom link.");return;
+    }
+    let startAt:string;
+    try{
+      const value=localToUtc(edit.start_at_local,edit.source_timezone);
+      if(!value)throw Error("Bad datetime");
+      startAt=value;
+    }catch{setMessage("Enter a valid start time and timezone.");return;}
     const {error} = await supabase.from("batches").update({
+      batch_name:edit.batch_name.trim(),
+      start_at:startAt,
+      start_date:edit.start_at_local.slice(0,10),
+      source_timezone:edit.source_timezone,
+      max_students:Number(edit.max_students),
+      notes:edit.notes.trim()||null,
       end_date:edit.end_date||null,
       recurring_zoom_url:edit.recurring_zoom_url.trim()||null,
       planned_sessions:edit.planned_sessions?Number(edit.planned_sessions):null,
@@ -632,7 +667,7 @@ export default function BatchDetailPage() {
 
       {editOpen && (
         <div className={styles.modalBackdrop}><div className={styles.modal}>
-          <div className={styles.modalHeader}><div><h2>Edit Batch</h2><p>Update dates, Zoom and status. Trainer assignment is managed in LMS.</p></div><button className={styles.close} onClick={()=>setEditOpen(false)}>×</button></div>
+          <div className={styles.modalHeader}><div><h2>Edit Batch</h2><p>Batch details sync to LMS. Trainer assignments and individual class reschedules stay in LMS.</p></div><button className={styles.close} onClick={()=>setEditOpen(false)}>×</button></div>
           <form className={styles.form} onSubmit={saveEdit}>
             <div className={styles.formGrid}>
               <label>
@@ -645,7 +680,12 @@ export default function BatchDetailPage() {
                  <small>Change trainer in <a href={"https://orbit-lms-igebra1.vercel.app/batches/"+batchId}
                    target="_blank" rel="noopener noreferrer">Orbit LMS</a>.</small>
               </label>
-              <label><span>Batch End Date</span><input type="date" value={edit.end_date} onChange={e=>setEdit({...edit,end_date:e.target.value})}/></label>
+              <label><span>Batch Name</span><input value={edit.batch_name} maxLength={200} onChange={e=>setEdit({...edit,batch_name:e.target.value})}/></label>
+               <label><span>Batch Start (local date &amp; time)</span><input type="datetime-local" value={edit.start_at_local} onChange={e=>setEdit({...edit,start_at_local:e.target.value})}/></label>
+               <label><span>Batch Time Zone</span><select value={edit.source_timezone} onChange={e=>setEdit({...edit,source_timezone:e.target.value})}>
+                 {CRM_TIME_ZONES.map(zone=><option key={zone.value} value={zone.value}>{zone.label}</option>)}
+               </select></label>
+               <label><span>Batch End Date</span><input type="date" value={edit.end_date} onChange={e=>setEdit({...edit,end_date:e.target.value})}/></label>
               <label><span>Planned Sessions</span><input type="number" min="1" value={edit.planned_sessions} onChange={e=>setEdit({...edit,planned_sessions:e.target.value})}/></label>
               <label>
                 <span>Classes Per Month</span>
@@ -679,6 +719,8 @@ export default function BatchDetailPage() {
               </div>
               <label><span>Class Duration</span><select value={edit.duration_minutes} onChange={e=>setEdit({...edit,duration_minutes:e.target.value})}><option value="60">60 Minutes</option><option value="90">90 Minutes</option><option value="120">120 Minutes</option></select></label>
               <label className={styles.full}><span>Recurring Zoom Link</span><input type="url" value={edit.recurring_zoom_url} onChange={e=>setEdit({...edit,recurring_zoom_url:e.target.value})}/></label>
+               <label><span>Maximum Students</span><input type="number" min="1" max="8" value={edit.max_students} onChange={e=>setEdit({...edit,max_students:e.target.value})}/></label>
+               <label className={styles.full}><span>Batch Notes</span><textarea rows={2} value={edit.notes} onChange={e=>setEdit({...edit,notes:e.target.value})}/></label>
               <label><span>Status</span><select value={edit.status} onChange={e=>setEdit({...edit,status:e.target.value})}><option>Active</option><option>Upcoming</option><option>Paused</option><option>Completed</option></select></label>
             </div>
             <div className={styles.modalFooter}><button type="button" className={styles.secondary} onClick={()=>setEditOpen(false)}>Cancel</button><button className={styles.primary}>Save Batch</button></div>
