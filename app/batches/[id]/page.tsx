@@ -141,8 +141,25 @@ export default function BatchDetailPage() {
     init();
   },[router,batchId]);
 
-  async function load(r?:string) {
-    setLoading(true);
+  useEffect(()=>{
+    if(!role||!batchId)return;
+    const refresh=()=>{if(!editOpen)void load(role,true);};
+    const onVisible=()=>{if(document.visibilityState==="visible")refresh();};
+    const channel=supabase.channel("crm-batch-detail-"+batchId)
+      .on("postgres_changes",{event:"UPDATE",schema:"public",table:"batches",
+         filter:"id=eq."+batchId},refresh)
+      .subscribe();
+    window.addEventListener("focus",refresh);
+    document.addEventListener("visibilitychange",onVisible);
+    return ()=>{
+      window.removeEventListener("focus",refresh);
+      document.removeEventListener("visibilitychange",onVisible);
+      void supabase.removeChannel(channel);
+    };
+  },[batchId,role,editOpen]);
+
+  async function load(r?:string,silent=false) {
+    if(!silent)setLoading(true);
 
     const [b,s,rr,cs,tr,h] = await Promise.all([
       supabase.from("batches").select("*").eq("id",batchId).single(),
@@ -155,7 +172,7 @@ export default function BatchDetailPage() {
 
     if (b.error) {
       setMessage(b.error.message);
-      setLoading(false);
+      if(!silent)setLoading(false);
       return;
     }
 
@@ -184,7 +201,7 @@ export default function BatchDetailPage() {
       setFinance([]); setTxns([]);
     }
 
-    setLoading(false);
+    if(!silent)setLoading(false);
   }
 
   async function loadFinance() {
@@ -284,8 +301,6 @@ export default function BatchDetailPage() {
     }
 
     const {error} = await supabase.from("batches").update({
-      trainer_id:edit.trainer_id||null,
-      trainer_name:edit.trainer_name.trim()||null,
       end_date:edit.end_date||null,
       recurring_zoom_url:edit.recurring_zoom_url.trim()||null,
       planned_sessions:edit.planned_sessions?Number(edit.planned_sessions):null,
@@ -617,15 +632,18 @@ export default function BatchDetailPage() {
 
       {editOpen && (
         <div className={styles.modalBackdrop}><div className={styles.modal}>
-          <div className={styles.modalHeader}><div><h2>Edit Batch</h2><p>Replace trainer, extend batch, update Zoom.</p></div><button className={styles.close} onClick={()=>setEditOpen(false)}>×</button></div>
+          <div className={styles.modalHeader}><div><h2>Edit Batch</h2><p>Update dates, Zoom and status. Trainer assignment is managed in LMS.</p></div><button className={styles.close} onClick={()=>setEditOpen(false)}>×</button></div>
           <form className={styles.form} onSubmit={saveEdit}>
             <div className={styles.formGrid}>
               <label>
                 <span>Trainer</span>
-                <select value={edit.trainer_id} onChange={e=>chooseTrainer(e.target.value)}>
+                <select value={edit.trainer_id} onChange={e=>chooseTrainer(e.target.value)}
+                   disabled title="Trainer assignment is managed in Orbit LMS">
                   <option value="">Select trainer</option>
                   {trainers.map(x=><option key={x.id} value={x.id}>{x.trainer_name}</option>)}
                 </select>
+                 <small>Change trainer in <a href={"https://orbit-lms-igebra1.vercel.app/batches/"+batchId}
+                   target="_blank" rel="noopener noreferrer">Orbit LMS</a>.</small>
               </label>
               <label><span>Batch End Date</span><input type="date" value={edit.end_date} onChange={e=>setEdit({...edit,end_date:e.target.value})}/></label>
               <label><span>Planned Sessions</span><input type="number" min="1" value={edit.planned_sessions} onChange={e=>setEdit({...edit,planned_sessions:e.target.value})}/></label>

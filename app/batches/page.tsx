@@ -184,8 +184,24 @@ export default function BatchesPage() {
     init();
   }, [router]);
 
-  async function load() {
-    setLoading(true);
+  useEffect(()=>{
+    if(!userId)return;
+    const refresh=()=>{void load(true);};
+    const onVisible=()=>{if(document.visibilityState==="visible")refresh();};
+    const channel=supabase.channel("crm-batches-live")
+      .on("postgres_changes",{event:"*",schema:"public",table:"batches"},refresh)
+      .subscribe();
+    window.addEventListener("focus",refresh);
+    document.addEventListener("visibilitychange",onVisible);
+    return ()=>{
+      window.removeEventListener("focus",refresh);
+      document.removeEventListener("visibilitychange",onVisible);
+      void supabase.removeChannel(channel);
+    };
+  },[userId]);
+
+  async function load(silent=false) {
+    if(!silent)setLoading(true);
 
     const [b, r, s, t] = await Promise.all([
       supabase.from("batches").select("*").order("created_at", { ascending: false }),
@@ -199,7 +215,7 @@ export default function BatchesPage() {
     setRoster((r.data || []) as Roster[]);
     setStudents((s.data || []) as StudentOption[]);
     setTrainers((t.data || []) as Trainer[]);
-    setLoading(false);
+    if(!silent)setLoading(false);
   }
 
   // Running means a batch marked Active. A batch with both weekday and
